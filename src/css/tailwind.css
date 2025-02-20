@@ -1,0 +1,35 @@
+/*
+Theme Name: Wade's Marine Group
+Theme URI: https://impactmarinegroup.com
+Author: Wade's Marine Group
+Description: A custom WordPress theme for Wade's Marine Group
+Version: 1.0.0
+License: GNU General Public License v2 or later
+License URI: LICENSE
+Text Domain: wades
+*/
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles */
+@layer base {
+    body {
+        @apply font-sans antialiased;
+    }
+}
+
+@layer components {
+    .wp-block {
+        @apply max-w-screen-xl mx-auto px-4;
+    }
+
+    .alignfull {
+        @apply max-w-full w-full px-0;
+    }
+
+    .alignwide {
+        @apply max-w-screen-xl mx-auto;
+    }
+}

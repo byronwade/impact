@@ -1,0 +1,35 @@
+/* Editor-specific styles */
+.wp-block-wades-hero {
+    position: relative;
+    background: linear-gradient(to right, var(--wp--preset--color--primary), var(--wp--preset--color--secondary));
+    color: white;
+    padding: 6rem 0;
+}
+
+.wp-block-wades-hero .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.wp-block-wades-hero .content {
+    max-width: 56rem;
+    margin: 0 auto;
+    text-align: center;
+}
+
+/* Editor-specific overrides */
+.wp-block-wades-hero input[type="text"],
+.wp-block-wades-hero textarea {
+    background: transparent;
+    border: 1px dashed rgba(255, 255, 255, 0.3);
+    color: white;
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.wp-block-wades-hero input[type="text"]::placeholder,
+.wp-block-wades-hero textarea::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}

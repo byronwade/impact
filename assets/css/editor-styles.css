@@ -1,0 +1,31 @@
+/* Add this at the top */
+:root {
+    --wp--preset--color--primary: #004AAD;
+    --wp--preset--color--light: #F5F5F5;
+}
+
+/* Editor Styles for Templates */
+.services-template {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.services-template .hero-section {
+    background-color: var(--wp--preset--color--primary);
+    color: white;
+    padding: 4rem 2rem;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.services-template .services-grid {
+    padding: 2rem;
+}
+
+.services-template .cta-section {
+    background-color: var(--wp--preset--color--light);
+    padding: 4rem 2rem;
+    text-align: center;
+}
+
+/* Add more template styles as needed */
