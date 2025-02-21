@@ -220,9 +220,10 @@ require get_template_directory() . '/inc/class-wade-nav-walker.php';
 require get_template_directory() . '/inc/class-wade-mobile-nav-walker.php';
 
 /**
- * Load default content creation
+ * Load post types
  */
-require get_template_directory() . '/inc/default-content.php';
+require get_template_directory() . '/inc/post-types/service.php';
+require get_template_directory() . '/inc/post-types/brand.php';
 
 /**
  * Custom Post Types and Taxonomies
@@ -285,105 +286,7 @@ function wades_enqueue_block_editor_assets() {
         array(),
         _S_VERSION
     );
-
-    // Enqueue the template sidebar script
-    wp_enqueue_script(
-        'wades-template-sidebar',
-        get_template_directory_uri() . '/assets/js/template-sidebar.js',
-        array(
-            'wp-plugins',
-            'wp-edit-post',
-            'wp-element',
-            'wp-components',
-            'wp-data',
-            'wp-i18n'
-        ),
-        _S_VERSION,
-        true
-    );
 }
-add_action('enqueue_block_editor_assets', 'wades_enqueue_block_editor_assets');
-
-// Add this to enable block editor features
-function wades_setup_block_editor() {
-    // Add support for editor styles
-    add_theme_support('editor-styles');
-    
-    // Add support for wide alignments
-    add_theme_support('align-wide');
-    
-    // Add support for custom colors
-    add_theme_support('editor-color-palette', array(
-        array(
-            'name'  => __('Primary', 'wades'),
-            'slug'  => 'primary',
-            'color' => '#004AAD',
-        ),
-        array(
-            'name'  => __('Light', 'wades'),
-            'slug'  => 'light',
-            'color' => '#F5F5F5',
-        ),
-        // Add more colors as needed
-    ));
-}
-add_action('after_setup_theme', 'wades_setup_block_editor');
-
-// Add this to register template post meta
-function wades_register_meta() {
-    register_post_meta('page', '_template_settings', array(
-        'show_in_rest' => true,
-        'single' => true,
-        'type' => 'object',
-        'auth_callback' => function() {
-            return current_user_can('edit_posts');
-        }
-    ));
-
-    // Register individual meta fields
-    $meta_fields = array(
-        '_hero_title',
-        '_hero_description',
-        '_services_title',
-        '_services_subtitle',
-        '_cta_text',
-        '_cta_link',
-        // Add other meta fields here
-    );
-
-    foreach ($meta_fields as $field) {
-        register_post_meta('page', $field, array(
-            'show_in_rest' => true,
-            'single' => true,
-            'type' => 'string',
-            'auth_callback' => function() {
-                return current_user_can('edit_posts');
-            }
-        ));
-    }
-}
-add_action('init', 'wades_register_meta');
-
-// Add this to register block patterns
-function wades_register_patterns() {
-    // Register pattern categories
-    register_block_pattern_category(
-        'wades-templates',
-        array('label' => __('Wade\'s Templates', 'wades'))
-    );
-
-    // Register patterns
-    register_block_pattern(
-        'wades/services-template',
-        array(
-            'title' => __('Services Template', 'wades'),
-            'content' => file_get_contents(get_template_directory() . '/inc/block-patterns/services-pattern.html'),
-            'categories' => array('wades-templates'),
-        )
-    );
-    // Register other patterns...
-}
-add_action('init', 'wades_register_patterns');
 
 /**
  * Register and handle page templates
@@ -472,12 +375,117 @@ function wades_template_styles() {
     if (is_page_template('templates/home.php')) {
         wp_enqueue_style('wades-home-template', get_template_directory_uri() . '/assets/css/home-template.css', array(), _S_VERSION);
     }
+
+    // Add blog styles for posts
+    if (is_singular('post') || is_home() || is_archive()) {
+        wp_add_inline_style('wades-style', '
+            /* Custom Prose Styles */
+            .prose :where(h1):not(:where([class~="not-prose"] *)) {
+                margin-top: 2em;
+                margin-bottom: 1em;
+            }
+            .prose :where(h2, h3, h4):not(:where([class~="not-prose"] *)) {
+                margin-top: 2em;
+                margin-bottom: 1em;
+            }
+            .prose :where(img):not(:where([class~="not-prose"] *)) {
+                border-radius: 0.75rem;
+                box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            }
+            .prose :where(blockquote):not(:where([class~="not-prose"] *)) {
+                border-left-color: var(--primary-color, #004AAD);
+                background-color: rgb(241 245 249);
+                padding: 1rem 1.5rem;
+                border-radius: 0.5rem;
+            }
+            .prose :where(code):not(:where([class~="not-prose"] *)) {
+                background-color: rgb(241 245 249);
+                padding: 0.2em 0.4em;
+                border-radius: 0.25rem;
+                font-size: 0.875em;
+            }
+            .prose :where(pre):not(:where([class~="not-prose"] *)) {
+                background-color: rgb(15 23 42);
+                padding: 1.25rem 1.5rem;
+                border-radius: 0.5rem;
+                overflow-x: auto;
+            }
+            .prose :where(ul, ol):not(:where([class~="not-prose"] *)) {
+                padding-left: 1.625em;
+            }
+            .prose :where(li):not(:where([class~="not-prose"] *)) {
+                margin-top: 0.5em;
+                margin-bottom: 0.5em;
+            }
+            .prose :where(table):not(:where([class~="not-prose"] *)) {
+                border-collapse: collapse;
+                width: 100%;
+                margin-top: 2em;
+                margin-bottom: 2em;
+            }
+            .prose :where(th, td):not(:where([class~="not-prose"] *)) {
+                border: 1px solid rgb(226 232 240);
+                padding: 0.75rem 1rem;
+            }
+            .prose :where(th):not(:where([class~="not-prose"] *)) {
+                background-color: rgb(241 245 249);
+            }
+        ');
+    }
 }
 add_action('wp_enqueue_scripts', 'wades_template_styles');
 
 /**
- * Load post types
+ * Add featured post meta box
  */
-require get_template_directory() . '/inc/post-types/service.php';
-require get_template_directory() . '/inc/post-types/brand.php';
+function wades_add_featured_post_meta_box() {
+    add_meta_box(
+        'wades_featured_post',
+        'Featured Post',
+        'wades_featured_post_meta_box_callback',
+        'post',
+        'side',
+        'high'
+    );
+}
+add_action('add_meta_boxes', 'wades_add_featured_post_meta_box');
+
+/**
+ * Featured post meta box callback
+ */
+function wades_featured_post_meta_box_callback($post) {
+    wp_nonce_field('wades_featured_post', 'wades_featured_post_nonce');
+    $is_featured = get_post_meta($post->ID, '_is_featured_post', true);
+    ?>
+    <label>
+        <input type="checkbox" name="is_featured_post" value="1" <?php checked($is_featured, '1'); ?>>
+        Mark as featured post
+    </label>
+    <?php
+}
+
+/**
+ * Save featured post meta
+ */
+function wades_save_featured_post_meta($post_id) {
+    if (!isset($_POST['wades_featured_post_nonce'])) {
+        return;
+    }
+
+    if (!wp_verify_nonce($_POST['wades_featured_post_nonce'], 'wades_featured_post')) {
+        return;
+    }
+
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+
+    if (!current_user_can('edit_post', $post_id)) {
+        return;
+    }
+
+    $is_featured = isset($_POST['is_featured_post']) ? '1' : '';
+    update_post_meta($post_id, '_is_featured_post', $is_featured);
+}
+add_action('save_post', 'wades_save_featured_post_meta');
 
