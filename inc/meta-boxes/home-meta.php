@@ -3,6 +3,10 @@
  * Custom Meta Boxes for Home Page Template
  */
 
+if (!defined('ABSPATH')) {
+    exit; // Exit if accessed directly
+}
+
 function wades_add_home_meta_boxes() {
     // Get the current screen
     $screen = get_current_screen();
@@ -12,8 +16,12 @@ function wades_add_home_meta_boxes() {
 
     // Get the current template
     $template = get_page_template_slug();
+    
+    // Only add these meta boxes for the home template
+    if ($template !== 'templates/home.php') {
+        return;
+    }
 
-    // Add meta boxes for all pages or specifically for home template
     add_meta_box(
         'wades_home_hero',
         'Hero Section',
@@ -61,12 +69,316 @@ function wades_add_home_meta_boxes() {
 }
 add_action('add_meta_boxes', 'wades_add_home_meta_boxes');
 
-// Add this to register the template
+// Register the home template
 function wades_add_home_template($templates) {
     $templates['templates/home.php'] = 'Home Template';
     return $templates;
 }
 add_filter('theme_page_templates', 'wades_add_home_template');
+
+// Save the meta box data
+function wades_save_home_meta($post_id) {
+    // Verify nonce
+    if (!isset($_POST['wades_home_meta_nonce']) || !wp_verify_nonce($_POST['wades_home_meta_nonce'], 'wades_home_meta')) {
+        return;
+    }
+
+    // If this is an autosave, don't do anything
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+
+    // Check user permissions
+    if (!current_user_can('edit_post', $post_id)) {
+        return;
+    }
+
+    // Verify nonce for sections
+    if (isset($_POST['wades_home_sections_meta_nonce']) && 
+        wp_verify_nonce($_POST['wades_home_sections_meta_nonce'], 'wades_home_sections_meta')) {
+        
+        // Save sections configuration
+        if (isset($_POST['home_sections'])) {
+            $sections = array();
+            foreach ($_POST['home_sections'] as $section_id => $section_data) {
+                $sections[$section_id] = array(
+                    'enabled' => isset($section_data['enabled']),
+                    'order' => absint($section_data['order']),
+                    'title' => sanitize_text_field($section_data['title'])
+                );
+            }
+            update_post_meta($post_id, '_home_sections', $sections);
+        }
+    }
+
+    // Hero Section
+    $hero_fields = array(
+        'hero_title',
+        'hero_description',
+        'hero_background_video',
+        'hero_background_image',
+        'hero_primary_cta_label',
+        'hero_primary_cta_link',
+        'hero_secondary_cta_label',
+        'hero_secondary_cta_link'
+    );
+
+    foreach ($hero_fields as $field) {
+        if (isset($_POST[$field])) {
+            update_post_meta($post_id, '_' . $field, sanitize_text_field($_POST[$field]));
+        }
+    }
+
+    // Featured Services
+    if (isset($_POST['featured_services'])) {
+        $services = array();
+        foreach ($_POST['featured_services'] as $service) {
+            $services[] = array(
+                'icon' => wp_kses_post($service['icon']),
+                'title' => sanitize_text_field($service['title']),
+                'description' => wp_kses_post($service['description']),
+                'link' => esc_url_raw($service['link'])
+            );
+        }
+        update_post_meta($post_id, '_featured_services', $services);
+    }
+
+    // About Section
+    if (isset($_POST['about_title'])) {
+        update_post_meta($post_id, '_about_title', sanitize_text_field($_POST['about_title']));
+    }
+    if (isset($_POST['about_content'])) {
+        update_post_meta($post_id, '_about_content', wp_kses_post($_POST['about_content']));
+    }
+    if (isset($_POST['about_image'])) {
+        update_post_meta($post_id, '_about_image', absint($_POST['about_image']));
+    }
+    if (isset($_POST['about_cta_text'])) {
+        update_post_meta($post_id, '_about_cta_text', sanitize_text_field($_POST['about_cta_text']));
+    }
+    if (isset($_POST['about_cta_link'])) {
+        update_post_meta($post_id, '_about_cta_link', esc_url_raw($_POST['about_cta_link']));
+    }
+
+    // CTA Section
+    if (isset($_POST['cta_title'])) {
+        update_post_meta($post_id, '_cta_title', sanitize_text_field($_POST['cta_title']));
+    }
+    if (isset($_POST['cta_description'])) {
+        update_post_meta($post_id, '_cta_description', wp_kses_post($_POST['cta_description']));
+    }
+    if (isset($_POST['cta_button_text'])) {
+        update_post_meta($post_id, '_cta_button_text', sanitize_text_field($_POST['cta_button_text']));
+    }
+    if (isset($_POST['cta_button_link'])) {
+        update_post_meta($post_id, '_cta_button_link', esc_url_raw($_POST['cta_button_link']));
+    }
+}
+add_action('save_post', 'wades_save_home_meta');
+
+// Add necessary JavaScript
+function wades_home_meta_scripts() {
+    global $post;
+    if (!$post || get_page_template_slug($post->ID) !== 'templates/home.php') {
+        return;
+    }
+
+    wp_enqueue_media();
+    wp_enqueue_script('jquery');
+    wp_enqueue_script('jquery-ui-sortable');
+    
+    // Add inline script for media uploads and dynamic fields
+    ?>
+    <script>
+        jQuery(document).ready(function($) {
+            // Video upload
+            $('.upload-video-button').click(function(e) {
+                e.preventDefault();
+                var button = $(this);
+                var customUploader = wp.media({
+                    title: 'Select Video',
+                    library: { type: 'video' },
+                    button: { text: 'Use this video' },
+                    multiple: false
+                }).on('select', function() {
+                    var attachment = customUploader.state().get('selection').first().toJSON();
+                    button.siblings('.video-url').val(attachment.url);
+                    button.siblings('.remove-video-button').show();
+                    $('#video-preview').html('<video width="300" controls><source src="' + attachment.url + '" type="video/mp4"></video>');
+                }).open();
+            });
+
+            // Image upload
+            $('.upload-image').click(function(e) {
+                e.preventDefault();
+                var button = $(this);
+                var customUploader = wp.media({
+                    title: 'Select Image',
+                    library: { type: 'image' },
+                    button: { text: 'Use this image' },
+                    multiple: false
+                }).on('select', function() {
+                    var attachment = customUploader.state().get('selection').first().toJSON();
+                    button.siblings('input[type="hidden"]').val(attachment.id);
+                    button.siblings('.image-preview').html('<img src="' + attachment.url + '" style="max-width:150px;">');
+                }).open();
+            });
+
+            // Remove video
+            $('.remove-video-button').click(function() {
+                $(this).siblings('.video-url').val('');
+                $(this).hide();
+                $('#video-preview').empty();
+            });
+
+            // Add service
+            $('.add-service').click(function() {
+                var index = $('.service-item').length;
+                var template = wp.template('service-item');
+                $(this).before(template({ index: index }));
+            });
+
+            // Remove service
+            $(document).on('click', '.remove-service', function() {
+                $(this).closest('.service-item').remove();
+            });
+
+            $('.sections-list').sortable({
+                handle: '.dashicons-menu',
+                update: function(event, ui) {
+                    $('.sections-list .section-item').each(function(index) {
+                        $(this).find('.section-order').val((index + 1) * 10);
+                    });
+                }
+            });
+        });
+    </script>
+    <?php
+}
+add_action('admin_footer', 'wades_home_meta_scripts');
+
+// Add necessary styles
+function wades_home_meta_styles() {
+    global $post;
+    if (!$post || get_page_template_slug($post->ID) !== 'templates/home.php') {
+        return;
+    }
+    ?>
+    <style>
+        .home-meta-box {
+            padding: 10px;
+        }
+        .video-upload-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .video-preview {
+            margin-top: 10px;
+        }
+        .service-item {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #fff;
+        }
+        .cta-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border: 1px solid #e5e5e5;
+        }
+        .home-sections-manager .section-item {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .home-sections-manager .section-item:hover {
+            background: #f0f0f0 !important;
+        }
+        .home-sections-manager .ui-sortable-helper {
+            background: #fff !important;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        }
+    </style>
+    <?php
+}
+add_action('admin_head', 'wades_home_meta_styles');
+
+// Add section management meta box
+function wades_home_sections_callback($post) {
+    wp_nonce_field('wades_home_sections_meta', 'wades_home_sections_meta_nonce');
+
+    // Get sections configuration
+    $sections = get_post_meta($post->ID, '_home_sections', true);
+    
+    // Default sections configuration
+    if (!is_array($sections)) {
+        $sections = array(
+            'hero' => array(
+                'enabled' => true,
+                'order' => 10,
+                'title' => 'Hero Section'
+            ),
+            'featured_brands' => array(
+                'enabled' => true,
+                'order' => 20,
+                'title' => 'Featured Brands'
+            ),
+            'fleet' => array(
+                'enabled' => true,
+                'order' => 30,
+                'title' => 'Fleet Section'
+            ),
+            'services' => array(
+                'enabled' => true,
+                'order' => 40,
+                'title' => 'Services Section'
+            ),
+            'testimonials' => array(
+                'enabled' => true,
+                'order' => 50,
+                'title' => 'Testimonials'
+            ),
+            'social' => array(
+                'enabled' => true,
+                'order' => 60,
+                'title' => 'Social Feed'
+            ),
+            'cta' => array(
+                'enabled' => true,
+                'order' => 70,
+                'title' => 'Call to Action'
+            )
+        );
+    }
+
+    // Sort sections by order
+    uasort($sections, function($a, $b) {
+        return $a['order'] - $b['order'];
+    });
+    ?>
+    <div class="home-sections-manager">
+        <p class="description">Enable/disable sections and drag to reorder them. Changes will be reflected on the home page.</p>
+        <div class="sections-list" style="margin-top: 15px;">
+            <?php foreach ($sections as $section_id => $section) : ?>
+                <div class="section-item" style="padding: 10px; background: #f9f9f9; border: 1px solid #ddd; margin-bottom: 5px;">
+                    <input type="hidden" 
+                           name="home_sections[<?php echo esc_attr($section_id); ?>][order]" 
+                           value="<?php echo esc_attr($section['order']); ?>"
+                           class="section-order">
+                    <label style="display: flex; align-items: center; gap: 10px;">
+                        <span class="dashicons dashicons-menu" style="cursor: move;"></span>
+                        <input type="checkbox" 
+                               name="home_sections[<?php echo esc_attr($section_id); ?>][enabled]" 
+                               <?php checked($section['enabled']); ?>>
+                        <?php echo esc_html($section['title']); ?>
+                    </label>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php
+}
 
 // Featured Services Section Callback
 function wades_featured_services_callback($post) {
@@ -183,277 +495,129 @@ function wades_home_hero_callback($post) {
     wp_nonce_field('wades_home_meta', 'wades_home_meta_nonce');
 
     $hero_meta = array(
-        'heading' => get_post_meta($post->ID, '_hero_heading', true),
-        'subheading' => get_post_meta($post->ID, '_hero_subheading', true),
-        'video_url' => get_post_meta($post->ID, '_hero_video_url', true),
-        'primary_text' => get_post_meta($post->ID, '_hero_primary_text', true),
-        'primary_link' => get_post_meta($post->ID, '_hero_primary_link', true),
-        'secondary_text' => get_post_meta($post->ID, '_hero_secondary_text', true),
-        'secondary_link' => get_post_meta($post->ID, '_hero_secondary_link', true),
-        'phone' => get_post_meta($post->ID, '_hero_phone', true),
-        'rating' => get_post_meta($post->ID, '_hero_rating', true)
+        'title' => get_post_meta($post->ID, '_hero_title', true) ?: 'Expert Boat Service You Can Trust',
+        'description' => get_post_meta($post->ID, '_hero_description', true) ?: 'Certified Technicians, Fast Turnaround, and Unmatched Care for Your Boat.',
+        'phoneNumber' => get_post_meta($post->ID, '_hero_phone_number', true) ?: '(555) 123-4567',
+        'rating' => array(
+            'value' => get_post_meta($post->ID, '_hero_rating_value', true) ?: 4.9,
+            'text' => get_post_meta($post->ID, '_hero_rating_text', true) ?: '4.9 Star Rated'
+        ),
+        'backgroundImage' => get_post_meta($post->ID, '_hero_background_image', true),
+        'backgroundVideo' => get_post_meta($post->ID, '_hero_background_video', true),
+        'primaryCta' => array(
+            'label' => get_post_meta($post->ID, '_hero_primary_cta_label', true) ?: 'Schedule Service',
+            'link' => get_post_meta($post->ID, '_hero_primary_cta_link', true) ?: '/schedule',
+            'icon' => get_post_meta($post->ID, '_hero_primary_cta_icon', true) ?: 'calendar'
+        ),
+        'secondaryCta' => array(
+            'label' => get_post_meta($post->ID, '_hero_secondary_cta_label', true) ?: 'View Our Services',
+            'link' => get_post_meta($post->ID, '_hero_secondary_cta_link', true) ?: '/services',
+            'icon' => get_post_meta($post->ID, '_hero_secondary_cta_icon', true) ?: 'chevron-right'
+        )
     );
     ?>
     <div class="home-meta-box">
         <p>
-            <label for="hero_heading">Hero Heading:</label>
-            <input type="text" id="hero_heading" name="hero_heading" value="<?php echo esc_attr($hero_meta['heading']); ?>" class="widefat">
+            <label for="hero_title">Hero Title:</label>
+            <input type="text" id="hero_title" name="hero_title" value="<?php echo esc_attr($hero_meta['title']); ?>" class="widefat">
         </p>
         <p>
-            <label for="hero_subheading">Hero Subheading:</label>
-            <input type="text" id="hero_subheading" name="hero_subheading" value="<?php echo esc_attr($hero_meta['subheading']); ?>" class="widefat">
+            <label for="hero_description">Hero Description:</label>
+            <textarea id="hero_description" name="hero_description" rows="3" class="widefat"><?php echo esc_textarea($hero_meta['description']); ?></textarea>
         </p>
+
+        <p>
+            <label for="hero_phone_number">Phone Number:</label>
+            <input type="text" id="hero_phone_number" name="hero_phone_number" value="<?php echo esc_attr($hero_meta['phoneNumber']); ?>" class="widefat">
+        </p>
+
+        <div class="rating-section">
+            <h4>Rating Badge</h4>
+            <p>
+                <label for="hero_rating_value">Rating Value (0-5):</label>
+                <input type="number" id="hero_rating_value" name="hero_rating_value" value="<?php echo esc_attr($hero_meta['rating']['value']); ?>" min="0" max="5" step="0.1" class="widefat">
+            </p>
+            <p>
+                <label for="hero_rating_text">Rating Text:</label>
+                <input type="text" id="hero_rating_text" name="hero_rating_text" value="<?php echo esc_attr($hero_meta['rating']['text']); ?>" class="widefat">
+            </p>
+        </div>
         
-        <!-- Video Upload Field -->
+        <!-- Background Video Field -->
         <div class="video-field">
-            <label for="hero_video_url">Background Video:</label>
+            <label for="hero_background_video">Background Video:</label>
             <div class="video-upload-container">
-                <input type="text" id="hero_video_url" name="hero_video_url" value="<?php echo esc_attr($hero_meta['video_url']); ?>" class="widefat video-url" readonly>
+                <input type="text" id="hero_background_video" name="hero_background_video" value="<?php echo esc_url($hero_meta['backgroundVideo']); ?>" class="widefat video-url" readonly>
                 <button type="button" class="button upload-video-button">Upload Video</button>
-                <button type="button" class="button remove-video-button" <?php echo empty($hero_meta['video_url']) ? 'style="display:none;"' : ''; ?>>Remove</button>
+                <button type="button" class="button remove-video-button" <?php echo empty($hero_meta['backgroundVideo']) ? 'style="display:none;"' : ''; ?>>Remove</button>
             </div>
+            <p class="description">MP4 format recommended. Will fallback to background image if video cannot be played.</p>
             <div id="video-preview" class="video-preview">
-                <?php if ($hero_meta['video_url']) : ?>
+                <?php if ($hero_meta['backgroundVideo']) : ?>
                     <video width="300" controls>
-                        <source src="<?php echo esc_url($hero_meta['video_url']); ?>" type="video/mp4">
+                        <source src="<?php echo esc_url($hero_meta['backgroundVideo']); ?>" type="video/mp4">
                     </video>
                 <?php endif; ?>
             </div>
         </div>
 
+        <!-- Background Image Field -->
+        <div class="image-field">
+            <label for="hero_background_image">Background Image:</label>
+            <div class="image-upload-container">
+                <input type="hidden" id="hero_background_image" name="hero_background_image" value="<?php echo esc_attr($hero_meta['backgroundImage']); ?>">
+                <button type="button" class="button upload-image-button">Upload Image</button>
+                <div class="image-preview">
+                    <?php if ($hero_meta['backgroundImage']) : ?>
+                        <?php echo wp_get_attachment_image($hero_meta['backgroundImage'], 'medium'); ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <p class="description">Recommended size: 1920x1080px</p>
+        </div>
+
         <div class="cta-section">
-            <h4>Call to Action Buttons</h4>
+            <h4>Primary Call to Action</h4>
             <div class="primary-cta">
                 <p>
-                    <label for="hero_primary_text">Primary Button Text:</label>
-                    <input type="text" id="hero_primary_text" name="hero_primary_text" value="<?php echo esc_attr($hero_meta['primary_text']); ?>" class="widefat">
+                    <label for="hero_primary_cta_label">Button Text:</label>
+                    <input type="text" id="hero_primary_cta_label" name="hero_primary_cta_label" value="<?php echo esc_attr($hero_meta['primaryCta']['label']); ?>" class="widefat">
                 </p>
                 <p>
-                    <label for="hero_primary_link">Primary Button Link:</label>
-                    <input type="text" id="hero_primary_link" name="hero_primary_link" value="<?php echo esc_attr($hero_meta['primary_link']); ?>" class="widefat">
+                    <label for="hero_primary_cta_link">Button Link:</label>
+                    <input type="text" id="hero_primary_cta_link" name="hero_primary_cta_link" value="<?php echo esc_attr($hero_meta['primaryCta']['link']); ?>" class="widefat">
+                </p>
+                <p>
+                    <label for="hero_primary_cta_icon">Icon:</label>
+                    <select id="hero_primary_cta_icon" name="hero_primary_cta_icon" class="widefat">
+                        <option value="calendar" <?php selected($hero_meta['primaryCta']['icon'], 'calendar'); ?>>Calendar</option>
+                        <option value="none" <?php selected($hero_meta['primaryCta']['icon'], 'none'); ?>>None</option>
+                    </select>
                 </p>
             </div>
+
+            <h4>Secondary Call to Action</h4>
             <div class="secondary-cta">
                 <p>
-                    <label for="hero_secondary_text">Secondary Button Text:</label>
-                    <input type="text" id="hero_secondary_text" name="hero_secondary_text" value="<?php echo esc_attr($hero_meta['secondary_text']); ?>" class="widefat">
+                    <label for="hero_secondary_cta_label">Button Text:</label>
+                    <input type="text" id="hero_secondary_cta_label" name="hero_secondary_cta_label" value="<?php echo esc_attr($hero_meta['secondaryCta']['label']); ?>" class="widefat">
                 </p>
                 <p>
-                    <label for="hero_secondary_link">Secondary Button Link:</label>
-                    <input type="text" id="hero_secondary_link" name="hero_secondary_link" value="<?php echo esc_attr($hero_meta['secondary_link']); ?>" class="widefat">
+                    <label for="hero_secondary_cta_link">Button Link:</label>
+                    <input type="text" id="hero_secondary_cta_link" name="hero_secondary_cta_link" value="<?php echo esc_attr($hero_meta['secondaryCta']['link']); ?>" class="widefat">
+                </p>
+                <p>
+                    <label for="hero_secondary_cta_icon">Icon:</label>
+                    <select id="hero_secondary_cta_icon" name="hero_secondary_cta_icon" class="widefat">
+                        <option value="chevron-right" <?php selected($hero_meta['secondaryCta']['icon'], 'chevron-right'); ?>>Chevron Right</option>
+                        <option value="none" <?php selected($hero_meta['secondaryCta']['icon'], 'none'); ?>>None</option>
+                    </select>
                 </p>
             </div>
         </div>
-        <p>
-            <label for="hero_phone">Phone Number:</label>
-            <input type="text" id="hero_phone" name="hero_phone" value="<?php echo esc_attr($hero_meta['phone']); ?>" class="widefat">
-        </p>
-        <p>
-            <label for="hero_rating">Rating Text:</label>
-            <input type="text" id="hero_rating" name="hero_rating" value="<?php echo esc_attr($hero_meta['rating']); ?>" class="widefat">
-        </p>
     </div>
-
-    <script>
-    jQuery(document).ready(function($) {
-        // Video Upload
-        $('.upload-video-button').click(function(e) {
-            e.preventDefault();
-            var button = $(this);
-            var container = button.closest('.video-field');
-            var videoUploader = wp.media({
-                title: 'Select Background Video',
-                button: {
-                    text: 'Use this video'
-                },
-                multiple: false,
-                library: {
-                    type: 'video'
-                }
-            }).on('select', function() {
-                var attachment = videoUploader.state().get('selection').first().toJSON();
-                container.find('.video-url').val(attachment.url);
-                container.find('.remove-video-button').show();
-                var preview = container.find('.video-preview');
-                preview.html('<video width="300" controls><source src="' + attachment.url + '" type="video/mp4"></video>');
-            }).open();
-        });
-
-        // Remove Video
-        $('.remove-video-button').click(function(e) {
-            e.preventDefault();
-            var container = $(this).closest('.video-field');
-            container.find('.video-url').val('');
-            container.find('.video-preview').empty();
-            $(this).hide();
-        });
-    });
-    </script>
     <?php
 }
-
-// Save meta box data
-function wades_save_home_meta($post_id) {
-    // Basic security checks
-    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
-    if (!current_user_can('edit_post', $post_id)) return;
-    if (get_post_type($post_id) !== 'page') return;
-
-    // Verify nonce
-    if (!isset($_POST['wades_home_meta_nonce']) || !wp_verify_nonce($_POST['wades_home_meta_nonce'], 'wades_home_meta')) {
-        return;
-    }
-
-    // Save hero section fields
-    $text_fields = array(
-        'hero_heading',
-        'hero_subheading',
-        'hero_primary_text',
-        'hero_primary_link',
-        'hero_secondary_text',
-        'hero_secondary_link',
-        'hero_phone',
-        'hero_rating'
-    );
-
-    foreach ($text_fields as $field) {
-        if (isset($_POST[$field])) {
-            update_post_meta($post_id, '_' . $field, sanitize_text_field($_POST[$field]));
-        }
-    }
-
-    // Save video URL separately
-    if (isset($_POST['hero_video_url'])) {
-        update_post_meta($post_id, '_hero_video_url', esc_url_raw($_POST['hero_video_url']));
-    }
-
-    // Save Featured Services
-    if (isset($_POST['services_section_title'])) {
-        update_post_meta($post_id, '_services_section_title', sanitize_text_field($_POST['services_section_title']));
-    }
-    if (isset($_POST['featured_services'])) {
-        $services = array();
-        foreach ($_POST['featured_services'] as $service) {
-            $services[] = array(
-                'icon' => wp_kses_post($service['icon']),
-                'title' => sanitize_text_field($service['title']),
-                'description' => wp_kses_post($service['description']),
-                'link' => esc_url_raw($service['link'])
-            );
-        }
-        update_post_meta($post_id, '_featured_services', $services);
-    }
-
-    // Save About Section
-    if (isset($_POST['about_title'])) {
-        update_post_meta($post_id, '_about_title', sanitize_text_field($_POST['about_title']));
-    }
-    if (isset($_POST['about_content'])) {
-        update_post_meta($post_id, '_about_content', wp_kses_post($_POST['about_content']));
-    }
-    if (isset($_POST['about_image'])) {
-        update_post_meta($post_id, '_about_image', absint($_POST['about_image']));
-    }
-    if (isset($_POST['about_cta_text'])) {
-        update_post_meta($post_id, '_about_cta_text', sanitize_text_field($_POST['about_cta_text']));
-    }
-    if (isset($_POST['about_cta_link'])) {
-        update_post_meta($post_id, '_about_cta_link', esc_url_raw($_POST['about_cta_link']));
-    }
-
-    // Save CTA Section
-    if (isset($_POST['cta_title'])) {
-        update_post_meta($post_id, '_cta_title', sanitize_text_field($_POST['cta_title']));
-    }
-    if (isset($_POST['cta_description'])) {
-        update_post_meta($post_id, '_cta_description', wp_kses_post($_POST['cta_description']));
-    }
-    if (isset($_POST['cta_button_text'])) {
-        update_post_meta($post_id, '_cta_button_text', sanitize_text_field($_POST['cta_button_text']));
-    }
-    if (isset($_POST['cta_button_link'])) {
-        update_post_meta($post_id, '_cta_button_link', esc_url_raw($_POST['cta_button_link']));
-    }
-}
-add_action('save_post_page', 'wades_save_home_meta');
-
-// Add JavaScript for dynamic fields and image upload
-function wades_home_meta_scripts() {
-    global $post;
-    if (!$post) return;
-    
-    if (get_page_template_slug($post->ID) === 'templates/home.php') {
-        ?>
-        <script>
-            jQuery(document).ready(function($) {
-                // Image Upload
-                $('.upload-image').click(function(e) {
-                    e.preventDefault();
-                    var button = $(this);
-                    var customUploader = wp.media({
-                        title: 'Select Image',
-                        button: { text: 'Use this image' },
-                        multiple: false
-                    }).on('select', function() {
-                        var attachment = customUploader.state().get('selection').first().toJSON();
-                        button.siblings('input[type="hidden"]').val(attachment.id);
-                        button.siblings('.image-preview').html('<img src="' + attachment.url + '" style="max-width:150px;">');
-                    }).open();
-                });
-
-                // Add Service
-                $('.add-service').click(function() {
-                    var index = $('.service-item').length;
-                    var newService = '<div class="service-item" style="margin-bottom: 20px; padding: 10px; border: 1px solid #ccc;">' +
-                        '<p><label>Icon (HTML):</label><br>' +
-                        '<input type="text" name="featured_services[' + index + '][icon]" class="widefat"></p>' +
-                        '<p><label>Title:</label><br>' +
-                        '<input type="text" name="featured_services[' + index + '][title]" class="widefat"></p>' +
-                        '<p><label>Description:</label><br>' +
-                        '<textarea name="featured_services[' + index + '][description]" rows="3" class="widefat"></textarea></p>' +
-                        '<p><label>Link:</label><br>' +
-                        '<input type="text" name="featured_services[' + index + '][link]" class="widefat"></p>' +
-                        '<button type="button" class="button remove-service">Remove Service</button>' +
-                        '</div>';
-                    $(this).before(newService);
-                });
-
-                // Remove Service
-                $(document).on('click', '.remove-service', function() {
-                    $(this).parent('.service-item').remove();
-                });
-            });
-        </script>
-        <?php
-    }
-}
-add_action('admin_footer', 'wades_home_meta_scripts');
-
-// Add CSS for the meta boxes
-function wades_home_meta_styles() {
-    ?>
-    <style>
-        .home-meta-box .video-upload-container {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        .home-meta-box .video-preview {
-            margin-top: 10px;
-        }
-        .home-meta-box .cta-section {
-            margin: 20px 0;
-            padding: 15px;
-            background: #f5f5f5;
-            border-radius: 5px;
-        }
-        .home-meta-box .cta-section h4 {
-            margin-top: 0;
-        }
-    </style>
-    <?php
-}
-add_action('admin_head', 'wades_home_meta_styles');
 
 // Add this to your functions to ensure the template is loaded
 function wades_load_home_template($template) {

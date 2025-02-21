@@ -3,7 +3,9 @@
  * Custom Meta Boxes for About Page Template
  */
 
-use WP_Block_Editor_Context;
+if (!defined('ABSPATH')) {
+    exit; // Exit if accessed directly
+}
 
 function wades_about_meta_boxes($post_type, $post) {
     // Only add meta boxes for pages
@@ -26,151 +28,47 @@ function wades_about_meta_boxes($post_type, $post) {
     }
 
     // Add meta boxes based on template
-    switch ($template) {
-        case 'templates/about.php':
-            add_meta_box(
-                'wades_about_section',
-                'About Section',
-                'wades_about_section_callback',
-                'page',
-                'normal',
-                'high'
-            );
-            add_meta_box(
-                'wades_brands_section',
-                'Brands Section',
-                'wades_brands_section_callback',
-                'page',
-                'normal',
-                'high'
-            );
-            add_meta_box(
-                'wades_services_section',
-                'Services Section',
-                'wades_services_section_callback',
-                'page',
-                'normal',
-                'high'
-            );
-            add_meta_box(
-                'wades_testimonials_section',
-                'Testimonials Section',
-                'wades_testimonials_section_callback',
-                'page',
-                'normal',
-                'high'
-            );
-            add_meta_box(
-                'wades_contact_section',
-                'Contact Section',
-                'wades_contact_section_callback',
-                'page',
-                'normal',
-                'high'
-            );
-            break;
-
-        case 'templates/boats.php':
-            add_meta_box(
-                'wades_hero_section',
-                'Hero Section',
-                'wades_hero_section_callback',
-                'page',
-                'normal',
-                'high'
-            );
-            add_meta_box(
-                'wades_boats_section',
-                'Boats Section',
-                'wades_boats_section_callback',
-                'page',
-                'normal',
-                'high'
-            );
-            add_meta_box(
-                'wades_cta_section',
-                'CTA Section',
-                'wades_cta_section_callback',
-                'page',
-                'normal',
-                'high'
-            );
-            break;
-
-        case 'templates/services.php':
-            add_meta_box(
-                'wades_hero_section',
-                'Hero Section',
-                'wades_hero_section_callback',
-                'page',
-                'normal',
-                'high'
-            );
-            add_meta_box(
-                'wades_services_section',
-                'Services Section',
-                'wades_services_section_callback',
-                'page',
-                'normal',
-                'high'
-            );
-            add_meta_box(
-                'wades_cta_section',
-                'CTA Section',
-                'wades_cta_section_callback',
-                'page',
-                'normal',
-                'high'
-            );
-            break;
-
-        case 'templates/financing.php':
-            add_meta_box(
-                'wades_hero_section',
-                'Hero Section',
-                'wades_hero_section_callback',
-                'page',
-                'normal',
-                'high'
-            );
-            add_meta_box(
-                'wades_financing_section',
-                'Financing Section',
-                'wades_financing_section_callback',
-                'page',
-                'normal',
-                'high'
-            );
-            add_meta_box(
-                'wades_cta_section',
-                'CTA Section',
-                'wades_cta_section_callback',
-                'page',
-                'normal',
-                'high'
-            );
-            break;
-
-        case 'templates/contact.php':
-            add_meta_box(
-                'wades_hero_section',
-                'Hero Section',
-                'wades_hero_section_callback',
-                'page',
-                'normal',
-                'high'
-            );
-            add_meta_box(
-                'wades_contact_info_section',
-                'Contact Information',
-                'wades_contact_info_section_callback',
-                'page',
-                'normal',
-                'high'
-            );
-            break;
-
-        // Add other template cases as needed
+    if ($template === 'templates/about.php') {
+        add_meta_box(
+            'wades_about_section',
+            'About Section',
+            'wades_about_section_callback',
+            'page',
+            'normal',
+            'high'
+        );
+        add_meta_box(
+            'wades_brands_section',
+            'Brands Section',
+            'wades_brands_section_callback',
+            'page',
+            'normal',
+            'high'
+        );
+        add_meta_box(
+            'wades_services_section',
+            'Services Section',
+            'wades_services_section_callback',
+            'page',
+            'normal',
+            'high'
+        );
+        add_meta_box(
+            'wades_testimonials_section',
+            'Testimonials Section',
+            'wades_testimonials_section_callback',
+            'page',
+            'normal',
+            'high'
+        );
+        add_meta_box(
+            'wades_contact_section',
+            'Contact Section',
+            'wades_contact_section_callback',
+            'page',
+            'normal',
+            'high'
+        );
     }
 }
 add_action('add_meta_boxes', 'wades_about_meta_boxes', 10, 2);
@@ -179,7 +77,6 @@ add_action('add_meta_boxes', 'wades_about_meta_boxes', 10, 2);
 function wades_about_section_callback($post) {
     wp_nonce_field('wades_about_meta_box', 'wades_about_meta_box_nonce');
 
-    // Get meta values with defaults
     $about_title = get_post_meta($post->ID, '_about_title', true) ?: 'About Impact Marine Group';
     $about_paragraphs = get_post_meta($post->ID, '_about_paragraphs', true);
     $about_image = get_post_meta($post->ID, '_about_image', true);
@@ -188,10 +85,9 @@ function wades_about_section_callback($post) {
     // Set default paragraphs if empty
     if (!is_array($about_paragraphs) || empty($about_paragraphs)) {
         $about_paragraphs = array(
-            'Impact Marine Group is more than just a boat dealership - we\'re your gateway to unforgettable aquatic adventures. Founded by passionate boating enthusiasts, our mission is to provide unparalleled service and top-quality marine products to both seasoned sailors and newcomers to the boating world.',
-            'Located at 5185 Browns Bridge Rd, our state-of-the-art facility is a testament to our commitment to excellence. We\'ve created a space where customers can explore, learn, and find the perfect vessel for their needs. Our showroom features a wide array of boats, from sleek speedboats to comfortable family cruisers, all hand-picked for their quality and performance.',
-            'What sets Impact Marine Group apart is our team. Each member brings years of experience and a genuine love for boating to the table. We don\'t just sell boats - we use them, we live and breathe the boating lifestyle. This firsthand experience allows us to provide expert advice and insights that go beyond what you\'ll find in any product brochure.',
-            'We believe that boating is more than a hobby - it\'s a way of life. That\'s why we\'re committed to fostering a community of boating enthusiasts. Through our events, workshops, and customer appreciation days, we bring together like-minded individuals who share our passion for the water.'
+            'Impact Marine Group is more than just a boat dealership - we\'re your gateway to unforgettable aquatic adventures.',
+            'Our state-of-the-art facility showcases a wide array of boats, from sleek speedboats to comfortable family cruisers.',
+            'What sets us apart is our team\'s passion and expertise in the boating industry.'
         );
     }
 
@@ -211,105 +107,56 @@ function wades_about_section_callback($post) {
         );
     }
     ?>
-    <p>
-        <label for="about_title">Section Title:</label><br>
-        <input type="text" id="about_title" name="about_title" value="<?php echo esc_attr($about_title); ?>" class="widefat">
-    </p>
+    <div class="about-section-meta">
+        <p>
+            <label for="about_title">Section Title:</label><br>
+            <input type="text" id="about_title" name="about_title" value="<?php echo esc_attr($about_title); ?>" class="widefat">
+        </p>
 
-    <div class="about-paragraphs">
-        <h4>About Paragraphs</h4>
-        <?php foreach ($about_paragraphs as $index => $paragraph) : ?>
-            <p>
-                <textarea name="about_paragraphs[]" rows="3" class="widefat"><?php echo esc_textarea($paragraph); ?></textarea>
-                <button type="button" class="button remove-paragraph">Remove Paragraph</button>
-            </p>
-        <?php endforeach; ?>
-        <button type="button" class="button add-paragraph">Add Paragraph</button>
-    </div>
-
-    <p>
-        <label for="about_image">About Image:</label><br>
-        <input type="hidden" id="about_image" name="about_image" value="<?php echo esc_attr($about_image); ?>">
-        <button type="button" class="button upload-image">Upload Image</button>
-        <div class="image-preview">
-            <?php if ($about_image) : ?>
-                <?php echo wp_get_attachment_image($about_image, 'thumbnail'); ?>
-            <?php endif; ?>
+        <div class="about-paragraphs">
+            <h4>About Paragraphs</h4>
+            <?php foreach ($about_paragraphs as $index => $paragraph) : ?>
+                <p>
+                    <textarea name="about_paragraphs[]" rows="3" class="widefat"><?php echo esc_textarea($paragraph); ?></textarea>
+                    <button type="button" class="button remove-paragraph">Remove Paragraph</button>
+                </p>
+            <?php endforeach; ?>
+            <button type="button" class="button add-paragraph">Add Paragraph</button>
         </div>
-    </p>
 
-    <div class="about-features">
-        <h4>Features</h4>
-        <?php foreach ($about_features as $index => $feature) : ?>
-            <div class="feature-item">
-                <p>
-                    <label>Icon (Lucide icon name):</label><br>
-                    <input type="text" name="about_features[<?php echo $index; ?>][icon]" value="<?php echo esc_attr($feature['icon']); ?>" class="widefat">
-                </p>
-                <p>
-                    <label>Title:</label><br>
-                    <input type="text" name="about_features[<?php echo $index; ?>][title]" value="<?php echo esc_attr($feature['title']); ?>" class="widefat">
-                </p>
-                <p>
-                    <label>Description:</label><br>
-                    <textarea name="about_features[<?php echo $index; ?>][description]" rows="2" class="widefat"><?php echo esc_textarea($feature['description']); ?></textarea>
-                </p>
-                <button type="button" class="button remove-feature">Remove Feature</button>
+        <p>
+            <label for="about_image">About Image:</label><br>
+            <input type="hidden" id="about_image" name="about_image" value="<?php echo esc_attr($about_image); ?>">
+            <button type="button" class="button upload-image">Upload Image</button>
+            <div class="image-preview">
+                <?php if ($about_image) : ?>
+                    <?php echo wp_get_attachment_image($about_image, 'thumbnail'); ?>
+                <?php endif; ?>
             </div>
-        <?php endforeach; ?>
-        <button type="button" class="button add-feature">Add Feature</button>
+        </p>
+
+        <div class="about-features">
+            <h4>Features</h4>
+            <?php foreach ($about_features as $index => $feature) : ?>
+                <div class="feature-item">
+                    <p>
+                        <label>Icon (Lucide icon name):</label><br>
+                        <input type="text" name="about_features[<?php echo $index; ?>][icon]" value="<?php echo esc_attr($feature['icon']); ?>" class="widefat">
+                    </p>
+                    <p>
+                        <label>Title:</label><br>
+                        <input type="text" name="about_features[<?php echo $index; ?>][title]" value="<?php echo esc_attr($feature['title']); ?>" class="widefat">
+                    </p>
+                    <p>
+                        <label>Description:</label><br>
+                        <textarea name="about_features[<?php echo $index; ?>][description]" rows="2" class="widefat"><?php echo esc_textarea($feature['description']); ?></textarea>
+                    </p>
+                    <button type="button" class="button remove-feature">Remove Feature</button>
+                </div>
+            <?php endforeach; ?>
+            <button type="button" class="button add-feature">Add Feature</button>
+        </div>
     </div>
-
-    <script>
-        jQuery(document).ready(function($) {
-            // Image Upload
-            $('.upload-image').click(function(e) {
-                e.preventDefault();
-                var button = $(this);
-                var customUploader = wp.media({
-                    title: 'Select Image',
-                    button: { text: 'Use this image' },
-                    multiple: false
-                }).on('select', function() {
-                    var attachment = customUploader.state().get('selection').first().toJSON();
-                    button.siblings('input[type="hidden"]').val(attachment.id);
-                    button.siblings('.image-preview').html('<img src="' + attachment.url + '" style="max-width:150px;">');
-                }).open();
-            });
-
-            // Add Paragraph
-            $('.add-paragraph').click(function() {
-                var newParagraph = '<p><textarea name="about_paragraphs[]" rows="3" class="widefat"></textarea>' +
-                                 '<button type="button" class="button remove-paragraph">Remove Paragraph</button></p>';
-                $(this).before(newParagraph);
-            });
-
-            // Remove Paragraph
-            $(document).on('click', '.remove-paragraph', function() {
-                $(this).parent('p').remove();
-            });
-
-            // Add Feature
-            $('.add-feature').click(function() {
-                var index = $('.feature-item').length;
-                var newFeature = '<div class="feature-item">' +
-                    '<p><label>Icon (Lucide icon name):</label><br>' +
-                    '<input type="text" name="about_features[' + index + '][icon]" class="widefat"></p>' +
-                    '<p><label>Title:</label><br>' +
-                    '<input type="text" name="about_features[' + index + '][title]" class="widefat"></p>' +
-                    '<p><label>Description:</label><br>' +
-                    '<textarea name="about_features[' + index + '][description]" rows="2" class="widefat"></textarea></p>' +
-                    '<button type="button" class="button remove-feature">Remove Feature</button>' +
-                    '</div>';
-                $(this).before(newFeature);
-            });
-
-            // Remove Feature
-            $(document).on('click', '.remove-feature', function() {
-                $(this).parent('.feature-item').remove();
-            });
-        });
-    </script>
     <?php
 }
 
@@ -860,36 +707,22 @@ function wades_contact_info_section_callback($post) {
 
 // Save meta box data
 function wades_save_about_meta($post_id) {
-    // If this is an autosave, our form has not been submitted, so we don't want to do anything.
-    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
-        return;
-    }
-
-    // Check if our nonce is set and verify it.
+    // Check if our nonce is set and verify it
     if (!isset($_POST['wades_about_meta_box_nonce']) || !wp_verify_nonce($_POST['wades_about_meta_box_nonce'], 'wades_about_meta_box')) {
         return;
     }
 
-    // Check the user's permissions.
+    // If this is an autosave, our form has not been submitted, so we don't want to do anything
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+
+    // Check the user's permissions
     if (!current_user_can('edit_post', $post_id)) {
         return;
     }
 
-    // Make sure we're working with a page
-    if (get_post_type($post_id) !== 'page') {
-        return;
-    }
-
-    // Check if this is the correct template
-    $template = get_page_template_slug($post_id);
-    if ($template && $template !== 'templates/about.php') {
-        return;
-    }
-
-    // Call shared meta save function
-    wades_save_shared_meta($post_id);
-
-    // Now it's safe to save the data
+    // Save the about section data
     if (isset($_POST['about_title'])) {
         update_post_meta($post_id, '_about_title', sanitize_text_field($_POST['about_title']));
     }
@@ -914,158 +747,32 @@ function wades_save_about_meta($post_id) {
         }
         update_post_meta($post_id, '_about_features', $features);
     }
-
-    // Save Brands Section
-    if (isset($_POST['brands_title'])) {
-        update_post_meta($post_id, '_brands_title', sanitize_text_field($_POST['brands_title']));
-    }
-    if (isset($_POST['brands_subtitle'])) {
-        update_post_meta($post_id, '_brands_subtitle', sanitize_text_field($_POST['brands_subtitle']));
-    }
-    if (isset($_POST['featured_brands'])) {
-        $brands = array();
-        foreach ($_POST['featured_brands'] as $brand) {
-            $brands[] = array(
-                'name' => sanitize_text_field($brand['name']),
-                'description' => wp_kses_post($brand['description']),
-                'features' => array_map('sanitize_text_field', $brand['features']),
-                'image' => absint($brand['image']),
-                'models' => array_map('sanitize_text_field', $brand['models'])
-            );
-        }
-        update_post_meta($post_id, '_featured_brands', $brands);
-    }
-
-    // Save Services Section
-    if (isset($_POST['services_title'])) {
-        update_post_meta($post_id, '_services_title', sanitize_text_field($_POST['services_title']));
-    }
-    if (isset($_POST['services_subtitle'])) {
-        update_post_meta($post_id, '_services_subtitle', sanitize_text_field($_POST['services_subtitle']));
-    }
-    if (isset($_POST['services_description'])) {
-        update_post_meta($post_id, '_services_description', wp_kses_post($_POST['services_description']));
-    }
-    if (isset($_POST['service_cards'])) {
-        $cards = array();
-        foreach ($_POST['service_cards'] as $card) {
-            $cards[] = array(
-                'icon' => sanitize_text_field($card['icon']),
-                'title' => sanitize_text_field($card['title']),
-                'description' => wp_kses_post($card['description'])
-            );
-        }
-        update_post_meta($post_id, '_service_cards', $cards);
-    }
-
-    // Save Testimonials Section
-    if (isset($_POST['testimonials_title'])) {
-        update_post_meta($post_id, '_testimonials_title', sanitize_text_field($_POST['testimonials_title']));
-    }
-    if (isset($_POST['testimonials_subtitle'])) {
-        update_post_meta($post_id, '_testimonials_subtitle', sanitize_text_field($_POST['testimonials_subtitle']));
-    }
-    if (isset($_POST['testimonials'])) {
-        $testimonials = array();
-        foreach ($_POST['testimonials'] as $testimonial) {
-            $testimonials[] = array(
-                'content' => wp_kses_post($testimonial['content']),
-                'author' => sanitize_text_field($testimonial['author'])
-            );
-        }
-        update_post_meta($post_id, '_testimonials', $testimonials);
-    }
-
-    // Save Contact Section
-    if (isset($_POST['contact_title'])) {
-        update_post_meta($post_id, '_contact_title', sanitize_text_field($_POST['contact_title']));
-    }
-    if (isset($_POST['contact_subtitle'])) {
-        update_post_meta($post_id, '_contact_subtitle', sanitize_text_field($_POST['contact_subtitle']));
-    }
-    if (isset($_POST['address'])) {
-        update_post_meta($post_id, '_address', sanitize_text_field($_POST['address']));
-    }
-    if (isset($_POST['business_hours'])) {
-        update_post_meta($post_id, '_business_hours', array_map('sanitize_text_field', $_POST['business_hours']));
-    }
-    if (isset($_POST['phone_numbers'])) {
-        update_post_meta($post_id, '_phone_numbers', array_map('sanitize_text_field', $_POST['phone_numbers']));
-    }
-    if (isset($_POST['email_addresses'])) {
-        update_post_meta($post_id, '_email_addresses', array_map('sanitize_email', $_POST['email_addresses']));
-    }
-    if (isset($_POST['service_areas'])) {
-        update_post_meta($post_id, '_service_areas', array_map('sanitize_text_field', $_POST['service_areas']));
-    }
-    if (isset($_POST['map_image'])) {
-        update_post_meta($post_id, '_map_image', absint($_POST['map_image']));
-    }
-
-    // Add to save_post function
-    if (isset($_POST['featured_boats'])) {
-        $boats = array();
-        foreach ($_POST['featured_boats'] as $boat) {
-            $boats[] = array(
-                'image' => absint($boat['image']),
-                'title' => sanitize_text_field($boat['title']),
-                'description' => wp_kses_post($boat['description']),
-                'price' => sanitize_text_field($boat['price']),
-                'link' => esc_url_raw($boat['link'])
-            );
-        }
-        update_post_meta($post_id, '_featured_boats', $boats);
-    }
-
-    // Save Financing Section
-    if (isset($_POST['financing_title'])) {
-        update_post_meta($post_id, '_financing_title', sanitize_text_field($_POST['financing_title']));
-    }
-    if (isset($_POST['financing_description'])) {
-        update_post_meta($post_id, '_financing_description', wp_kses_post($_POST['financing_description']));
-    }
-    if (isset($_POST['financing_options'])) {
-        $options = array();
-        foreach ($_POST['financing_options'] as $option) {
-            $options[] = array(
-                'title' => sanitize_text_field($option['title']),
-                'description' => wp_kses_post($option['description']),
-                'features' => array_map('sanitize_text_field', $option['features'])
-            );
-        }
-        update_post_meta($post_id, '_financing_options', $options);
-    }
-
-    // Save Contact Info Section
-    if (isset($_POST['contact_address'])) {
-        update_post_meta($post_id, '_contact_address', sanitize_text_field($_POST['contact_address']));
-    }
-    if (isset($_POST['contact_phone'])) {
-        update_post_meta($post_id, '_contact_phone', sanitize_text_field($_POST['contact_phone']));
-    }
-    if (isset($_POST['contact_email'])) {
-        update_post_meta($post_id, '_contact_email', sanitize_email($_POST['contact_email']));
-    }
-    if (isset($_POST['contact_hours'])) {
-        update_post_meta($post_id, '_contact_hours', wp_kses_post($_POST['contact_hours']));
-    }
-    if (isset($_POST['contact_map_embed'])) {
-        update_post_meta($post_id, '_contact_map_embed', wp_kses_post($_POST['contact_map_embed']));
-    }
-    if (isset($_POST['contact_form_shortcode'])) {
-        update_post_meta($post_id, '_contact_form_shortcode', sanitize_text_field($_POST['contact_form_shortcode']));
-    }
 }
 add_action('save_post', 'wades_save_about_meta');
 
 // Add JavaScript for dynamic fields
 add_action('admin_footer', function() {
     global $post;
-    if (!$post || get_page_template_slug($post->ID) !== 'templates/about.php') return;
+    if (!$post || get_page_template_slug($post->ID) !== 'templates/about.php') {
+        return;
+    }
     ?>
     <script>
         jQuery(document).ready(function($) {
-            // ... existing image upload code ...
+            // Image Upload
+            $('.upload-image').click(function(e) {
+                e.preventDefault();
+                var button = $(this);
+                var customUploader = wp.media({
+                    title: 'Select Image',
+                    button: { text: 'Use this image' },
+                    multiple: false
+                }).on('select', function() {
+                    var attachment = customUploader.state().get('selection').first().toJSON();
+                    button.siblings('input[type="hidden"]').val(attachment.id);
+                    button.siblings('.image-preview').html('<img src="' + attachment.url + '" style="max-width:150px;">');
+                }).open();
+            });
 
             // Add dynamic field handlers for new sections
             function addDynamicFieldHandler(addButtonClass, removeButtonClass, template) {

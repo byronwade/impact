@@ -237,6 +237,18 @@ require get_template_directory() . '/inc/meta-boxes/home-meta.php';
 require get_template_directory() . '/inc/meta-boxes/shared-meta.php';
 require get_template_directory() . '/inc/meta-boxes/boat-meta.php';
 
+// Load template files and meta boxes on init to prevent header issues
+function wades_load_template_files() {
+    require_once get_template_directory() . '/inc/post-types.php';
+    require_once get_template_directory() . '/inc/meta-boxes/about-meta.php';
+    require_once get_template_directory() . '/inc/meta-boxes/home-meta.php';
+    require_once get_template_directory() . '/inc/meta-boxes/shared-meta.php';
+    require_once get_template_directory() . '/inc/meta-boxes/boat-meta.php';
+    require_once get_template_directory() . '/inc/block-patterns/templates.php';
+    require_once get_template_directory() . '/inc/template-blocks.php';
+}
+add_action('init', 'wades_load_template_files', 5);
+
 /**
  * Helper function to get meta values
  */
@@ -452,4 +464,14 @@ function wades_add_meta_boxes($post_type, $post) {
     }
 }
 add_action('add_meta_boxes', 'wades_add_meta_boxes', 10, 2);
+
+/**
+ * Enqueue template-specific styles
+ */
+function wades_template_styles() {
+    if (is_page_template('templates/home.php')) {
+        wp_enqueue_style('wades-home-template', get_template_directory_uri() . '/assets/css/home-template.css', array(), _S_VERSION);
+    }
+}
+add_action('wp_enqueue_scripts', 'wades_template_styles');
 
