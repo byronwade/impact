@@ -1,28 +1,77 @@
 /* global jQuery, wp */
 jQuery(document).ready(($) => {
-	// Image Upload Handler
-	function initImageUpload() {
-		$(".upload-image").on("click", function (e) {
-			e.preventDefault();
-			const button = $(this);
-			const imageInput = button.siblings('input[type="hidden"]');
-			const imagePreview = button.siblings(".image-preview");
+	// Tab functionality
+	$(".tab-button").on("click", function () {
+		$(".tab-button").removeClass("active");
+		$(".tab-content").removeClass("active");
+		$(this).addClass("active");
+		$('.tab-content[data-tab="' + $(this).data("tab") + '"]').addClass("active");
+	});
 
-			const frame = wp.media({
-				title: "Select Image",
-				multiple: false,
-				library: { type: "image" },
+	// Section order sorting
+	$("#section-order").sortable({
+		handle: ".dashicons-menu",
+		update: function () {
+			var order = [];
+			$("#section-order li").each(function () {
+				order.push($(this).data("section"));
 			});
+			$("#section-order-input").val(order.join(","));
+		},
+	});
 
-			frame.on("select", () => {
-				const attachment = frame.state().get("selection").first().toJSON();
-				imageInput.val(attachment.id);
-				imagePreview.html(`<img src="${attachment.url}" alt="">`);
-			});
+	// Image upload functionality
+	$(".upload-image").on("click", function (e) {
+		e.preventDefault();
+		var button = $(this);
+		var imagePreview = button.siblings(".image-preview");
+		var imageInput = button.siblings('input[type="hidden"]');
 
-			frame.open();
+		var frame = wp.media({
+			title: "Select or Upload Image",
+			button: {
+				text: "Use this image",
+			},
+			multiple: false,
+		});
+
+		frame.on("select", function () {
+			var attachment = frame.state().get("selection").first().toJSON();
+			imageInput.val(attachment.id);
+			imagePreview.html('<img src="' + attachment.url + '" style="max-width:150px;">');
+		});
+
+		frame.open();
+	});
+
+	// Add/Remove functionality for dynamic lists
+	function setupDynamicList(addButton, container, template) {
+		$(addButton).on("click", function () {
+			var index = container.children().length;
+			var newItem = template.replace(/\{index\}/g, index);
+			container.append(newItem);
+		});
+
+		$(document).on("click", ".remove-item", function () {
+			$(this).closest(".dynamic-item").remove();
 		});
 	}
+
+	// Setup for features list
+	setupDynamicList(".add-feature", $(".features-list"), '<div class="dynamic-item"><input type="text" name="service_features[]" class="widefat" placeholder="Enter a feature"><button type="button" class="button remove-item">Remove</button></div>');
+
+	// Setup for reasons list
+	setupDynamicList(".add-reason", $(".reasons-list"), '<div class="dynamic-item"><input type="text" name="why_choose_us[]" class="widefat" placeholder="Enter a reason"><button type="button" class="button remove-item">Remove</button></div>');
+
+	// Setup for policies list
+	setupDynamicList(".add-policy", $(".policies-list"), '<div class="dynamic-item"><input type="text" name="service_policies[]" class="widefat" placeholder="Enter a policy"><button type="button" class="button remove-item">Remove</button></div>');
+
+	// Make lists sortable
+	$(".features-list, .reasons-list, .policies-list").sortable({
+		handle: ".dashicons-menu",
+		items: ".dynamic-item",
+		cursor: "move",
+	});
 
 	// Services Grid Handler
 	function initServicesGrid() {
@@ -63,32 +112,6 @@ jQuery(document).ready(($) => {
 
 		$(".services-grid").sortable({
 			handle: ".card-header",
-			cursor: "move",
-			opacity: 0.6,
-		});
-	}
-
-	// Why Choose Us Handler
-	function initReasons() {
-		$(".add-reason").on("click", () => {
-			const newReason = `
-                <p>
-                    <input type="text" name="why_choose_us[]" class="widefat">
-                    <button type="button" class="button remove-reason">Remove</button>
-                </p>
-            `;
-			$(".reasons-list").append(newReason);
-		});
-
-		$(document).on("click", ".remove-reason", function () {
-			$(this)
-				.closest("p")
-				.fadeOut(() => {
-					$(this).closest("p").remove();
-				});
-		});
-
-		$(".reasons-list").sortable({
 			cursor: "move",
 			opacity: 0.6,
 		});
@@ -197,9 +220,7 @@ jQuery(document).ready(($) => {
 
 	// Initialize all functionality
 	function init() {
-		initImageUpload();
 		initServicesGrid();
-		initReasons();
 		initPackages();
 		initPolicies();
 	}

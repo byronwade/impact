@@ -25,9 +25,19 @@ function wades_boat_details_callback($post) {
         'year' => get_post_meta($post->ID, '_boat_year', true),
         'type' => get_post_meta($post->ID, '_boat_type', true),
         'model' => get_post_meta($post->ID, '_boat_model', true),
+        'featured' => get_post_meta($post->ID, '_boat_featured', true),
+        'length' => get_post_meta($post->ID, '_boat_length', true),
+        'capacity' => get_post_meta($post->ID, '_boat_capacity', true),
+        'speed' => get_post_meta($post->ID, '_boat_speed', true)
     );
     ?>
     <div class="boat-meta-box">
+        <p>
+            <label for="boat_featured">
+                <input type="checkbox" id="boat_featured" name="boat_featured" value="1" <?php checked($boat_meta['featured'], '1'); ?>>
+                Feature this boat on homepage
+            </label>
+        </p>
         <p>
             <label for="boat_condition">Condition:</label>
             <select name="boat_condition" id="boat_condition" class="widefat">
@@ -59,6 +69,18 @@ function wades_boat_details_callback($post) {
             <label for="boat_model">Model:</label>
             <input type="text" id="boat_model" name="boat_model" value="<?php echo esc_attr($boat_meta['model']); ?>" class="widefat">
         </p>
+        <p>
+            <label for="boat_length">Length (ft):</label>
+            <input type="number" id="boat_length" name="boat_length" value="<?php echo esc_attr($boat_meta['length']); ?>" class="widefat">
+        </p>
+        <p>
+            <label for="boat_capacity">Capacity (guests):</label>
+            <input type="number" id="boat_capacity" name="boat_capacity" value="<?php echo esc_attr($boat_meta['capacity']); ?>" class="widefat">
+        </p>
+        <p>
+            <label for="boat_speed">Speed (knots):</label>
+            <input type="number" id="boat_speed" name="boat_speed" value="<?php echo esc_attr($boat_meta['speed']); ?>" class="widefat">
+        </p>
     </div>
     <?php
 }
@@ -87,6 +109,9 @@ function wades_save_boat_meta($post_id) {
         'boat_year' => 'number',
         'boat_type' => 'text',
         'boat_model' => 'text',
+        'boat_length' => 'number',
+        'boat_capacity' => 'number',
+        'boat_speed' => 'number'
     );
 
     foreach ($fields as $field => $type) {
@@ -100,5 +125,9 @@ function wades_save_boat_meta($post_id) {
             update_post_meta($post_id, '_' . $field, $value);
         }
     }
+
+    // Save featured status
+    $featured = isset($_POST['boat_featured']) ? '1' : '';
+    update_post_meta($post_id, '_boat_featured', $featured);
 }
 add_action('save_post_boat', 'wades_save_boat_meta'); 

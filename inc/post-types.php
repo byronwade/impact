@@ -70,37 +70,6 @@ function wades_register_post_types() {
         'rewrite'              => array('slug' => 'services'),
         'show_in_rest'          => true,
     ));
-
-    // Brands Post Type
-    register_post_type('brand', array(
-        'labels' => array(
-            'name'                  => _x('Brands', 'Post type general name', 'wades'),
-            'singular_name'         => _x('Brand', 'Post type singular name', 'wades'),
-            'menu_name'            => _x('Brands', 'Admin Menu text', 'wades'),
-            'name_admin_bar'       => _x('Brand', 'Add New on Toolbar', 'wades'),
-            'add_new'              => __('Add New', 'wades'),
-            'add_new_item'         => __('Add New Brand', 'wades'),
-            'new_item'             => __('New Brand', 'wades'),
-            'edit_item'            => __('Edit Brand', 'wades'),
-            'view_item'            => __('View Brand', 'wades'),
-            'all_items'            => __('All Brands', 'wades'),
-            'search_items'         => __('Search Brands', 'wades'),
-            'not_found'            => __('No brands found.', 'wades'),
-            'not_found_in_trash'   => __('No brands found in Trash.', 'wades'),
-        ),
-        'public'                => true,
-        'show_ui'               => true,
-        'show_in_menu'          => true,
-        'show_in_nav_menus'     => true,
-        'show_in_admin_bar'     => true,
-        'menu_position'         => 7,
-        'menu_icon'             => 'dashicons-awards',
-        'hierarchical'          => false,
-        'supports'              => array('title', 'editor', 'thumbnail', 'excerpt', 'custom-fields'),
-        'has_archive'           => true,
-        'rewrite'              => array('slug' => 'brands'),
-        'show_in_rest'          => true,
-    ));
 }
 add_action('init', 'wades_register_post_types');
 
@@ -279,47 +248,6 @@ function wades_add_custom_fields() {
                         'param' => 'post_type',
                         'operator' => '==',
                         'value' => 'service',
-                    ),
-                ),
-            ),
-        ));
-
-        // Brand Fields
-        acf_add_local_field_group(array(
-            'key' => 'group_brand_details',
-            'title' => 'Brand Details',
-            'fields' => array(
-                array(
-                    'key' => 'field_brand_logo',
-                    'label' => 'Brand Logo',
-                    'name' => 'brand_logo',
-                    'type' => 'image',
-                    'instructions' => 'Upload the brand logo',
-                    'required' => 1,
-                    'return_format' => 'array',
-                ),
-                array(
-                    'key' => 'field_brand_website',
-                    'label' => 'Website',
-                    'name' => 'brand_website',
-                    'type' => 'url',
-                    'instructions' => 'Enter the brand website URL',
-                ),
-                array(
-                    'key' => 'field_brand_featured',
-                    'label' => 'Featured Brand',
-                    'name' => 'brand_featured',
-                    'type' => 'true_false',
-                    'instructions' => 'Mark this brand as featured',
-                    'ui' => 1,
-                ),
-            ),
-            'location' => array(
-                array(
-                    array(
-                        'param' => 'post_type',
-                        'operator' => '==',
-                        'value' => 'brand',
                     ),
                 ),
             ),

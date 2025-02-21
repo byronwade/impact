@@ -32,6 +32,15 @@ function wades_add_home_meta_boxes() {
     );
 
     add_meta_box(
+        'wades_home_brands',
+        'Featured Brands Section',
+        'wades_home_brands_callback',
+        'page',
+        'normal',
+        'high'
+    );
+
+    add_meta_box(
         'wades_home_sections',
         'Page Sections',
         'wades_home_sections_callback',
@@ -109,6 +118,21 @@ function wades_save_home_meta($post_id) {
             }
             update_post_meta($post_id, '_home_sections', $sections);
         }
+    }
+
+    // Save brands
+    if (isset($_POST['home_brands']) && is_array($_POST['home_brands'])) {
+        $brands = array();
+        foreach ($_POST['home_brands'] as $brand) {
+            if (!empty($brand['name'])) {
+                $brands[] = array(
+                    'name' => sanitize_text_field($brand['name']),
+                    'url' => esc_url_raw($brand['url']),
+                    'image' => absint($brand['image'])
+                );
+            }
+        }
+        update_post_meta($post_id, '_home_brands', $brands);
     }
 
     // Hero Section
@@ -616,6 +640,105 @@ function wades_home_hero_callback($post) {
             </div>
         </div>
     </div>
+    <?php
+}
+
+// Add this new function for the brands meta box
+function wades_home_brands_callback($post) {
+    $brands = get_post_meta($post->ID, '_home_brands', true) ?: array(
+        array(
+            'image' => '',
+            'name' => 'Sea Fox',
+            'url' => ''
+        ),
+        array(
+            'image' => '',
+            'name' => 'Bennington',
+            'url' => ''
+        ),
+        array(
+            'image' => '',
+            'name' => 'Yamaha',
+            'url' => ''
+        ),
+        array(
+            'image' => '',
+            'name' => 'Mercury',
+            'url' => ''
+        ),
+        array(
+            'image' => '',
+            'name' => 'Suzuki',
+            'url' => ''
+        )
+    );
+    ?>
+    <div class="brands-meta-box">
+        <div class="brands-list">
+            <?php foreach ($brands as $index => $brand) : ?>
+                <div class="brand-item" style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #eee;">
+                    <h4>Brand <?php echo $index + 1; ?></h4>
+                    <p>
+                        <label>Brand Name:</label><br>
+                        <input type="text" name="home_brands[<?php echo $index; ?>][name]" 
+                               value="<?php echo esc_attr($brand['name']); ?>" class="widefat">
+                    </p>
+                    <p>
+                        <label>Brand URL:</label><br>
+                        <input type="url" name="home_brands[<?php echo $index; ?>][url]" 
+                               value="<?php echo esc_url($brand['url']); ?>" class="widefat">
+                    </p>
+                    <p>
+                        <label>Brand Logo:</label><br>
+                        <input type="hidden" name="home_brands[<?php echo $index; ?>][image]" 
+                               value="<?php echo esc_attr($brand['image']); ?>" class="brand-image-input">
+                        <button type="button" class="button upload-brand-image">Upload Logo</button>
+                        <button type="button" class="button remove-brand-image" style="color: #a00;">Remove Logo</button>
+                        <div class="brand-image-preview" style="margin-top: 10px;">
+                            <?php if ($brand['image']) : ?>
+                                <?php echo wp_get_attachment_image($brand['image'], 'thumbnail'); ?>
+                            <?php endif; ?>
+                        </div>
+                    </p>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+
+    <script>
+    jQuery(document).ready(function($) {
+        $('.upload-brand-image').click(function(e) {
+            e.preventDefault();
+            var button = $(this);
+            var container = button.closest('.brand-item');
+            var imageInput = container.find('.brand-image-input');
+            var imagePreview = container.find('.brand-image-preview');
+
+            var frame = wp.media({
+                title: 'Select Brand Logo',
+                button: {
+                    text: 'Use this image'
+                },
+                multiple: false
+            });
+
+            frame.on('select', function() {
+                var attachment = frame.state().get('selection').first().toJSON();
+                imageInput.val(attachment.id);
+                imagePreview.html('<img src="' + attachment.url + '" style="max-width: 150px;">');
+            });
+
+            frame.open();
+        });
+
+        $('.remove-brand-image').click(function(e) {
+            e.preventDefault();
+            var container = $(this).closest('.brand-item');
+            container.find('.brand-image-input').val('');
+            container.find('.brand-image-preview').empty();
+        });
+    });
+    </script>
     <?php
 }
 

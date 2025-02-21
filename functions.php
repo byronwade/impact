@@ -214,6 +214,11 @@ add_action('init', 'wades_register_block_styles');
 require get_template_directory() . '/inc/theme-settings.php';
 
 /**
+ * Load Instagram feed functionality
+ */
+require get_template_directory() . '/inc/instagram-feed.php';
+
+/**
  * Load custom navigation walkers
  */
 require get_template_directory() . '/inc/class-wade-nav-walker.php';
@@ -223,7 +228,6 @@ require get_template_directory() . '/inc/class-wade-mobile-nav-walker.php';
  * Load post types
  */
 require get_template_directory() . '/inc/post-types/service.php';
-require get_template_directory() . '/inc/post-types/brand.php';
 
 /**
  * Custom Post Types and Taxonomies
@@ -237,6 +241,11 @@ require get_template_directory() . '/inc/meta-boxes/about-meta.php';
 require get_template_directory() . '/inc/meta-boxes/home-meta.php';
 require get_template_directory() . '/inc/meta-boxes/shared-meta.php';
 require get_template_directory() . '/inc/meta-boxes/boat-meta.php';
+
+/**
+ * Include meta boxes
+ */
+require_once get_template_directory() . '/inc/meta-boxes/services-meta.php';
 
 // Load template files and meta boxes on init to prevent header issues
 function wades_load_template_files() {
@@ -488,4 +497,70 @@ function wades_save_featured_post_meta($post_id) {
     update_post_meta($post_id, '_is_featured_post', $is_featured);
 }
 add_action('save_post', 'wades_save_featured_post_meta');
+
+/**
+ * Custom comment callback function
+ */
+function wades_comment_callback($comment, $args, $depth) {
+    $tag = ('div' === $args['style']) ? 'div' : 'li';
+    ?>
+    <<?php echo $tag; ?> id="comment-<?php comment_ID(); ?>" <?php comment_class(empty($args['has_children']) ? 'bg-white rounded-xl shadow-md p-6' : 'bg-white rounded-xl shadow-md p-6 ml-12 mt-6', null, null, false); ?>>
+        <article id="div-comment-<?php comment_ID(); ?>" class="comment-body">
+            <footer class="comment-meta mb-4">
+                <div class="flex items-start gap-4">
+                    <?php
+                    if (0 != $args['avatar_size']) {
+                        echo get_avatar($comment, $args['avatar_size'], '', '', array('class' => 'rounded-full'));
+                    }
+                    ?>
+                    <div>
+                        <div class="comment-author vcard">
+                            <?php printf('<b class="fn">%s</b>', get_comment_author_link()); ?>
+                        </div>
+                        <div class="comment-metadata">
+                            <time datetime="<?php comment_time('c'); ?>" class="text-sm text-muted-foreground">
+                                <?php
+                                printf(
+                                    '<a href="%s" class="hover:text-primary transition-colors">%s</a>',
+                                    esc_url(get_comment_link($comment->comment_ID)),
+                                    sprintf(
+                                        /* translators: 1: comment date, 2: comment time */
+                                        __('%1$s at %2$s', 'wades'),
+                                        get_comment_date('', $comment),
+                                        get_comment_time()
+                                    )
+                                );
+                                ?>
+                            </time>
+                            <?php edit_comment_link(__('Edit', 'wades'), ' <span class="edit-link text-sm text-primary hover:text-primary/80 transition-colors">', '</span>'); ?>
+                        </div>
+                    </div>
+                </div>
+
+                <?php if ('0' == $comment->comment_approved) : ?>
+                    <p class="comment-awaiting-moderation text-sm text-yellow-600 mt-2"><?php _e('Your comment is awaiting moderation.', 'wades'); ?></p>
+                <?php endif; ?>
+            </footer>
+
+            <div class="comment-content prose prose-sm max-w-none">
+                <?php comment_text(); ?>
+            </div>
+
+            <?php
+            comment_reply_link(array_merge($args, array(
+                'add_below' => 'div-comment',
+                'depth'     => $depth,
+                'max_depth' => $args['max_depth'],
+                'before'    => '<div class="reply mt-4">',
+                'after'     => '</div>',
+                'reply_text' => sprintf(
+                    '<span class="inline-flex items-center text-sm font-medium text-primary hover:text-primary/80 transition-colors">%s <i data-lucide="reply" class="w-4 h-4 ml-1"></i></span>',
+                    __('Reply', 'wades')
+                ),
+            )));
+            ?>
+        </article>
+    </<?php echo $tag; ?>>
+    <?php
+}
 

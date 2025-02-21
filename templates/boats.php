@@ -8,6 +8,8 @@
 get_header(); ?>
 
 <main role="main" aria-label="Main content" class="flex-grow">
+    <?php get_template_part('template-parts/template-header'); ?>
+
     <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
         <h1 class="text-4xl font-bold text-center mb-8"><?php echo wades_get_meta('boats_title') ?: 'Our Boat Inventory'; ?></h1>
         
@@ -117,7 +119,7 @@ get_header(); ?>
                         <a href="<?php the_permalink(); ?>" 
                            class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2">
                             View Details
-                            <i data-lucide="chevron-right" class="ml-2 h-4 w-4"></i>
+                            <i data-lucide="chevron-right" class="ml-2 h-4 h-4"></i>
                         </a>
                     </div>
                 </div>

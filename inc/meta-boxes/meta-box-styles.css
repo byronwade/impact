@@ -1,0 +1,128 @@
+.meta-box-tabs {
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 0;
+}
+
+.tab-button {
+    padding: 10px 20px;
+    margin-right: 5px;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.tab-button.active {
+    border-bottom: 2px solid #2271b1;
+    font-weight: bold;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.meta-box-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.meta-box-section h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+}
+
+.section-order-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.section-order-list li {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 5px;
+    background: #fff;
+    border: 1px solid #ddd;
+    cursor: move;
+}
+
+.section-order-list .dashicons {
+    margin-right: 10px;
+    color: #666;
+}
+
+.dynamic-list .dynamic-item {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.card-header {
+    padding: 10px;
+    background: #f5f5f5;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-body {
+    padding: 15px;
+}
+
+.image-preview {
+    margin-top: 10px;
+}
+
+.image-preview img {
+    max-width: 150px;
+    height: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 2px;
+}
+
+.icon-selector {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.description {
+    color: #666;
+    font-style: italic;
+    margin-top: 5px;
+    display: block;
+}
+
+/* WordPress Admin Overrides */
+.widefat {
+    margin: 8px 0;
+}
+
+.button {
+    margin: 2px;
+}
+
+input[type="checkbox"] {
+    margin: 0 8px 0 0;
+}
+
+textarea {
+    min-height: 60px;
+}
