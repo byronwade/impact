@@ -1,0 +1,55 @@
+/* Front-end styles */
+.wp-block-wades-hero {
+    position: relative;
+    background: linear-gradient(to right, var(--wp--preset--color--primary), var(--wp--preset--color--secondary));
+    color: white;
+    padding: 6rem 0;
+}
+
+.wp-block-wades-hero .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.wp-block-wades-hero .content {
+    max-width: 56rem;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.wp-block-wades-hero h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+}
+
+.wp-block-wades-hero p {
+    font-size: 1.25rem;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.wp-block-wades-hero .cta-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.wp-block-wades-hero .primary-cta {
+    background-color: white;
+    color: var(--wp--preset--color--primary);
+    padding: 0.75rem 2rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+.wp-block-wades-hero .secondary-cta {
+    border: 2px solid white;
+    padding: 0.75rem 2rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}

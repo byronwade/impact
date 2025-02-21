@@ -1,0 +1,402 @@
+/* Brand Admin Styles */
+.brand-meta-box {
+    margin: 20px 0;
+}
+
+/* Card Styles */
+.card {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .04);
+    margin-bottom: 15px;
+    border-radius: 4px;
+}
+
+.card-header {
+    padding: 12px 15px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #ccd0d4;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 4px 4px 0 0;
+}
+
+.card-header:hover {
+    background: #f0f0f1;
+}
+
+.card-body {
+    padding: 15px;
+}
+
+.card-actions {
+    display: flex;
+    gap: 5px;
+}
+
+/* Model Item Styles */
+.model-item {
+    position: relative;
+}
+
+.model-title {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.model-item .card-body {
+    background: #fff;
+}
+
+/* Feature Item Styles */
+.feature-item {
+    margin-bottom: 10px;
+}
+
+.feature-input {
+    flex: 1;
+    margin-right: 10px;
+}
+
+/* Button Styles */
+.button.move-model,
+.button.move-feature {
+    cursor: move;
+    color: #50575e;
+}
+
+.button.remove-model,
+.button.remove-feature {
+    color: #cc1818;
+}
+
+/* Search and Filter */
+.models-filter {
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+}
+
+#search-models {
+    width: 100%;
+    max-width: 300px;
+}
+
+/* Image Preview */
+.image-preview {
+    margin-top: 10px;
+}
+
+.image-preview img {
+    border: 1px solid #ccd0d4;
+    padding: 2px;
+    border-radius: 2px;
+}
+
+/* Drag and Drop */
+.ui-sortable-helper {
+    background: #fff !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, .2) !important;
+}
+
+.ui-sortable-placeholder {
+    visibility: visible !important;
+    background: #f8f9fa;
+    border: 2px dashed #ccd0d4;
+    margin-bottom: 15px;
+}
+
+/* Helper Classes */
+.description {
+    color: #666;
+    font-style: italic;
+    margin-top: 4px;
+    display: block;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 782px) {
+    .card-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .card-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .feature-input {
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+}
+
+/* ACF-style Admin CSS */
+.acf-fields {
+    position: relative;
+    margin: 0;
+    padding: 0;
+}
+
+.acf-field-group {
+    padding: 20px 12px;
+    border-top: 1px solid #eee;
+    background: #fff;
+}
+
+.acf-field-group:first-child {
+    border-top: none;
+}
+
+.acf-label {
+    vertical-align: top;
+    margin: 0 0 10px;
+}
+
+.acf-label label {
+    display: block;
+    font-weight: 600;
+    margin: 0 0 3px;
+    padding: 0;
+}
+
+.acf-label p.description {
+    display: block;
+    color: #666;
+    font-size: 13px;
+    line-height: 1.4em;
+    margin: 3px 0 0;
+}
+
+.acf-input {
+    vertical-align: top;
+}
+
+.acf-input input[type="text"],
+.acf-input input[type="url"],
+.acf-input textarea,
+.acf-input select {
+    width: 100%;
+    padding: 4px 8px;
+    margin: 0;
+    box-sizing: border-box;
+    font-size: 14px;
+    line-height: 1.4;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.07);
+    background-color: #fff;
+    color: #32373c;
+    outline: none;
+    transition: 0.05s border-color ease-in-out;
+}
+
+.acf-input textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+.acf-input select {
+    padding-right: 24px;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg"><path d="M5 6l5 5 5-5 2 1-7 7-7-7 2-1z" fill="%23555"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 5px top 55%;
+    background-size: 16px 16px;
+}
+
+/* True/False Field */
+.acf-true-false {
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Repeater Field */
+.acf-repeater {
+    margin: -8px;
+}
+
+.acf-table {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-spacing: 0;
+    border-radius: 3px;
+    margin-bottom: 10px;
+}
+
+.acf-repeater-items {
+    margin: 0;
+    padding: 0;
+}
+
+.acf-row {
+    display: flex;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.25s ease;
+}
+
+.acf-row:last-child {
+    border-bottom: none;
+}
+
+.acf-row:hover {
+    background-color: #f9f9f9;
+}
+
+.acf-row-handle {
+    width: 36px;
+    text-align: center;
+    vertical-align: middle;
+    position: relative;
+    background: #f9f9f9;
+    border-right: 1px solid #e1e1e1;
+    cursor: move;
+}
+
+.acf-row-handle.order {
+    border-right: 1px solid #e1e1e1;
+    background: #f9f9f9;
+    cursor: move;
+    color: #aaa;
+    text-shadow: #fff 0 1px 0;
+    padding: 10px 0;
+}
+
+.acf-row-handle.remove {
+    border-left: 1px solid #e1e1e1;
+    background: #f9f9f9;
+}
+
+.acf-row-handle .reorder-handle {
+    display: block;
+    font-size: 18px;
+    line-height: 1;
+    color: #999;
+    text-shadow: 0 1px 0 #fff;
+    cursor: move;
+}
+
+.acf-row-handle .acf-icon {
+    display: block;
+    height: 100%;
+    width: 100%;
+    text-align: center;
+    background: transparent;
+    border: none;
+    padding: 8px 0;
+    line-height: 1;
+    cursor: pointer;
+    color: #999;
+    font-size: 16px;
+}
+
+.acf-row-handle .acf-icon:hover {
+    color: #f00;
+}
+
+.acf-fields {
+    flex: 1;
+    padding: 15px 12px;
+}
+
+/* Image Uploader */
+.acf-image-uploader {
+    position: relative;
+}
+
+.acf-image-uploader .image-wrap {
+    position: relative;
+    max-width: 150px;
+    margin: 0 0 5px;
+}
+
+.acf-image-uploader .image-wrap img {
+    width: 100%;
+    height: auto;
+    display: block;
+    min-width: 30px;
+    min-height: 30px;
+    background: #f1f1f1;
+    margin: 0;
+    padding: 0;
+}
+
+.acf-image-uploader .acf-button {
+    margin: 0;
+}
+
+.acf-actions {
+    text-align: right;
+    padding: 10px;
+}
+
+.acf-button {
+    display: inline-block;
+    text-decoration: none;
+    font-size: 13px;
+    line-height: 2.15384615;
+    min-height: 30px;
+    margin: 0;
+    padding: 0 10px;
+    cursor: pointer;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 3px;
+    white-space: nowrap;
+    box-sizing: border-box;
+    background: #f7f7f7;
+    border-color: #ccc;
+    box-shadow: 0 1px 0 #ccc;
+    vertical-align: top;
+    color: #555;
+}
+
+.acf-button.button-primary {
+    background: #2271b1;
+    border-color: #2271b1;
+    color: #fff;
+    text-decoration: none;
+    text-shadow: none;
+}
+
+.acf-button:hover {
+    background: #f0f0f0;
+    border-color: #999;
+    color: #23282d;
+}
+
+.acf-button.button-primary:hover {
+    background: #135e96;
+    border-color: #135e96;
+    color: #fff;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 782px) {
+    .acf-fields {
+        padding: 10px 8px;
+    }
+
+    .acf-label {
+        margin-bottom: 5px;
+    }
+
+    .acf-input input[type="text"],
+    .acf-input input[type="url"],
+    .acf-input textarea,
+    .acf-input select {
+        font-size: 16px;
+        padding: 6px 10px;
+    }
+
+    .acf-row-handle {
+        width: 30px;
+    }
+}

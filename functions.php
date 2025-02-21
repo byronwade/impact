@@ -475,3 +475,9 @@ function wades_template_styles() {
 }
 add_action('wp_enqueue_scripts', 'wades_template_styles');
 
+/**
+ * Load post types
+ */
+require get_template_directory() . '/inc/post-types/service.php';
+require get_template_directory() . '/inc/post-types/brand.php';
+
