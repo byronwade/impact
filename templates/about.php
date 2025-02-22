@@ -11,7 +11,7 @@ get_template_part('template-parts/template-header');
 
 <main role="main" aria-label="Main content" class="flex-grow">
     <div class="bg-gray-50">
-        <div class="container mx-auto px-4 -mt-16 relative z-10 space-y-24 max-w-7xl pb-24">
+        <div class="container mx-auto px-4 relative z-10 space-y-24 max-w-7xl pb-24">
             <!-- Our Story Section -->
             <section class="bg-white rounded-2xl shadow-xl p-8 md:p-12">
                 <div class="grid md:grid-cols-2 gap-12">
@@ -96,7 +96,7 @@ get_template_part('template-parts/template-header');
                             'description' => 'Our technicians are factory trained and certified by leading marine manufacturers'
                         ),
                         array(
-                            'icon' => 'tool',
+                            'icon' => 'wrench',
                             'title' => 'Expert Service',
                             'description' => 'Comprehensive maintenance, repairs, and winterization services'
                         ),

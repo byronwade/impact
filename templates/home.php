@@ -22,13 +22,13 @@ $hero_meta = array(
         'value' => get_post_meta(get_the_ID(), '_hero_rating_value', true) ?: 4.9
     ),
     'primaryCta' => array(
-        'label' => get_post_meta(get_the_ID(), '_hero_primary_cta_label', true) ?: 'Schedule Service',
-        'link' => get_post_meta(get_the_ID(), '_hero_primary_cta_link', true) ?: '/schedule',
-        'icon' => get_post_meta(get_the_ID(), '_hero_primary_cta_icon', true) ?: 'calendar'
+        'label' => get_post_meta(get_the_ID(), '_hero_primary_cta_label', true) ?: 'See our Inventory',
+        'page_id' => get_post_meta(get_the_ID(), '_hero_primary_cta_page', true) ?: get_page_by_path('boats')->ID,
+        'icon' => get_post_meta(get_the_ID(), '_hero_primary_cta_icon', true) ?: 'anchor'
     ),
     'secondaryCta' => array(
         'label' => get_post_meta(get_the_ID(), '_hero_secondary_cta_label', true) ?: 'View Our Services',
-        'link' => get_post_meta(get_the_ID(), '_hero_secondary_cta_link', true) ?: '/services',
+        'page_id' => get_post_meta(get_the_ID(), '_hero_secondary_cta_page', true) ?: get_page_by_path('services')->ID,
         'icon' => get_post_meta(get_the_ID(), '_hero_secondary_cta_icon', true) ?: 'chevron-right'
     )
 );
@@ -37,7 +37,7 @@ $hero_meta = array(
 $cta_title = get_post_meta(get_the_ID(), '_cta_title', true) ?: 'Ready to Experience the Best in Boating?';
 $cta_description = get_post_meta(get_the_ID(), '_cta_description', true) ?: 'Join the Impact Marine family and discover why we\'re Georgia\'s premier boat dealer.';
 $cta_button_text = get_post_meta(get_the_ID(), '_cta_button_text', true) ?: 'Contact Us Today';
-$cta_button_link = get_post_meta(get_the_ID(), '_cta_button_link', true) ?: '/contact';
+$cta_button_page_id = get_post_meta(get_the_ID(), '_cta_button_page', true) ?: get_page_by_path('contact')->ID;
 
 // Default sections configuration if not set
 if (!is_array($sections)) {
@@ -62,19 +62,39 @@ if (!is_array($sections)) {
             'order' => 40,
             'title' => 'Services Section'
         ),
+        'stats' => array(
+            'enabled' => true,
+            'order' => 45,
+            'title' => 'Statistics'
+        ),
         'testimonials' => array(
             'enabled' => true,
             'order' => 50,
             'title' => 'Testimonials'
         ),
-        'social' => array(
+        'certification' => array(
+            'enabled' => true,
+            'order' => 55,
+            'title' => 'Certifications'
+        ),
+        'featured_articles' => array(
             'enabled' => true,
             'order' => 60,
+            'title' => 'Featured Articles'
+        ),
+        'faq' => array(
+            'enabled' => true,
+            'order' => 65,
+            'title' => 'FAQ'
+        ),
+        'social' => array(
+            'enabled' => true,
+            'order' => 70,
             'title' => 'Social Feed'
         ),
         'cta' => array(
             'enabled' => true,
-            'order' => 70,
+            'order' => 80,
             'title' => 'Call to Action'
         )
     );
@@ -145,17 +165,17 @@ uasort($sections, function($a, $b) {
 
                             <div class="flex flex-wrap gap-4 pt-4">
                                 <?php if ($hero_meta['primaryCta']['label']) : ?>
-                                    <a href="<?php echo esc_url($hero_meta['primaryCta']['link']); ?>" 
+                                    <a href="<?php echo esc_url(get_permalink($hero_meta['primaryCta']['page_id'])); ?>" 
                                        class="group inline-flex items-center px-8 py-4 text-lg font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all duration-300 shadow-lg hover:shadow-blue-500/25">
-                                        <?php if ($hero_meta['primaryCta']['icon'] === 'calendar') : ?>
-                                            <i data-lucide="calendar" class="w-5 h-5 mr-2 transition-transform group-hover:scale-110"></i>
+                                        <?php if ($hero_meta['primaryCta']['icon'] === 'anchor') : ?>
+                                            <i data-lucide="anchor" class="w-5 h-5 mr-2 transition-transform group-hover:scale-110"></i>
                                         <?php endif; ?>
                                         <?php echo esc_html($hero_meta['primaryCta']['label']); ?>
                                     </a>
                                 <?php endif; ?>
 
                                 <?php if ($hero_meta['secondaryCta']['label']) : ?>
-                                    <a href="<?php echo esc_url($hero_meta['secondaryCta']['link']); ?>" 
+                                    <a href="<?php echo esc_url(get_permalink($hero_meta['secondaryCta']['page_id'])); ?>" 
                                        class="group inline-flex items-center px-8 py-4 text-lg font-medium bg-white/10 backdrop-blur-sm text-white border border-white/20 hover:bg-white/20 rounded-lg transition-all duration-300">
                                         <?php echo esc_html($hero_meta['secondaryCta']['label']); ?>
                                         <?php if ($hero_meta['secondaryCta']['icon'] === 'chevron-right') : ?>
@@ -460,8 +480,8 @@ uasort($sections, function($a, $b) {
                         <h3 class="text-2xl font-bold text-white mb-4">Ready to Experience Expert Service?</h3>
                         <p class="text-lg text-blue-100 mb-8">Our certified technicians are ready to help with all your marine service needs.</p>
                         <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                            <a href="/services" 
-                               class="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-blue-600 bg-white hover:bg-blue-50 rounded-lg transition-all duration-300 shadow-lg">
+                            <a href="<?php echo esc_url(get_permalink(get_page_by_path('services')->ID)); ?>" 
+                               class="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all duration-300 shadow-lg">
                                 View All Services
                                 <i data-lucide="arrow-right" class="w-5 h-5 ml-2"></i>
                             </a>
@@ -625,13 +645,195 @@ uasort($sections, function($a, $b) {
                             <p class="text-xl text-blue-100 mb-8"><?php echo wp_kses_post($cta_description); ?></p>
                         <?php endif; ?>
 
-                        <?php if ($cta_button_text && $cta_button_link) : ?>
-                            <a href="<?php echo esc_url($cta_button_link); ?>" 
+                        <?php if ($cta_button_text && $cta_button_page_id) : ?>
+                            <a href="<?php echo esc_url(get_permalink($cta_button_page_id)); ?>" 
                                class="button inline-flex items-center bg-white hover:bg-blue-50 text-blue-900 px-8 py-4 rounded-lg font-medium transition-colors">
                                 <?php echo esc_html($cta_button_text); ?>
                                 <i data-lucide="arrow-right" class="w-5 h-5 ml-2"></i>
                             </a>
                         <?php endif; ?>
+                    </div>
+                </div>
+            </section>
+
+        <?php elseif ($section_id === 'stats') : ?>
+            <!-- Stats Section -->
+            <section class="py-24 bg-gradient-to-b from-gray-50 to-white">
+                <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                        <div class="text-center">
+                            <div class="text-4xl font-bold text-blue-600 mb-2">5000+</div>
+                            <div class="text-gray-600">Boats Serviced</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-4xl font-bold text-blue-600 mb-2">98%</div>
+                            <div class="text-gray-600">Customer Satisfaction</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-4xl font-bold text-blue-600 mb-2">25+</div>
+                            <div class="text-gray-600">Years Experience</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-4xl font-bold text-blue-600 mb-2">24/7</div>
+                            <div class="text-gray-600">Support Available</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        <?php elseif ($section_id === 'featured_articles') : ?>
+            <!-- Featured Articles Section -->
+            <section class="py-24 bg-white">
+                <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <div class="text-center mb-12">
+                        <h2 class="text-3xl font-bold mb-4">Latest Boating Tips & News</h2>
+                        <p class="text-gray-600">Stay informed with our expert advice and industry updates</p>
+                    </div>
+                    <div class="grid md:grid-cols-3 gap-8">
+                        <?php
+                        $articles = new WP_Query(array(
+                            'post_type' => 'post',
+                            'posts_per_page' => 3,
+                            'orderby' => 'date',
+                            'order' => 'DESC'
+                        ));
+
+                        if ($articles->have_posts()) :
+                            while ($articles->have_posts()) : $articles->the_post();
+                        ?>
+                            <article class="bg-white rounded-xl overflow-hidden shadow-lg transition-transform hover:translate-y-[-4px]">
+                                <?php if (has_post_thumbnail()) : ?>
+                                    <div class="aspect-video overflow-hidden">
+                                        <?php the_post_thumbnail('medium_large', array('class' => 'w-full h-full object-cover')); ?>
+                                    </div>
+                                <?php endif; ?>
+                                <div class="p-6">
+                                    <div class="flex items-center gap-2 text-sm text-gray-500 mb-3">
+                                        <i data-lucide="calendar" class="w-4 h-4"></i>
+                                        <?php echo get_the_date(); ?>
+                                    </div>
+                                    <h3 class="text-xl font-semibold mb-2">
+                                        <a href="<?php the_permalink(); ?>" class="hover:text-blue-600 transition-colors">
+                                            <?php the_title(); ?>
+                                        </a>
+                                    </h3>
+                                    <p class="text-gray-600 mb-4"><?php echo wp_trim_words(get_the_excerpt(), 20); ?></p>
+                                    <a href="<?php the_permalink(); ?>" class="inline-flex items-center text-blue-600 hover:text-blue-700">
+                                        Read More
+                                        <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>
+                                    </a>
+                                </div>
+                            </article>
+                        <?php
+                            endwhile;
+                            wp_reset_postdata();
+                        endif;
+                        ?>
+                    </div>
+                </div>
+            </section>
+
+        <?php elseif ($section_id === 'faq') : ?>
+            <!-- FAQ Section -->
+            <section class="py-24 bg-gray-50">
+                <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <div class="text-center mb-12">
+                        <h2 class="text-3xl font-bold mb-4">Frequently Asked Questions</h2>
+                        <p class="text-gray-600">Find answers to common questions about our services</p>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                        <?php
+                        $faqs = array(
+                            array(
+                                'question' => 'What types of boats do you service?',
+                                'answer' => 'We service all types of recreational boats including powerboats, sailboats, pontoons, and personal watercraft.'
+                            ),
+                            array(
+                                'question' => 'Do you offer mobile service?',
+                                'answer' => 'Yes, we provide mobile service throughout the local area for most maintenance and repair needs.'
+                            ),
+                            array(
+                                'question' => 'How often should I service my boat?',
+                                'answer' => 'We recommend regular maintenance every 100 hours of operation or annually, whichever comes first.'
+                            ),
+                            array(
+                                'question' => 'What are your warranty terms?',
+                                'answer' => 'We offer a 90-day warranty on all parts and labor for service work performed.'
+                            )
+                        );
+
+                        foreach ($faqs as $faq) :
+                        ?>
+                            <div class="bg-white rounded-lg p-6 shadow-sm">
+                                <h3 class="text-lg font-semibold mb-3 flex items-start gap-3">
+                                    <i data-lucide="help-circle" class="w-5 h-5 text-blue-600 flex-shrink-0"></i>
+                                    <?php echo esc_html($faq['question']); ?>
+                                </h3>
+                                <p class="text-gray-600 ml-8"><?php echo esc_html($faq['answer']); ?></p>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </section>
+
+        <?php elseif ($section_id === 'certification') : ?>
+            <!-- Certification Section -->
+            <section class="py-24 bg-white">
+                <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <div class="grid md:grid-cols-2 gap-12 items-center">
+                        <div>
+                            <div class="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700 mb-6">
+                                <i data-lucide="award" class="w-4 h-4 mr-2"></i>
+                                Certified Excellence
+                            </div>
+                            <h2 class="text-4xl font-bold mb-6">Factory-Certified Marine Technicians</h2>
+                            <p class="text-xl text-gray-600 mb-8">Our team consists of factory-trained and certified technicians from the industry's leading manufacturers.</p>
+                            <div class="space-y-4">
+                                <div class="flex items-start gap-4">
+                                    <div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                                        <i data-lucide="check" class="w-6 h-6 text-blue-600"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-semibold mb-2">Manufacturer Certified</h3>
+                                        <p class="text-gray-600">Direct training from top boat manufacturers</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-4">
+                                    <div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                                        <i data-lucide="tool" class="w-6 h-6 text-blue-600"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-semibold mb-2">Latest Technology</h3>
+                                        <p class="text-gray-600">Advanced diagnostic and repair equipment</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-4">
+                                    <div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                                        <i data-lucide="refresh-cw" class="w-6 h-6 text-blue-600"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-semibold mb-2">Continuous Training</h3>
+                                        <p class="text-gray-600">Regular updates on latest marine technology</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <?php
+                            $certification_images = array(
+                                array('url' => 'path/to/cert1.jpg', 'alt' => 'Mercury Certification'),
+                                array('url' => 'path/to/cert2.jpg', 'alt' => 'Yamaha Certification'),
+                                array('url' => 'path/to/cert3.jpg', 'alt' => 'Volvo Penta Certification'),
+                                array('url' => 'path/to/cert4.jpg', 'alt' => 'ABYC Certification')
+                            );
+
+                            foreach ($certification_images as $cert) :
+                            ?>
+                                <div class="bg-gray-100 rounded-lg p-4 flex items-center justify-center">
+                                    <img src="<?php echo esc_url($cert['url']); ?>" alt="<?php echo esc_attr($cert['alt']); ?>" class="max-h-24">
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
                     </div>
                 </div>
             </section>

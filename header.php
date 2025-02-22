@@ -32,7 +32,14 @@
 				<a class="flex items-center space-x-2" href="<?php echo esc_url(home_url('/')); ?>" aria-label="<?php bloginfo('name'); ?>">
 					<?php
 					if (has_custom_logo()) {
-						the_custom_logo();
+						$custom_logo_id = get_theme_mod('custom_logo');
+						$logo = wp_get_attachment_image_src($custom_logo_id, 'full');
+						?>
+						<img src="<?php echo esc_url($logo[0]); ?>"
+							 alt="<?php bloginfo('name'); ?>"
+							 class="w-auto h-10 max-w-[200px] object-contain"
+						>
+						<?php
 					} else {
 						?>
 						<span class="text-xl font-bold"><?php bloginfo('name'); ?></span>

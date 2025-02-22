@@ -122,12 +122,15 @@ function wades_register_boat_post_type() {
     $args = array(
         'labels'              => $labels,
         'public'              => true,
-        'has_archive'         => true,
+        'has_archive'         => false,
         'publicly_queryable'  => true,
         'show_ui'            => true,
         'show_in_menu'       => true,
         'query_var'          => true,
-        'rewrite'            => array('slug' => 'boats'),
+        'rewrite'            => array(
+            'slug' => 'boat',
+            'with_front' => false
+        ),
         'capability_type'    => 'post',
         'menu_icon'          => 'dashicons-store',
         'supports'           => array('title', 'editor', 'thumbnail', 'excerpt'),
@@ -135,6 +138,22 @@ function wades_register_boat_post_type() {
     );
 
     register_post_type('boat', $args);
+
+    // Add redirect for boat archive to boats page
+    add_action('template_redirect', function() {
+        if (is_post_type_archive('boat')) {
+            $boats_page = get_page_by_path('boats');
+            if ($boats_page) {
+                wp_redirect(get_permalink($boats_page->ID), 301);
+                exit;
+            }
+        }
+    });
+
+    // Flush rewrite rules when saving a boat post
+    add_action('save_post_boat', function() {
+        flush_rewrite_rules();
+    });
 
     // Register additional taxonomies
     $taxonomies = array(

@@ -5,11 +5,6 @@
  * @package wades
  */
 
-// Get customization options
-$custom_title = get_post_meta(get_the_ID(), '_blog_title', true);
-$custom_description = get_post_meta(get_the_ID(), '_blog_description', true);
-$custom_sub_header = get_post_meta(get_the_ID(), '_blog_sub_header', true);
-
 // Get blog-specific options
 $show_featured = get_post_meta(get_the_ID(), '_show_featured_post', true) !== 'no';
 $show_categories = get_post_meta(get_the_ID(), '_show_categories', true) !== 'no';
@@ -20,11 +15,10 @@ $layout = get_post_meta(get_the_ID(), '_blog_layout', true) ?: 'grid';
 $paged = (get_query_var('paged')) ? get_query_var('paged') : 1;
 
 get_header();
-get_template_part('template-parts/template-header');
 ?>
 
 <main role="main" aria-label="Main content" class="flex-grow bg-gray-50">
-    <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+    <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24">
         <?php if ($show_categories) : ?>
             <!-- Categories Filter -->
             <div class="flex flex-wrap justify-center gap-2 mb-8">
@@ -55,39 +49,43 @@ get_template_part('template-parts/template-header');
             if ($featured_query->have_posts()) :
                 while ($featured_query->have_posts()) : $featured_query->the_post();
             ?>
-            <article class="featured-post">
-                <div class="featured-post__image">
-                    <?php if (has_post_thumbnail()) : ?>
-                        <?php the_post_thumbnail('large', array(
-                            'class' => 'object-cover w-full h-full',
-                            'alt' => get_the_title()
-                        )); ?>
-                    <?php endif; ?>
-                </div>
-                <div class="featured-post__content">
-                    <span class="featured-post__badge">Featured</span>
-                    <div class="featured-post__meta">
-                        <time datetime="<?php echo get_the_date('c'); ?>"><?php echo get_the_date(); ?></time>
-                        <span>•</span>
-                        <?php
-                        $categories = get_the_category();
-                        if ($categories) {
-                            echo '<span>' . esc_html($categories[0]->name) . '</span>';
-                        }
-                        ?>
+            <article class="featured-post bg-white rounded-xl shadow-lg overflow-hidden mb-12">
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="relative aspect-w-16 aspect-h-9">
+                        <?php if (has_post_thumbnail()) : ?>
+                            <?php the_post_thumbnail('large', array(
+                                'class' => 'object-cover w-full h-full',
+                                'alt' => get_the_title()
+                            )); ?>
+                        <?php endif; ?>
                     </div>
-                    <h2 class="featured-post__title">
-                        <a href="<?php the_permalink(); ?>" class="hover:text-primary transition-colors">
-                            <?php the_title(); ?>
+                    <div class="p-8 flex flex-col justify-center">
+                        <div class="inline-flex items-center rounded-full bg-primary/10 text-primary px-3 py-1 text-sm font-medium mb-4">
+                            Featured Post
+                        </div>
+                        <div class="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                            <time datetime="<?php echo get_the_date('c'); ?>"><?php echo get_the_date(); ?></time>
+                            <?php
+                            $categories = get_the_category();
+                            if ($categories) {
+                                echo '<span>•</span><span>' . esc_html($categories[0]->name) . '</span>';
+                            }
+                            ?>
+                        </div>
+                        <h2 class="text-2xl font-bold mb-4">
+                            <a href="<?php the_permalink(); ?>" class="hover:text-primary transition-colors">
+                                <?php the_title(); ?>
+                            </a>
+                        </h2>
+                        <div class="text-muted-foreground mb-6">
+                            <?php the_excerpt(); ?>
+                        </div>
+                        <a href="<?php the_permalink(); ?>" 
+                           class="inline-flex items-center text-primary hover:text-primary/80 font-medium">
+                            Read More
+                            <i data-lucide="chevron-right" class="w-4 h-4 ml-2"></i>
                         </a>
-                    </h2>
-                    <div class="featured-post__excerpt">
-                        <?php the_excerpt(); ?>
                     </div>
-                    <a href="<?php the_permalink(); ?>" class="featured-post__link">
-                        Read More
-                        <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                    </a>
                 </div>
             </article>
             <?php
@@ -98,63 +96,62 @@ get_template_part('template-parts/template-header');
         <?php endif; ?>
 
         <!-- Posts Grid -->
-        <?php
-        $args = array(
-            'post_type' => 'post',
-            'posts_per_page' => $posts_per_page,
-            'paged' => $paged
-        );
-
-        // Exclude featured post if shown
-        if ($show_featured) {
-            $args['meta_query'] = array(
-                array(
-                    'key' => '_is_featured_post',
-                    'value' => '1',
-                    'compare' => '!='
-                )
-            );
-        }
-
-        $query = new WP_Query($args);
-        ?>
-
-        <div class="blog-grid">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <?php
+            $args = array(
+                'post_type' => 'post',
+                'posts_per_page' => $posts_per_page,
+                'paged' => $paged
+            );
+
+            if ($show_featured) {
+                $args['meta_query'] = array(
+                    array(
+                        'key' => '_is_featured_post',
+                        'value' => '1',
+                        'compare' => '!='
+                    )
+                );
+            }
+
+            $query = new WP_Query($args);
+
             if ($query->have_posts()) :
                 while ($query->have_posts()) : $query->the_post();
             ?>
-            <article class="blog-card">
-                <div class="blog-card__image">
-                    <?php if (has_post_thumbnail()) : ?>
-                        <?php the_post_thumbnail('medium_large', array(
-                            'class' => 'object-cover w-full h-full',
-                            'alt' => get_the_title()
-                        )); ?>
-                    <?php endif; ?>
-                </div>
-                <div class="blog-card__content">
-                    <div class="blog-card__meta">
+            <article class="blog-card bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden">
+                <a href="<?php the_permalink(); ?>" class="block">
+                    <div class="relative aspect-w-16 aspect-h-9">
+                        <?php if (has_post_thumbnail()) : ?>
+                            <?php the_post_thumbnail('medium_large', array(
+                                'class' => 'transition-transform duration-300 group-hover:scale-105 object-cover w-full h-full',
+                                'alt' => get_the_title()
+                            )); ?>
+                        <?php endif; ?>
+                    </div>
+                </a>
+                <div class="p-6">
+                    <div class="flex items-center gap-2 text-sm text-muted-foreground mb-4">
                         <time datetime="<?php echo get_the_date('c'); ?>"><?php echo get_the_date(); ?></time>
-                        <span>•</span>
                         <?php
                         $categories = get_the_category();
                         if ($categories) {
-                            echo '<span>' . esc_html($categories[0]->name) . '</span>';
+                            echo '<span>•</span><span>' . esc_html($categories[0]->name) . '</span>';
                         }
                         ?>
                     </div>
-                    <h2 class="blog-card__title">
-                        <a href="<?php the_permalink(); ?>">
+                    <h2 class="text-xl font-semibold mb-4">
+                        <a href="<?php the_permalink(); ?>" class="hover:text-primary transition-colors">
                             <?php the_title(); ?>
                         </a>
                     </h2>
-                    <div class="blog-card__excerpt">
+                    <div class="text-muted-foreground mb-6">
                         <?php the_excerpt(); ?>
                     </div>
-                    <a href="<?php the_permalink(); ?>" class="blog-card__link">
+                    <a href="<?php the_permalink(); ?>" 
+                       class="inline-flex items-center text-primary hover:text-primary/80 font-medium">
                         Read More
-                        <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                        <i data-lucide="chevron-right" class="w-4 h-4 ml-2"></i>
                     </a>
                 </div>
             </article>
@@ -184,5 +181,12 @@ get_template_part('template-parts/template-header');
         <?php endif; ?>
     </div>
 </main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Lucide icons
+    lucide.createIcons();
+});
+</script>
 
 <?php get_footer(); ?> 

@@ -5,7 +5,8 @@
  * @package wades
  */
 
-get_header(); ?>
+get_header();
+?>
 
 <main role="main" aria-label="Main content" class="flex-grow bg-gray-50">
     <article class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
@@ -32,17 +33,6 @@ get_header(); ?>
             $status = !empty($status) ? $status[0] : '';
             $manufacturer = !empty($manufacturer) ? $manufacturer[0] : '';
         ?>
-
-        <!-- Breadcrumb -->
-        <nav class="mb-8">
-            <ol class="flex items-center space-x-2 text-sm text-muted-foreground">
-                <li><a href="<?php echo home_url(); ?>" class="hover:text-primary">Home</a></li>
-                <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                <li><a href="<?php echo get_post_type_archive_link('boat'); ?>" class="hover:text-primary">Boats</a></li>
-                <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                <li class="text-primary font-medium"><?php the_title(); ?></li>
-            </ol>
-        </nav>
 
         <!-- Main Content -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -160,7 +150,7 @@ get_header(); ?>
             'orderby' => 'rand',
             'meta_query' => array(
                 array(
-                    'key' => '_boat_type',
+                    'key' => '_boat_model',
                     'value' => $model,
                     'compare' => '='
                 )
@@ -174,13 +164,14 @@ get_header(); ?>
             <h2 class="text-2xl font-semibold mb-8">Similar Boats</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <?php while ($similar_boats->have_posts()) : $similar_boats->the_post(); 
-                    $s_condition = get_post_meta(get_the_ID(), '_boat_condition', true);
-                    $s_price = get_post_meta(get_the_ID(), '_boat_price', true);
-                    $s_year = get_post_meta(get_the_ID(), '_boat_year', true);
-                    $s_type = get_post_meta(get_the_ID(), '_boat_type', true);
+                    $s_condition = wp_get_post_terms(get_the_ID(), 'boat_condition', array('fields' => 'names'));
+                    $s_condition = !empty($s_condition) ? $s_condition[0] : '';
+                    $s_price = get_post_meta(get_the_ID(), '_boat_sales_price', true);
+                    $s_year = get_post_meta(get_the_ID(), '_boat_model_year', true);
+                    $s_model = get_post_meta(get_the_ID(), '_boat_model', true);
                 ?>
                 <a href="<?php the_permalink(); ?>" class="group">
-                    <div class="rounded-xl overflow-hidden bg-white shadow-md">
+                    <div class="rounded-xl overflow-hidden bg-white shadow-md hover:shadow-lg transition-shadow">
                         <div class="relative aspect-w-16 aspect-h-9">
                             <?php if (has_post_thumbnail()) : ?>
                                 <?php the_post_thumbnail('medium', array(
@@ -188,16 +179,27 @@ get_header(); ?>
                                     'alt' => get_the_title()
                                 )); ?>
                             <?php endif; ?>
-                            <div class="absolute top-2 right-2">
-                                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium <?php echo $s_condition === 'NEW' ? 'bg-primary text-white' : 'bg-secondary text-secondary-foreground'; ?>">
-                                    <?php echo esc_html($s_condition); ?>
-                                </span>
-                            </div>
+                            <?php if ($s_condition) : ?>
+                                <div class="absolute top-4 right-4">
+                                    <span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium <?php echo $s_condition === 'NEW' ? 'bg-primary text-white' : 'bg-secondary text-secondary-foreground'; ?>">
+                                        <?php echo esc_html($s_condition); ?>
+                                    </span>
+                                </div>
+                            <?php endif; ?>
                         </div>
-                        <div class="p-4">
-                            <h3 class="font-semibold"><?php the_title(); ?></h3>
-                            <p class="text-muted-foreground text-sm"><?php echo esc_html($s_year . ' ' . $s_type); ?></p>
-                            <p class="font-semibold mt-2">$<?php echo number_format($s_price); ?></p>
+                        <div class="p-6">
+                            <h3 class="text-xl font-semibold mb-2"><?php the_title(); ?></h3>
+                            <?php if ($s_year || $s_model) : ?>
+                                <p class="text-muted-foreground">
+                                    <?php 
+                                    $details = array_filter([$s_year, $s_model]);
+                                    echo esc_html(implode(' ', $details));
+                                    ?>
+                                </p>
+                            <?php endif; ?>
+                            <?php if ($s_price) : ?>
+                                <p class="text-2xl font-bold text-primary mt-4">$<?php echo number_format($s_price); ?></p>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </a>

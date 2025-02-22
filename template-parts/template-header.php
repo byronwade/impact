@@ -5,106 +5,91 @@
  * @package wades
  */
 
-$title = get_the_title();
-$description = '';
-$background_image = get_post_meta(get_the_ID(), '_hero_background_image', true);
-$show_breadcrumbs = true;
-$sub_header = '';
+// Get page-specific content
+$page_title = get_the_title();
+$page_excerpt = has_excerpt() ? get_the_excerpt() : '';
 
-// Get template-specific meta
-$template = get_page_template_slug();
-switch ($template) {
-    case 'templates/about.php':
-        $title = get_post_meta(get_the_ID(), '_about_title', true) ?: $title;
-        $description = get_post_meta(get_the_ID(), '_about_description', true) ?: 'Impact Marine Group is dedicated to providing our customers personal service and quality boat brands.';
-        $sub_header = get_post_meta(get_the_ID(), '_about_sub_header', true);
-        break;
-    case 'templates/services.php':
-        $title = get_post_meta(get_the_ID(), '_services_title', true) ?: $title;
-        $description = get_post_meta(get_the_ID(), '_services_description', true);
-        $sub_header = get_post_meta(get_the_ID(), '_services_sub_header', true);
-        break;
-    case 'templates/boats.php':
-        $title = get_post_meta(get_the_ID(), '_boats_title', true) ?: 'Our Boat Inventory';
-        $description = get_post_meta(get_the_ID(), '_boats_description', true) ?: 'Discover our extensive collection of new and used boats.';
-        $sub_header = get_post_meta(get_the_ID(), '_boats_sub_header', true);
-        break;
-    case 'templates/blog.php':
-        $title = get_post_meta(get_the_ID(), '_blog_title', true) ?: 'Latest News & Updates';
-        $description = get_post_meta(get_the_ID(), '_blog_description', true) ?: 'Stay updated with our latest news and insights.';
-        $sub_header = get_post_meta(get_the_ID(), '_blog_sub_header', true);
-        break;
-    case 'templates/contact.php':
-        $title = get_post_meta(get_the_ID(), '_contact_title', true) ?: 'Get in Touch';
-        $description = get_post_meta(get_the_ID(), '_contact_description', true) ?: 'Have questions? We\'d love to hear from you.';
-        $sub_header = get_post_meta(get_the_ID(), '_contact_sub_header', true);
-        break;
-    case 'templates/financing.php':
-        $title = get_post_meta(get_the_ID(), '_financing_title', true) ?: 'Financing Options';
-        $description = get_post_meta(get_the_ID(), '_financing_description', true) ?: 'Flexible financing solutions for your dream boat.';
-        $sub_header = get_post_meta(get_the_ID(), '_financing_sub_header', true);
-        break;
-}
+// Get customization options from theme mods
+$background_image = get_post_meta(get_the_ID(), '_hero_background_image', true) ?: get_theme_mod('default_hero_background');
+$overlay_opacity = get_theme_mod('hero_overlay_opacity', '40');
+$header_height = get_theme_mod('hero_height', '70');
 ?>
 
-<!-- Page Header -->
-<section class="relative overflow-hidden bg-gradient-to-b from-gray-900 to-gray-800">
-    <!-- Background Pattern -->
+<header class="relative overflow-hidden" style="height: <?php echo esc_attr($header_height); ?>vh;">
+    <!-- Background Image with Overlay -->
     <div class="absolute inset-0">
-        <div class="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-800 mix-blend-multiply"></div>
         <?php if ($background_image) : ?>
-            <img src="<?php echo esc_url(wp_get_attachment_image_url($background_image, 'full')); ?>" 
+            <?php echo wp_get_attachment_image($background_image, 'full', false, array(
+                'class' => 'h-full w-full object-cover object-center',
+            )); ?>
+        <?php else : ?>
+            <img src="<?php echo get_theme_file_uri('assets/images/default-hero.jpg'); ?>" 
                  alt="" 
-                 class="absolute inset-0 h-full w-full object-cover opacity-20">
+                 class="h-full w-full object-cover object-center">
         <?php endif; ?>
-        <div class="absolute inset-0 bg-[url('data:image/svg+xml,...')] opacity-30"></div>
+        <div class="absolute inset-0 bg-black" style="opacity: <?php echo esc_attr($overlay_opacity / 100); ?>"></div>
     </div>
 
     <!-- Content -->
-    <div class="relative">
-        <?php if ($show_breadcrumbs) : ?>
-            <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-8">
-                <nav class="flex" aria-label="Breadcrumb">
-                    <ol class="flex items-center space-x-2 text-sm text-gray-300">
-                        <li>
-                            <a href="<?php echo home_url(); ?>" class="hover:text-white transition-colors">Home</a>
-                        </li>
-                        <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                        <?php if (is_singular('post') || is_post_type_archive('post')) : ?>
-                            <li>
-                                <a href="<?php echo get_permalink(get_option('page_for_posts')); ?>" class="hover:text-white transition-colors">Blog</a>
-                            </li>
-                            <?php if (is_singular('post')) : ?>
-                                <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                                <li class="text-white font-medium truncate max-w-[200px]"><?php echo get_the_title(); ?></li>
-                            <?php endif; ?>
-                        <?php else : ?>
-                            <li class="text-white font-medium"><?php echo get_the_title(); ?></li>
-                        <?php endif; ?>
-                    </ol>
-                </nav>
-            </div>
-        <?php endif; ?>
-
-        <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
-            <div class="mx-auto max-w-3xl text-center">
-                <?php if ($sub_header) : ?>
-                    <div class="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium bg-white/10 text-white/90 backdrop-blur-sm mb-6">
-                        <?php echo esc_html($sub_header); ?>
-                    </div>
-                <?php endif; ?>
-                <h1 class="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
-                    <?php echo esc_html($title); ?>
+    <div class="relative h-full flex flex-col justify-center px-6 sm:px-12">
+        <div class="container mx-auto max-w-7xl">
+            <div class="flex flex-col justify-center h-full">
+                <h1 class="text-white text-4xl sm:text-6xl font-bold mb-4 leading-tight max-w-3xl">
+                    <?php echo esc_html($page_title); ?>
                 </h1>
-                <?php if ($description) : ?>
-                    <p class="mt-6 text-lg leading-8 text-gray-300">
-                        <?php echo esc_html($description); ?>
+                <?php if ($page_excerpt) : ?>
+                    <p class="text-gray-200 text-xl sm:text-2xl mb-8 max-w-2xl mx-auto">
+                        <?php echo esc_html($page_excerpt); ?>
                     </p>
+                <?php endif; ?>
+                
+                <!-- Brand Logos -->
+                <?php if (get_theme_mod('show_brand_logos', true)) : 
+                    $logo_bg_style = get_theme_mod('brand_logos_bg', 'white');
+                    $logo_classes = 'h-10 object-contain p-2 rounded';
+                    
+                    // Add background color class based on setting
+                    switch ($logo_bg_style) {
+                        case 'white':
+                            $logo_classes .= ' bg-white';
+                            break;
+                        case 'dark':
+                            $logo_classes .= ' bg-gray-900';
+                            break;
+                        case 'transparent':
+                            // No additional background class
+                            break;
+                    }
+                ?>
+                    <div class="flex items-center space-x-6 mt-8">
+                        <?php
+                        // MB Sports Logo
+                        $mb_sports_logo = get_theme_mod('mb_sports_logo');
+                        if ($mb_sports_logo) : ?>
+                            <img src="<?php echo esc_url(wp_get_attachment_image_url($mb_sports_logo, 'full')); ?>"
+                                 alt="MB Sports Logo"
+                                 class="<?php echo esc_attr($logo_classes); ?>"
+                                 width="120"
+                                 height="40">
+                        <?php endif; ?>
+
+                        <?php
+                        // Viaggio Logo
+                        $viaggio_logo = get_theme_mod('viaggio_logo');
+                        if ($viaggio_logo) : ?>
+                            <img src="<?php echo esc_url(wp_get_attachment_image_url($viaggio_logo, 'full')); ?>"
+                                 alt="Viaggio Pontoon Boats Logo"
+                                 class="<?php echo esc_attr($logo_classes); ?>"
+                                 width="120"
+                                 height="40">
+                        <?php endif; ?>
+                    </div>
                 <?php endif; ?>
             </div>
         </div>
     </div>
-</section>
+</header>
 
 <!-- Optional Offset Content -->
-<div class="relative z-10 -mt-12"></div> 
+<div class="bg-gray-50 relative z-20"></div>
+<div class="relative z-20 -mt-12 bg-gray-50"></div> 

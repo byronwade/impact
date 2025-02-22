@@ -7,45 +7,41 @@
  * @package wades
  */
 
+// Redirect to blog page
+$blog_page = get_option('page_for_posts');
+if ($blog_page) {
+    wp_redirect(get_permalink($blog_page), 301);
+    exit;
+}
+
 get_header();
+get_template_part('template-parts/template-header');
 ?>
 
-	<main id="primary" class="site-main">
+<main role="main" aria-label="Main content" class="flex-grow">
+    <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24">
+        <?php if (have_posts()) : ?>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <?php
+                while (have_posts()) :
+                    the_post();
+                    get_template_part('template-parts/content', get_post_type());
+                endwhile;
+                ?>
+            </div>
 
-		<?php if ( have_posts() ) : ?>
+            <?php
+            the_posts_pagination(array(
+                'prev_text' => '<i data-lucide="chevron-left" class="w-4 h-4"></i> Previous',
+                'next_text' => 'Next <i data-lucide="chevron-right" class="w-4 h-4"></i>',
+            ));
+            ?>
 
-			<header class="page-header">
-				<?php
-				the_archive_title( '<h1 class="page-title">', '</h1>' );
-				the_archive_description( '<div class="archive-description">', '</div>' );
-				?>
-			</header><!-- .page-header -->
+        <?php else :
+            get_template_part('template-parts/content', 'none');
+        endif;
+        ?>
+    </div>
+</main>
 
-			<?php
-			/* Start the Loop */
-			while ( have_posts() ) :
-				the_post();
-
-				/*
-				 * Include the Post-Type-specific template for the content.
-				 * If you want to override this in a child theme, then include a file
-				 * called content-___.php (where ___ is the Post Type name) and that will be used instead.
-				 */
-				get_template_part( 'template-parts/content', get_post_type() );
-
-			endwhile;
-
-			the_posts_navigation();
-
-		else :
-
-			get_template_part( 'template-parts/content', 'none' );
-
-		endif;
-		?>
-
-	</main><!-- #main -->
-
-<?php
-get_sidebar();
-get_footer();
+<?php get_footer(); ?>

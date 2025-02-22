@@ -277,20 +277,64 @@ function wades_service_features_callback($post) {
  * Service Display Settings Meta Box Callback
  */
 function wades_service_display_callback($post) {
+    // Add nonce field
+    wp_nonce_field('wades_service_meta', 'wades_service_meta_nonce');
+
     $show_on_home = get_post_meta($post->ID, '_show_on_home', true);
     $home_order = get_post_meta($post->ID, '_home_order', true) ?: 0;
+    $home_description = get_post_meta($post->ID, '_home_description', true);
+    $home_icon = get_post_meta($post->ID, '_home_icon', true);
     ?>
-    <p>
-        <label>
-            <input type="checkbox" name="show_on_home" value="1" <?php checked($show_on_home, '1'); ?>>
-            Show on Homepage
-        </label>
-    </p>
-    <p>
-        <label for="home_order">Homepage Display Order:</label><br>
-        <input type="number" id="home_order" name="home_order" value="<?php echo esc_attr($home_order); ?>" class="small-text">
-        <span class="description">Lower numbers appear first</span>
-    </p>
+    <div class="service-home-display" style="padding: 10px;">
+        <div style="margin-bottom: 15px; padding: 10px; background: #f0f6fc; border: 1px solid #c5d9ed; border-radius: 4px;">
+            <label style="display: block; margin-bottom: 10px; font-weight: bold;">
+                <input type="checkbox" name="show_on_home" value="1" <?php checked($show_on_home, '1'); ?>>
+                Show this service on Homepage
+            </label>
+            <span class="description">Enable this to display the service in the homepage services section</span>
+        </div>
+
+        <div class="home-display-options" style="padding-left: 20px;">
+            <p>
+                <label for="home_order" style="font-weight: bold;">Display Order:</label><br>
+                <input type="number" id="home_order" name="home_order" value="<?php echo esc_attr($home_order); ?>" 
+                       class="small-text" min="1" max="99" style="width: 70px;">
+                <span class="description">Lower numbers appear first (1-99)</span>
+            </p>
+
+            <p>
+                <label for="home_description" style="font-weight: bold;">Homepage Description:</label><br>
+                <textarea id="home_description" name="home_description" rows="3" class="widefat"
+                          style="margin-top: 5px;"><?php echo esc_textarea($home_description); ?></textarea>
+                <span class="description">A shorter description specifically for the homepage display (optional)</span>
+            </p>
+
+            <p>
+                <label for="home_icon" style="font-weight: bold;">Homepage Icon:</label><br>
+                <input type="text" id="home_icon" name="home_icon" value="<?php echo esc_attr($home_icon); ?>" 
+                       class="widefat" style="margin-top: 5px;">
+                <span class="description">Lucide icon name (e.g., 'wrench', 'tool', etc.)</span>
+            </p>
+        </div>
+
+        <script>
+            jQuery(document).ready(function($) {
+                const showOnHome = $('input[name="show_on_home"]');
+                const homeOptions = $('.home-display-options');
+
+                function toggleHomeOptions() {
+                    if (showOnHome.is(':checked')) {
+                        homeOptions.slideDown(200);
+                    } else {
+                        homeOptions.slideUp(200);
+                    }
+                }
+
+                showOnHome.on('change', toggleHomeOptions);
+                toggleHomeOptions();
+            });
+        </script>
+    </div>
     <?php
 }
 
@@ -298,18 +342,22 @@ function wades_service_display_callback($post) {
  * Save Service Meta Box Data
  */
 function wades_save_service_meta($post_id) {
+    // Check if our nonce is set
     if (!isset($_POST['wades_service_meta_nonce'])) {
         return;
     }
 
+    // Verify that the nonce is valid
     if (!wp_verify_nonce($_POST['wades_service_meta_nonce'], 'wades_service_meta')) {
         return;
     }
 
+    // If this is an autosave, our form has not been submitted, so we don't want to do anything
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
         return;
     }
 
+    // Check the user's permissions
     if (!current_user_can('edit_post', $post_id)) {
         return;
     }
@@ -325,7 +373,9 @@ function wades_save_service_meta($post_id) {
         'hover_effect' => 'text',
         'seo_title' => 'text',
         'seo_description' => 'textarea',
-        'schema_type' => 'text'
+        'schema_type' => 'text',
+        'home_description' => 'textarea',
+        'home_icon' => 'text'
     );
 
     foreach ($fields as $field => $type) {
@@ -341,9 +391,17 @@ function wades_save_service_meta($post_id) {
         update_post_meta($post_id, '_service_features', $features);
     }
 
-    // Save display settings
+    // Save homepage display settings
     update_post_meta($post_id, '_show_on_home', isset($_POST['show_on_home']) ? '1' : '');
     update_post_meta($post_id, '_home_order', isset($_POST['home_order']) ? absint($_POST['home_order']) : 0);
+    
+    // Save homepage specific fields
+    if (isset($_POST['home_description'])) {
+        update_post_meta($post_id, '_home_description', wp_kses_post($_POST['home_description']));
+    }
+    if (isset($_POST['home_icon'])) {
+        update_post_meta($post_id, '_home_icon', sanitize_text_field($_POST['home_icon']));
+    }
 }
 add_action('save_post_service', 'wades_save_service_meta');
 
@@ -355,10 +413,12 @@ function wades_service_columns($columns) {
     foreach ($columns as $key => $value) {
         if ($key === 'title') {
             $new_columns[$key] = $value;
+            $new_columns['homepage'] = __('Homepage', 'wades');
             $new_columns['service_type'] = __('Type', 'wades');
             $new_columns['service_price'] = __('Price', 'wades');
             $new_columns['service_location'] = __('Location', 'wades');
         } else if ($key === 'date') {
+            $new_columns['homepage'] = __('Homepage', 'wades');
             $new_columns['service_type'] = __('Type', 'wades');
             $new_columns['service_price'] = __('Price', 'wades');
             $new_columns['service_location'] = __('Location', 'wades');
@@ -376,6 +436,19 @@ add_filter('manage_service_posts_columns', 'wades_service_columns');
  */
 function wades_service_column_content($column, $post_id) {
     switch ($column) {
+        case 'homepage':
+            $show_on_home = get_post_meta($post_id, '_show_on_home', true);
+            $home_order = get_post_meta($post_id, '_home_order', true);
+            if ($show_on_home) {
+                echo '<span style="color: #2271b1;">✓ Shown</span>';
+                if ($home_order) {
+                    echo ' <small>(Order: ' . esc_html($home_order) . ')</small>';
+                }
+            } else {
+                echo '<span style="color: #999;">—</span>';
+            }
+            break;
+
         case 'service_type':
             $type = get_post_meta($post_id, '_service_type', true);
             $types = array(

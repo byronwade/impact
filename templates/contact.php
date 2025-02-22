@@ -44,7 +44,7 @@ get_template_part('template-parts/template-header');
 
 <main class="flex-grow">
     <!-- Main Content -->
-    <div class="relative z-10 -mt-12 px-4 sm:px-6 lg:px-8">
+    <div class="relative z-10 px-4 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-7xl">
             <!-- Contact Cards -->
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-12">

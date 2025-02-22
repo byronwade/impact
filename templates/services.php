@@ -160,16 +160,64 @@ get_template_part('template-parts/template-header');
 
                         <!-- Pagination -->
                         <?php if ($total_services > $services_per_page) : ?>
-                        <div class="mt-12 flex justify-center items-center gap-2">
-                            <?php
-                            echo paginate_links(array(
-                                'total' => ceil($total_services / $services_per_page),
-                                'current' => $paged,
-                                'prev_text' => '<i data-lucide="chevron-left" class="w-4 h-4"></i> Previous',
-                                'next_text' => 'Next <i data-lucide="chevron-right" class="w-4 h-4"></i>',
-                                'type' => 'list'
-                            ));
-                            ?>
+                        <div class="mt-12 pb-12">
+                            <div class="flex justify-center gap-2">
+                                <?php
+                                $pagination = paginate_links(array(
+                                    'total' => ceil($total_services / $services_per_page),
+                                    'current' => $paged,
+                                    'prev_text' => '<i data-lucide="arrow-left" class="h-5 w-5 text-gray-700"></i>',
+                                    'next_text' => '<i data-lucide="arrow-right" class="h-5 w-5 text-gray-700"></i>',
+                                    'type' => 'array'
+                                ));
+
+                                if ($pagination) :
+                                    echo '<nav class="inline-flex items-center gap-2" aria-label="Pagination">';
+                                    
+                                    foreach ($pagination as $key => $page_link) : 
+                                        // Convert the link to a DOMDocument to extract href and class
+                                        $doc = new DOMDocument();
+                                        @$doc->loadHTML(mb_convert_encoding($page_link, 'HTML-ENTITIES', 'UTF-8'));
+                                        $tags = $doc->getElementsByTagName('a');
+                                        $spans = $doc->getElementsByTagName('span');
+                                        
+                                        $is_current = strpos($page_link, 'current') !== false;
+                                        $is_dots = strpos($page_link, 'dots') !== false;
+                                        
+                                        if ($is_dots) {
+                                            echo '<span class="px-2 text-gray-400">...</span>';
+                                            continue;
+                                        }
+                                        
+                                        $classes = 'relative inline-flex items-center justify-center min-w-[40px] h-10 text-sm font-medium transition-all duration-200';
+                                        
+                                        if ($is_current) {
+                                            $classes .= ' z-10 bg-primary text-white rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2';
+                                        } else {
+                                            $classes .= ' text-gray-700 hover:bg-gray-50 rounded-md border border-gray-300 bg-white hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2';
+                                        }
+                                        
+                                        // If it's a link
+                                        if ($tags->length > 0) {
+                                            $href = $tags->item(0)->getAttribute('href');
+                                            $content = strip_tags($page_link);
+                                            // Only show numbers for page links, not for prev/next
+                                            if (strpos($content, 'Previous') !== false || strpos($content, 'Next') !== false) {
+                                                echo '<a href="' . esc_url($href) . '" class="' . esc_attr($classes) . '">' . $content . '</a>';
+                                            } else {
+                                                echo '<a href="' . esc_url($href) . '" class="' . esc_attr($classes) . '">' . $content . '</a>';
+                                            }
+                                        } 
+                                        // If it's the current page (span)
+                                        else if ($spans->length > 0) {
+                                            echo '<span class="' . esc_attr($classes) . '">' . strip_tags($page_link) . '</span>';
+                                        }
+                                    endforeach;
+                                    
+                                    echo '</nav>';
+                                endif;
+                                ?>
+                            </div>
                         </div>
                         <?php endif; ?>
                     <?php
@@ -429,41 +477,156 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* Pagination Styles */
 .pagination {
+    display: none;
+}
+
+/* Breadcrumb Styles */
+.breadcrumb-container {
+    background-color: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 1rem 0;
+    margin-bottom: 2rem;
+}
+
+.breadcrumb {
     display: flex;
+    align-items: center;
     gap: 0.5rem;
-    align-items: center;
-    justify-content: center;
-}
-
-.pagination .page-numbers {
-    display: inline-flex;
-    align-items: center;
-    justify-center;
-    min-width: 2.5rem;
-    height: 2.5rem;
-    padding: 0 0.75rem;
     font-size: 0.875rem;
-    font-weight: 500;
-    border-radius: 0.5rem;
-    transition: all 0.2s;
+    color: #64748b;
 }
 
-.pagination .page-numbers.current {
-    background-color: var(--primary);
-    color: white;
+.breadcrumb a {
+    color: #2563eb;
+    text-decoration: none;
+    transition: color 0.2s;
 }
 
-.pagination .page-numbers:not(.current):hover {
-    background-color: var(--accent);
-    color: var(--accent-foreground);
+.breadcrumb a:hover {
+    color: #1d4ed8;
 }
 
-.pagination .prev,
-.pagination .next {
-    display: inline-flex;
-    align-items: center;
-    padding: 0 1rem;
+.breadcrumb-separator {
+    color: #94a3b8;
 }
 </style>
+
+<!-- CTA Section -->
+<section class="relative mt-24 mx-4">
+    <!-- Main Container with gradient background -->
+    <div class="relative max-w-7xl mx-auto">
+        <!-- Background with complex gradient and texture -->
+        <div class="absolute inset-0 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 rounded-3xl overflow-hidden">
+            <!-- Decorative gradient circles -->
+            <div class="absolute inset-0">
+                <div class="absolute left-1/4 top-0 w-64 h-64 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+                <div class="absolute right-1/4 bottom-0 w-64 h-64 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+                <div class="absolute left-1/3 bottom-1/3 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+            </div>
+
+            <!-- Mesh gradient overlay -->
+            <div class="absolute inset-0 bg-gradient-to-t from-blue-900/50 to-transparent"></div>
+            
+            <!-- Grid pattern overlay -->
+            <div class="absolute inset-0 opacity-10" style="background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(to right, #fff 1px, transparent 1px); background-size: 32px 32px;"></div>
+        </div>
+
+        <!-- Content Container -->
+        <div class="relative px-6 py-20 sm:px-12 sm:py-24">
+            <!-- Top accent line -->
+            <div class="absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent via-blue-200 to-transparent"></div>
+
+            <!-- Content Grid -->
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <!-- Left Column - Text Content -->
+                <div class="text-center lg:text-left space-y-6">
+                    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight">
+                        Ready for Professional Marine Service?
+                    </h2>
+                    <p class="text-lg sm:text-xl text-blue-100 max-w-2xl mx-auto lg:mx-0">
+                        Our certified technicians provide expert care for your boat, ensuring peak performance and reliability.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                        <a href="/contact" class="inline-flex items-center justify-center px-8 py-4 rounded-xl bg-white text-blue-900 font-semibold hover:bg-blue-50 transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 group">
+                            Schedule Service
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </svg>
+                        </a>
+                        <a href="tel:+17708817808" class="inline-flex items-center justify-center px-8 py-4 rounded-xl bg-blue-700/30 text-white font-semibold hover:bg-blue-700/40 border border-blue-400/20 backdrop-blur-sm transition-all duration-200 group">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2 transform group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                            (770) 881-7808
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Right Column - Feature List -->
+                <div class="hidden lg:block">
+                    <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
+                        <div class="space-y-6">
+                            <div class="flex items-start gap-4">
+                                <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-semibold text-white mb-2">Factory Certified</h3>
+                                    <p class="text-blue-100">Our technicians are factory-trained and certified for expert service.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-semibold text-white mb-2">Quick Turnaround</h3>
+                                    <p class="text-blue-100">Fast, efficient service to get you back on the water.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-semibold text-white mb-2">Satisfaction Guaranteed</h3>
+                                    <p class="text-blue-100">We stand behind our work with a 100% satisfaction guarantee.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom accent line -->
+            <div class="absolute inset-x-12 bottom-0 h-px bg-gradient-to-r from-transparent via-blue-200 to-transparent"></div>
+        </div>
+    </div>
+
+    <!-- Add animation keyframes -->
+    <style>
+        @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob {
+            animation: blob 7s infinite;
+        }
+        .animation-delay-2000 {
+            animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+            animation-delay: 4s;
+        }
+    </style>
+</section>
 
 <?php get_footer(); ?> 

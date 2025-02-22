@@ -10,330 +10,453 @@ if (!defined('ABSPATH')) {
 /**
  * Add meta boxes for About template
  */
-function wades_about_meta_boxes() {
-    // Only add meta boxes on page edit screen
-    if (!is_admin()) {
+function wades_add_about_meta_boxes() {
+    // Get current screen
+    $screen = get_current_screen();
+    if (!$screen || $screen->id !== 'page') {
         return;
     }
 
-    global $post;
-    if (!$post) {
+    // Get current template
+    $template = get_page_template_slug();
+    
+    // Only add these meta boxes for the about template
+    if ($template !== 'templates/about.php') {
         return;
     }
 
-    // Check if we're on a page and using the about template
-    if (get_post_type($post) === 'page') {
-        $template = get_page_template_slug($post->ID);
-        
-        if ($template === 'templates/about.php' || basename($template) === 'about.php') {
+    // Single meta box with tabs
             add_meta_box(
-                'about_content',
-                'About Page Content',
-                'wades_about_content_callback',
+        'wades_about_settings',
+        'About Page Settings',
+        'wades_about_settings_callback',
                 'page',
                 'normal',
                 'high'
             );
         }
-    }
-}
-add_action('add_meta_boxes', 'wades_about_meta_boxes');
+add_action('add_meta_boxes', 'wades_add_about_meta_boxes', 1);
 
 /**
  * About Content Meta Box Callback
  */
-function wades_about_content_callback($post) {
+function wades_about_settings_callback($post) {
     wp_nonce_field('wades_about_meta', 'wades_about_meta_nonce');
 
-    $meta = array(
-        // Hero Section
-        'about_title' => get_post_meta($post->ID, '_about_title', true),
-        'about_description' => get_post_meta($post->ID, '_about_description', true),
-        'about_image' => get_post_meta($post->ID, '_about_image', true),
-        
-        // Story Section
-        'story_title' => get_post_meta($post->ID, '_story_title', true),
-        'story_content' => get_post_meta($post->ID, '_story_content', true),
-        'specialties' => get_post_meta($post->ID, '_specialties', true) ?: array(),
-        'expertise' => get_post_meta($post->ID, '_expertise', true) ?: array(),
-        
-        // Features
-        'about_features' => get_post_meta($post->ID, '_about_features', true) ?: array(),
-        
-        // Service Areas
-        'service_areas' => get_post_meta($post->ID, '_service_areas', true) ?: array(),
-        'shipping_services' => get_post_meta($post->ID, '_shipping_services', true) ?: array(),
-        
-        // Contact Info
-        'contact_address' => get_post_meta($post->ID, '_contact_address', true),
-        'business_hours' => get_post_meta($post->ID, '_business_hours', true) ?: array(),
-        'contact_phone' => get_post_meta($post->ID, '_contact_phone', true),
-        'map_image' => get_post_meta($post->ID, '_map_image', true),
+    // Get all meta data
+    $hero_meta = array(
+        'title' => get_post_meta($post->ID, '_hero_title', true),
+        'description' => get_post_meta($post->ID, '_hero_description', true),
+        'background_image' => get_post_meta($post->ID, '_hero_background_image', true)
+    );
 
-        // Layout Options
-        'sections_visibility' => get_post_meta($post->ID, '_sections_visibility', true) ?: array(
-            'hero' => '1',
-            'story' => '1',
-            'features' => '1',
-            'service_areas' => '1',
-            'contact' => '1'
-        ),
-        'section_order' => get_post_meta($post->ID, '_section_order', true) ?: 'hero,story,features,service_areas,contact'
+    $team_meta = array(
+        'title' => get_post_meta($post->ID, '_team_section_title', true) ?: 'Our Team',
+        'description' => get_post_meta($post->ID, '_team_section_description', true),
+        'members' => get_post_meta($post->ID, '_team_members', true) ?: array()
+    );
+
+    $history_meta = array(
+        'title' => get_post_meta($post->ID, '_history_section_title', true),
+        'content' => get_post_meta($post->ID, '_history_content', true),
+        'image' => get_post_meta($post->ID, '_history_image', true)
+    );
+
+    $values_meta = array(
+        'title' => get_post_meta($post->ID, '_values_section_title', true),
+        'values' => get_post_meta($post->ID, '_company_values', true) ?: array()
+    );
+
+    // Get sections configuration
+    $sections = get_post_meta($post->ID, '_about_sections', true) ?: array(
+        'hero' => array('enabled' => true, 'order' => 10, 'title' => 'Hero Section'),
+        'history' => array('enabled' => true, 'order' => 20, 'title' => 'Our History'),
+        'values' => array('enabled' => true, 'order' => 30, 'title' => 'Our Values'),
+        'team' => array('enabled' => true, 'order' => 40, 'title' => 'Our Team')
     );
     ?>
-    <div class="about-meta-box">
+    <div class="meta-box-container">
+        <!-- Tab Navigation -->
         <div class="meta-box-tabs">
-            <button type="button" class="tab-button active" data-tab="hero">Hero</button>
-            <button type="button" class="tab-button" data-tab="story">Our Story</button>
-            <button type="button" class="tab-button" data-tab="features">Features</button>
-            <button type="button" class="tab-button" data-tab="areas">Service Areas</button>
-            <button type="button" class="tab-button" data-tab="contact">Contact</button>
-            <button type="button" class="tab-button" data-tab="layout">Layout</button>
+            <button type="button" class="tab-button active" data-tab="layout">Layout & Order</button>
+            <button type="button" class="tab-button" data-tab="hero">Hero Section</button>
+            <button type="button" class="tab-button" data-tab="history">Our History</button>
+            <button type="button" class="tab-button" data-tab="values">Our Values</button>
+            <button type="button" class="tab-button" data-tab="team">Our Team</button>
         </div>
 
-        <!-- Hero Tab -->
-        <div class="tab-content active" data-tab="hero">
+        <!-- Layout & Order Tab -->
+        <div class="tab-content active" data-tab="layout">
             <div class="meta-box-section">
-                <h3>Hero Section</h3>
+                <h3>Section Order & Visibility</h3>
+                <p class="description">Enable/disable sections and drag to reorder them.</p>
+                <div class="sections-list" style="margin-top: 15px;">
+                    <?php foreach ($sections as $section_id => $section) : ?>
+                        <div class="section-item" style="padding: 10px; background: #f9f9f9; border: 1px solid #ddd; margin-bottom: 5px;">
+                            <input type="hidden" 
+                                   name="about_sections[<?php echo esc_attr($section_id); ?>][order]" 
+                                   value="<?php echo esc_attr($section['order']); ?>"
+                                   class="section-order">
+                            <label style="display: flex; align-items: center; gap: 10px;">
+                                <span class="dashicons dashicons-menu" style="cursor: move;"></span>
+                                <input type="checkbox" 
+                                       name="about_sections[<?php echo esc_attr($section_id); ?>][enabled]" 
+                                       <?php checked($section['enabled']); ?>>
+                                <?php echo esc_html($section['title']); ?>
+                            </label>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hero Section Tab -->
+        <div class="tab-content" data-tab="hero">
+            <div class="meta-box-section">
+                <h3>Hero Content</h3>
                 <p>
-                    <label for="about_title">Page Title:</label><br>
-                    <input type="text" id="about_title" name="about_title" value="<?php echo esc_attr($meta['about_title']); ?>" class="widefat">
+                    <label for="hero_title">Hero Title:</label>
+                    <input type="text" id="hero_title" name="hero_title" 
+                           value="<?php echo esc_attr($hero_meta['title']); ?>" class="widefat">
                 </p>
                 <p>
-                    <label for="about_description">Hero Description:</label><br>
-                    <textarea id="about_description" name="about_description" rows="3" class="widefat"><?php echo esc_textarea($meta['about_description']); ?></textarea>
+                    <label for="hero_description">Hero Description:</label>
+                    <textarea id="hero_description" name="hero_description" rows="3" 
+                              class="widefat"><?php echo esc_textarea($hero_meta['description']); ?></textarea>
                 </p>
                 <p>
-                    <label>Hero Background Image:</label><br>
-                    <input type="hidden" name="about_image" value="<?php echo esc_attr($meta['about_image']); ?>" class="widefat">
-        <button type="button" class="button upload-image">Upload Image</button>
+                    <label for="hero_background_image">Background Image:</label>
+                    <input type="hidden" id="hero_background_image" name="hero_background_image" 
+                           value="<?php echo esc_attr($hero_meta['background_image']); ?>">
+                    <div class="button-group">
+                        <button type="button" class="button upload-image">Select Image</button>
+                        <button type="button" class="button remove-image">Remove Image</button>
+                    </div>
         <div class="image-preview">
-                        <?php if ($meta['about_image']) : ?>
-                            <?php echo wp_get_attachment_image($meta['about_image'], 'thumbnail'); ?>
+                        <?php if ($hero_meta['background_image']) : ?>
+                            <?php echo wp_get_attachment_image($hero_meta['background_image'], 'medium'); ?>
             <?php endif; ?>
         </div>
     </p>
             </div>
         </div>
 
-        <!-- Story Tab -->
-        <div class="tab-content" data-tab="story">
+        <!-- History Section Tab -->
+        <div class="tab-content" data-tab="history">
             <div class="meta-box-section">
-                <h3>Our Story Section</h3>
+                <h3>Our History</h3>
                 <p>
-                    <label for="story_title">Section Title:</label><br>
-                    <input type="text" id="story_title" name="story_title" value="<?php echo esc_attr($meta['story_title']); ?>" class="widefat">
+                    <label for="history_section_title">Section Title:</label>
+                    <input type="text" id="history_section_title" name="history_section_title" 
+                           value="<?php echo esc_attr($history_meta['title']); ?>" class="widefat">
                 </p>
                 <p>
-                    <label for="story_content">Story Content:</label><br>
-                    <textarea id="story_content" name="story_content" rows="5" class="widefat"><?php echo esc_textarea($meta['story_content']); ?></textarea>
+                    <label for="history_content">Content:</label>
+                    <?php wp_editor($history_meta['content'], 'history_content', array('textarea_name' => 'history_content')); ?>
                 </p>
+                <p>
+                    <label for="history_image">Featured Image:</label>
+                    <input type="hidden" id="history_image" name="history_image" 
+                           value="<?php echo esc_attr($history_meta['image']); ?>">
+                    <div class="button-group">
+                        <button type="button" class="button upload-image">Select Image</button>
+                        <button type="button" class="button remove-image">Remove Image</button>
             </div>
-
-            <div class="meta-box-section">
-                <h3>Specialties</h3>
-                <div class="specialties-list dynamic-list">
-                    <?php if (!empty($meta['specialties'])) : foreach ($meta['specialties'] as $specialty) : ?>
-                        <div class="dynamic-item">
-                            <input type="text" name="specialties[]" value="<?php echo esc_attr($specialty); ?>" class="widefat">
-                            <button type="button" class="button remove-item">Remove</button>
+                    <div class="image-preview">
+                        <?php if ($history_meta['image']) : ?>
+                            <?php echo wp_get_attachment_image($history_meta['image'], 'medium'); ?>
+                        <?php endif; ?>
                         </div>
-                    <?php endforeach; endif; ?>
-                </div>
-                <button type="button" class="button add-specialty">Add Specialty</button>
-            </div>
-
-            <div class="meta-box-section">
-                <h3>Engine Expertise</h3>
-                <div class="expertise-list dynamic-list">
-                    <?php if (!empty($meta['expertise'])) : foreach ($meta['expertise'] as $expertise) : ?>
-                        <div class="dynamic-item">
-                            <input type="text" name="expertise[]" value="<?php echo esc_attr($expertise); ?>" class="widefat">
-                            <button type="button" class="button remove-item">Remove</button>
-                        </div>
-                    <?php endforeach; endif; ?>
-                </div>
-                <button type="button" class="button add-expertise">Add Expertise</button>
+                </p>
             </div>
         </div>
 
-        <!-- Features Tab -->
-        <div class="tab-content" data-tab="features">
+        <!-- Values Section Tab -->
+        <div class="tab-content" data-tab="values">
             <div class="meta-box-section">
-                <h3>Features Grid</h3>
-                <div class="features-list">
+                <h3>Our Values</h3>
+                <p>
+                    <label for="values_section_title">Section Title:</label>
+                    <input type="text" id="values_section_title" name="values_section_title" 
+                           value="<?php echo esc_attr($values_meta['title']); ?>" class="widefat">
+                </p>
+                <div class="values-list">
                     <?php 
-                    if (!empty($meta['about_features'])) :
-                        foreach ($meta['about_features'] as $index => $feature) :
+                    $values = $values_meta['values'];
+                    if (empty($values)) {
+                        $values = array(
+                            array('title' => '', 'description' => '', 'icon' => '')
+                        );
+                    }
+                    foreach ($values as $index => $value) : 
                     ?>
-                        <div class="feature-item card">
+                        <div class="value-item card">
                             <div class="card-header">
-                                <h4>Feature <?php echo $index + 1; ?></h4>
-                                <button type="button" class="button remove-feature">Remove</button>
+                                <h4>Value <?php echo $index + 1; ?></h4>
+                                <button type="button" class="button remove-value">Remove</button>
                             </div>
                             <div class="card-body">
                 <p>
-                    <label>Icon (Lucide icon name):</label><br>
-                    <input type="text" name="about_features[<?php echo $index; ?>][icon]" value="<?php echo esc_attr($feature['icon']); ?>" class="widefat">
+                                    <label>Title:</label>
+                                    <input type="text" name="company_values[<?php echo $index; ?>][title]" 
+                                           value="<?php echo esc_attr($value['title']); ?>" class="widefat">
                 </p>
                 <p>
-                    <label>Title:</label><br>
-                    <input type="text" name="about_features[<?php echo $index; ?>][title]" value="<?php echo esc_attr($feature['title']); ?>" class="widefat">
+                                    <label>Description:</label>
+                                    <textarea name="company_values[<?php echo $index; ?>][description]" 
+                                              rows="2" class="widefat"><?php echo esc_textarea($value['description']); ?></textarea>
                 </p>
                 <p>
-                    <label>Description:</label><br>
-                    <textarea name="about_features[<?php echo $index; ?>][description]" rows="2" class="widefat"><?php echo esc_textarea($feature['description']); ?></textarea>
+                                    <label>Icon (Lucide icon name):</label>
+                                    <input type="text" name="company_values[<?php echo $index; ?>][icon]" 
+                                           value="<?php echo esc_attr($value['icon']); ?>" class="widefat">
                 </p>
             </div>
     </div>
-    <?php
-                        endforeach;
-                    endif;
-                    ?>
+                    <?php endforeach; ?>
                 </div>
-                <button type="button" class="button add-feature">Add Feature</button>
+                <button type="button" class="button add-value">Add Value</button>
             </div>
         </div>
 
-        <!-- Service Areas Tab -->
-        <div class="tab-content" data-tab="areas">
+        <!-- Team Section Tab -->
+        <div class="tab-content" data-tab="team">
             <div class="meta-box-section">
-                <h3>Service Areas</h3>
-                <div class="areas-list dynamic-list">
-                    <?php if (!empty($meta['service_areas'])) : foreach ($meta['service_areas'] as $area) : ?>
-                        <div class="dynamic-item">
-                            <input type="text" name="service_areas[]" value="<?php echo esc_attr($area); ?>" class="widefat">
-                            <button type="button" class="button remove-item">Remove</button>
-                    </div>
-                    <?php endforeach; endif; ?>
-                </div>
-                <button type="button" class="button add-area">Add Service Area</button>
-            </div>
-
-            <div class="meta-box-section">
-                <h3>Shipping Services</h3>
-                <div class="shipping-list dynamic-list">
-                    <?php if (!empty($meta['shipping_services'])) : foreach ($meta['shipping_services'] as $service) : ?>
-                        <div class="dynamic-item">
-                            <input type="text" name="shipping_services[]" value="<?php echo esc_attr($service); ?>" class="widefat">
-                            <button type="button" class="button remove-item">Remove</button>
-                        </div>
-                    <?php endforeach; endif; ?>
-    </div>
-                <button type="button" class="button add-shipping">Add Shipping Service</button>
-            </div>
-    </div>
-
-        <!-- Contact Tab -->
-        <div class="tab-content" data-tab="contact">
-            <div class="meta-box-section">
-                <h3>Contact Information</h3>
+                <h3>Our Team</h3>
                 <p>
-                    <label for="contact_address">Address:</label><br>
-                    <input type="text" id="contact_address" name="contact_address" value="<?php echo esc_attr($meta['contact_address']); ?>" class="widefat">
+                    <label for="team_section_title">Section Title:</label>
+                    <input type="text" id="team_section_title" name="team_section_title" 
+                           value="<?php echo esc_attr($team_meta['title']); ?>" class="widefat">
                 </p>
                 <p>
-                    <label for="contact_phone">Phone Number:</label><br>
-                    <input type="text" id="contact_phone" name="contact_phone" value="<?php echo esc_attr($meta['contact_phone']); ?>" class="widefat">
+                    <label for="team_section_description">Section Description:</label>
+                    <textarea id="team_section_description" name="team_section_description" 
+                              rows="3" class="widefat"><?php echo esc_textarea($team_meta['description']); ?></textarea>
                 </p>
+                <div class="team-members-list">
+                    <?php 
+                    $members = $team_meta['members'];
+                    if (empty($members)) {
+                        $members = array(
+                            array('name' => '', 'position' => '', 'bio' => '', 'image' => '')
+                        );
+                    }
+                    foreach ($members as $index => $member) : 
+                    ?>
+                        <div class="team-member-item card">
+                            <div class="card-header">
+                                <h4>Team Member <?php echo $index + 1; ?></h4>
+                                <button type="button" class="button remove-member">Remove</button>
             </div>
-
-            <div class="meta-box-section">
-                <h3>Business Hours</h3>
-                <div class="hours-list dynamic-list">
-                    <?php if (!empty($meta['business_hours'])) : foreach ($meta['business_hours'] as $hours) : ?>
-                        <div class="dynamic-item">
-                <input type="text" name="business_hours[]" value="<?php echo esc_attr($hours); ?>" class="widefat">
-                            <button type="button" class="button remove-item">Remove</button>
+                            <div class="card-body">
+                                <p>
+                                    <label>Name:</label>
+                                    <input type="text" name="team_members[<?php echo $index; ?>][name]" 
+                                           value="<?php echo esc_attr($member['name']); ?>" class="widefat">
+                                </p>
+                                <p>
+                                    <label>Position:</label>
+                                    <input type="text" name="team_members[<?php echo $index; ?>][position]" 
+                                           value="<?php echo esc_attr($member['position']); ?>" class="widefat">
+                                </p>
+                                <p>
+                                    <label>Bio:</label>
+                                    <textarea name="team_members[<?php echo $index; ?>][bio]" 
+                                              rows="3" class="widefat"><?php echo esc_textarea($member['bio']); ?></textarea>
+                                </p>
+                                <p>
+                                    <label>Photo:</label>
+                                    <input type="hidden" name="team_members[<?php echo $index; ?>][image]" 
+                                           value="<?php echo esc_attr($member['image']); ?>" class="member-image-input">
+                                    <div class="button-group">
+                                        <button type="button" class="button upload-member-image">Select Photo</button>
+                                        <button type="button" class="button remove-member-image">Remove Photo</button>
     </div>
-                    <?php endforeach; endif; ?>
-    </div>
-                <button type="button" class="button add-hours">Add Business Hours</button>
-    </div>
-
-            <div class="meta-box-section">
-                <h3>Map Image</h3>
-                <p>
-                    <input type="hidden" name="map_image" value="<?php echo esc_attr($meta['map_image']); ?>" class="widefat">
-                    <button type="button" class="button upload-image">Upload Map Image</button>
-                    <div class="image-preview">
-                        <?php if ($meta['map_image']) : ?>
-                            <?php echo wp_get_attachment_image($meta['map_image'], 'thumbnail'); ?>
+                                    <div class="member-image-preview">
+                                        <?php if ($member['image']) : ?>
+                                            <?php echo wp_get_attachment_image($member['image'], 'thumbnail'); ?>
                         <?php endif; ?>
                     </div>
                 </p>
             </div>
         </div>
-
-        <!-- Layout Tab -->
-        <div class="tab-content" data-tab="layout">
-            <div class="meta-box-section">
-                <h3>Section Visibility</h3>
-                <p>
-                    <label>
-                        <input type="checkbox" name="sections_visibility[hero]" value="1" <?php checked($meta['sections_visibility']['hero'], '1'); ?>>
-                        Show Hero Section
-                    </label>
-                </p>
-                <p>
-                    <label>
-                        <input type="checkbox" name="sections_visibility[story]" value="1" <?php checked($meta['sections_visibility']['story'], '1'); ?>>
-                        Show Our Story Section
-                    </label>
-                </p>
-                <p>
-                    <label>
-                        <input type="checkbox" name="sections_visibility[features]" value="1" <?php checked($meta['sections_visibility']['features'], '1'); ?>>
-                        Show Features Grid
-                    </label>
-                </p>
-                <p>
-                    <label>
-                        <input type="checkbox" name="sections_visibility[service_areas]" value="1" <?php checked($meta['sections_visibility']['service_areas'], '1'); ?>>
-                        Show Service Areas Section
-                    </label>
-                </p>
-                <p>
-                    <label>
-                        <input type="checkbox" name="sections_visibility[contact]" value="1" <?php checked($meta['sections_visibility']['contact'], '1'); ?>>
-                        Show Contact Section
-                    </label>
-                </p>
+                    <?php endforeach; ?>
                 </div>
-
-            <div class="meta-box-section">
-                <h3>Section Order</h3>
-                <p class="description">Drag and drop sections to reorder them on the page.</p>
-                <ul id="section-order" class="section-order-list">
-                    <?php
-                    $sections = explode(',', $meta['section_order']);
-                    $section_labels = array(
-                        'hero' => 'Hero Section',
-                        'story' => 'Our Story',
-                        'features' => 'Features Grid',
-                        'service_areas' => 'Service Areas',
-                        'contact' => 'Contact Section'
-                    );
-                    foreach ($sections as $section) :
-                        if (isset($section_labels[$section])) :
-                    ?>
-                        <li data-section="<?php echo esc_attr($section); ?>">
-                            <i class="dashicons dashicons-menu"></i>
-                            <?php echo esc_html($section_labels[$section]); ?>
-                        </li>
-                    <?php
-                        endif;
-                    endforeach;
-                    ?>
-                </ul>
-                <input type="hidden" name="section_order" id="section-order-input" value="<?php echo esc_attr($meta['section_order']); ?>">
+                <button type="button" class="button add-team-member">Add Team Member</button>
             </div>
         </div>
     </div>
 
-    <style>
-        <?php include get_template_directory() . '/inc/meta-boxes/meta-box-styles.css'; ?>
-    </style>
+    <script>
+    jQuery(document).ready(function($) {
+        // Tab functionality
+        $('.tab-button').on('click', function() {
+            $('.tab-button').removeClass('active');
+            $('.tab-content').removeClass('active');
+            $(this).addClass('active');
+            $('.tab-content[data-tab="' + $(this).data('tab') + '"]').addClass('active');
+        });
+
+        // Section ordering
+        $('.sections-list').sortable({
+            handle: '.dashicons-menu',
+            update: function(event, ui) {
+                $('.sections-list .section-item').each(function(index) {
+                    $(this).find('.section-order').val((index + 1) * 10);
+                });
+            }
+        });
+
+        // Image upload functionality
+        function initImageUpload(button, input, preview) {
+            button.on('click', function(e) {
+                e.preventDefault();
+                
+                var frame = wp.media({
+                    title: 'Select Image',
+                    multiple: false
+                });
+
+                frame.on('select', function() {
+                    var attachment = frame.state().get('selection').first().toJSON();
+                    input.val(attachment.id);
+                    preview.html($('<img>', {
+                        src: attachment.url,
+                        style: 'max-width: 200px; height: auto;'
+                    }));
+                });
+
+                frame.open();
+            });
+        }
+
+        // Initialize image uploads
+        $('.upload-image').each(function() {
+            var container = $(this).closest('.meta-box-section');
+            initImageUpload(
+                $(this),
+                container.find('input[type="hidden"]'),
+                container.find('.image-preview')
+            );
+        });
+
+        // Initialize team member image uploads
+        $('.upload-member-image').each(function() {
+            var container = $(this).closest('.team-member-item');
+            initImageUpload(
+                $(this),
+                container.find('.member-image-input'),
+                container.find('.member-image-preview')
+            );
+        });
+
+        // Remove image functionality
+        $('.remove-image, .remove-member-image').on('click', function() {
+            var container = $(this).closest('.meta-box-section, .team-member-item');
+            container.find('input[type="hidden"]').val('');
+            container.find('.image-preview, .member-image-preview').empty();
+        });
+
+        // Add value
+        $('.add-value').on('click', function() {
+            var index = $('.value-item').length;
+            var template = `
+                <div class="value-item card">
+                    <div class="card-header">
+                        <h4>Value ${index + 1}</h4>
+                        <button type="button" class="button remove-value">Remove</button>
+                    </div>
+                    <div class="card-body">
+                        <p>
+                            <label>Title:</label>
+                            <input type="text" name="company_values[${index}][title]" class="widefat">
+                        </p>
+                        <p>
+                            <label>Description:</label>
+                            <textarea name="company_values[${index}][description]" rows="2" class="widefat"></textarea>
+                        </p>
+                        <p>
+                            <label>Icon (Lucide icon name):</label>
+                            <input type="text" name="company_values[${index}][icon]" class="widefat">
+                        </p>
+                    </div>
+                </div>
+            `;
+            $('.values-list').append(template);
+        });
+
+        // Remove value
+        $(document).on('click', '.remove-value', function() {
+            $(this).closest('.value-item').remove();
+            // Update indices
+            $('.value-item').each(function(index) {
+                $(this).find('h4').text('Value ' + (index + 1));
+                $(this).find('input, textarea').each(function() {
+                    var name = $(this).attr('name');
+                    $(this).attr('name', name.replace(/\[\d+\]/, '[' + index + ']'));
+                });
+            });
+        });
+
+        // Add team member
+        $('.add-team-member').on('click', function() {
+            var index = $('.team-member-item').length;
+            var template = `
+                <div class="team-member-item card">
+                    <div class="card-header">
+                        <h4>Team Member ${index + 1}</h4>
+                        <button type="button" class="button remove-member">Remove</button>
+                    </div>
+                    <div class="card-body">
+                        <p>
+                            <label>Name:</label>
+                            <input type="text" name="team_members[${index}][name]" class="widefat">
+                        </p>
+                        <p>
+                            <label>Position:</label>
+                            <input type="text" name="team_members[${index}][position]" class="widefat">
+                        </p>
+                        <p>
+                            <label>Bio:</label>
+                            <textarea name="team_members[${index}][bio]" rows="3" class="widefat"></textarea>
+                        </p>
+                        <p>
+                            <label>Photo:</label>
+                            <input type="hidden" name="team_members[${index}][image]" class="member-image-input">
+                            <div class="button-group">
+                                <button type="button" class="button upload-member-image">Select Photo</button>
+                                <button type="button" class="button remove-member-image">Remove Photo</button>
+                            </div>
+                            <div class="member-image-preview"></div>
+                        </p>
+                    </div>
+                </div>
+            `;
+            var $newMember = $(template);
+            $('.team-members-list').append($newMember);
+            
+            // Initialize image upload for new member
+            initImageUpload(
+                $newMember.find('.upload-member-image'),
+                $newMember.find('.member-image-input'),
+                $newMember.find('.member-image-preview')
+            );
+        });
+
+        // Remove team member
+        $(document).on('click', '.remove-member', function() {
+            $(this).closest('.team-member-item').remove();
+            // Update indices
+            $('.team-member-item').each(function(index) {
+                $(this).find('h4').text('Team Member ' + (index + 1));
+                $(this).find('input, textarea').each(function() {
+                    var name = $(this).attr('name');
+                    $(this).attr('name', name.replace(/\[\d+\]/, '[' + index + ']'));
+                });
+            });
+        });
+    });
+    </script>
     <?php
 }
 
@@ -341,84 +464,114 @@ function wades_about_content_callback($post) {
  * Save About Meta Box Data
  */
 function wades_save_about_meta($post_id) {
+    // Check if our nonce is set
     if (!isset($_POST['wades_about_meta_nonce'])) {
         return;
     }
 
+    // Verify that the nonce is valid
     if (!wp_verify_nonce($_POST['wades_about_meta_nonce'], 'wades_about_meta')) {
         return;
     }
 
+    // If this is an autosave, our form has not been submitted, so we don't want to do anything
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
         return;
     }
 
+    // Check the user's permissions
     if (!current_user_can('edit_post', $post_id)) {
         return;
     }
 
-    // Save text fields
-    $text_fields = array(
-        'about_title',
-        'about_description',
-        'story_title',
-        'story_content',
-        'contact_address',
-        'contact_phone',
-        'section_order'
+    // Save sections configuration
+    if (isset($_POST['about_sections'])) {
+        $sections = array();
+        foreach ($_POST['about_sections'] as $section_id => $section_data) {
+            $sections[$section_id] = array(
+                'enabled' => isset($section_data['enabled']),
+                'order' => absint($section_data['order']),
+                'title' => sanitize_text_field($section_data['title'])
+            );
+        }
+        update_post_meta($post_id, '_about_sections', $sections);
+    }
+
+    // Save hero section
+    $hero_fields = array(
+        'hero_title' => 'text',
+        'hero_description' => 'textarea',
+        'hero_background_image' => 'number'
     );
 
-    foreach ($text_fields as $field) {
+    foreach ($hero_fields as $field => $type) {
         if (isset($_POST[$field])) {
-            update_post_meta($post_id, '_' . $field, sanitize_text_field($_POST[$field]));
+            $value = $type === 'textarea' ? wp_kses_post($_POST[$field]) : 
+                    ($type === 'number' ? absint($_POST[$field]) : sanitize_text_field($_POST[$field]));
+            update_post_meta($post_id, '_' . $field, $value);
         }
     }
 
-    // Save arrays
-    $array_fields = array(
-        'specialties',
-        'expertise',
-        'service_areas',
-        'shipping_services',
-        'business_hours'
+    // Save history section
+    $history_fields = array(
+        'history_section_title' => 'text',
+        'history_content' => 'html',
+        'history_image' => 'number'
     );
 
-    foreach ($array_fields as $field) {
-        if (isset($_POST[$field]) && is_array($_POST[$field])) {
-            update_post_meta($post_id, '_' . $field, array_map('sanitize_text_field', array_filter($_POST[$field])));
+    foreach ($history_fields as $field => $type) {
+        if (isset($_POST[$field])) {
+            $value = $type === 'html' ? wp_kses_post($_POST[$field]) : 
+                    ($type === 'number' ? absint($_POST[$field]) : sanitize_text_field($_POST[$field]));
+            update_post_meta($post_id, '_' . $field, $value);
         }
     }
 
-    // Save features
-    if (isset($_POST['about_features'])) {
-        $features = array();
-        foreach ($_POST['about_features'] as $feature) {
-            if (!empty($feature['title'])) {
-            $features[] = array(
-                'icon' => sanitize_text_field($feature['icon']),
-                'title' => sanitize_text_field($feature['title']),
-                'description' => wp_kses_post($feature['description'])
+    // Save values section
+    if (isset($_POST['values_section_title'])) {
+        update_post_meta($post_id, '_values_section_title', sanitize_text_field($_POST['values_section_title']));
+        }
+
+    if (isset($_POST['company_values']) && is_array($_POST['company_values'])) {
+        $values = array();
+        foreach ($_POST['company_values'] as $value) {
+            if (!empty($value['title'])) {
+                $values[] = array(
+                    'title' => sanitize_text_field($value['title']),
+                    'description' => wp_kses_post($value['description']),
+                    'icon' => sanitize_text_field($value['icon'])
             );
             }
         }
-        update_post_meta($post_id, '_about_features', $features);
+        update_post_meta($post_id, '_company_values', $values);
     }
 
-    // Save images
-    $image_fields = array('about_image', 'map_image');
-    foreach ($image_fields as $field) {
+    // Save team section
+    $team_fields = array(
+        'team_section_title' => 'text',
+        'team_section_description' => 'textarea'
+    );
+
+    foreach ($team_fields as $field => $type) {
         if (isset($_POST[$field])) {
-            update_post_meta($post_id, '_' . $field, absint($_POST[$field]));
+            $value = $type === 'textarea' ? wp_kses_post($_POST[$field]) : sanitize_text_field($_POST[$field]);
+            update_post_meta($post_id, '_' . $field, $value);
         }
     }
 
-    // Save section visibility
-    if (isset($_POST['sections_visibility']) && is_array($_POST['sections_visibility'])) {
-        $visibility = array();
-        foreach ($_POST['sections_visibility'] as $section => $value) {
-            $visibility[$section] = '1';
+    if (isset($_POST['team_members']) && is_array($_POST['team_members'])) {
+        $members = array();
+        foreach ($_POST['team_members'] as $member) {
+            if (!empty($member['name'])) {
+                $members[] = array(
+                    'name' => sanitize_text_field($member['name']),
+                    'position' => sanitize_text_field($member['position']),
+                    'bio' => wp_kses_post($member['bio']),
+                    'image' => absint($member['image'])
+                );
+            }
         }
-        update_post_meta($post_id, '_sections_visibility', $visibility);
+        update_post_meta($post_id, '_team_members', $members);
     }
 }
 add_action('save_post', 'wades_save_about_meta');
@@ -517,4 +670,5 @@ function wades_about_admin_scripts($hook) {
         }
     }
 }
+add_action('admin_enqueue_scripts', 'wades_about_admin_scripts'); 
 add_action('admin_enqueue_scripts', 'wades_about_admin_scripts'); 

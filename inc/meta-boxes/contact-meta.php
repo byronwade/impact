@@ -54,30 +54,31 @@ function wades_contact_content_callback($post) {
         // Contact Cards
         'contact_cards' => get_post_meta($post->ID, '_contact_cards', true) ?: array(
             array(
-                'icon' => 'message-circle',
-                'title' => 'Chat to sales',
-                'description' => 'Speak to our friendly team.',
+                'icon' => 'ship',
+                'title' => 'Sales Department',
+                'description' => 'Find your perfect boat',
                 'contact' => 'sales@impactmarinegroup.com',
                 'type' => 'email'
             ),
             array(
                 'icon' => 'wrench',
-                'title' => 'Service support',
-                'description' => 'We\'re here to help.',
+                'title' => 'Service Department',
+                'description' => 'Expert boat maintenance & repairs',
                 'contact' => 'service@impactmarinegroup.com',
                 'type' => 'email'
             ),
             array(
                 'icon' => 'map-pin',
-                'title' => 'Visit us',
-                'description' => '5185 Browns Bridge Rd',
-                'link_text' => 'View on Google Maps',
-                'href' => 'https://maps.google.com/?q=5185+Browns+Bridge+Rd'
+                'title' => 'Visit Our Showroom',
+                'description' => '5185 Browns Bridge Rd, Cumming, GA',
+                'link_text' => 'Get Directions',
+                'href' => 'https://maps.google.com/?q=5185+Browns+Bridge+Rd+Cumming+GA',
+                'type' => 'location'
             ),
             array(
                 'icon' => 'phone',
-                'title' => 'Call us',
-                'description' => 'Mon-Fri from 8am to 5pm.',
+                'title' => 'Call Us Today',
+                'description' => 'Mon-Fri from 8am to 5pm',
                 'contacts' => array(
                     array('label' => 'Sales', 'number' => '(770) 881-7808'),
                     array('label' => 'Service', 'number' => '(770) 881-7809')
@@ -89,32 +90,42 @@ function wades_contact_content_callback($post) {
         // Form Settings
         'form_settings' => get_post_meta($post->ID, '_form_settings', true) ?: array(
             'recipient_email' => get_option('admin_email'),
-            'success_message' => 'Thank you for your message. We\'ll get back to you soon!',
-            'error_message' => 'Sorry, there was a problem sending your message. Please try again.',
-            'required_fields' => array('name', 'email', 'message')
+            'success_message' => 'Thank you for your message. Our team will get back to you within 24 hours.',
+            'error_message' => 'Sorry, there was a problem sending your message. Please try again or contact us directly.',
+            'required_fields' => array('name', 'email', 'phone', 'message')
         ),
         
         // FAQ Section
         'faqs' => get_post_meta($post->ID, '_faqs', true) ?: array(
             array(
-                'icon' => 'ship',
-                'question' => 'What brands of boats do you offer?',
-                'answer' => 'We offer a wide range of boat brands, including Sea Fox, Bennington, and more. Visit our showroom or check our inventory online for the latest models.'
-            ),
-            array(
                 'icon' => 'clock',
                 'question' => 'What are your business hours?',
-                'answer' => 'We are open Monday through Friday from 8am to 5pm, and Saturday from 9am to 3pm. We are closed on Sundays.'
+                'answer' => 'Our showroom and service department are open Monday through Friday from 8am to 5pm. We\'re closed on major holidays.'
             ),
             array(
-                'icon' => 'wrench',
-                'question' => 'Do you offer boat maintenance services?',
-                'answer' => 'Yes, we provide comprehensive maintenance services including routine maintenance, repairs, and winterization.'
+                'icon' => 'map',
+                'question' => 'Where are you located?',
+                'answer' => 'We\'re conveniently located at 5185 Browns Bridge Rd in Cumming, GA. Our facility is easily accessible from GA-400.'
+            ),
+            array(
+                'icon' => 'calendar',
+                'question' => 'Do I need an appointment?',
+                'answer' => 'While walk-ins are welcome for our showroom, we recommend scheduling appointments for service work and boat viewings to ensure the best possible experience.'
+            ),
+            array(
+                'icon' => 'truck',
+                'question' => 'Do you offer mobile service?',
+                'answer' => 'Yes, we offer mobile service for many maintenance and repair needs. Contact our service department to discuss your specific requirements.'
             ),
             array(
                 'icon' => 'credit-card',
                 'question' => 'What payment methods do you accept?',
-                'answer' => 'We accept all major credit cards, cash, and offer various financing options through our trusted partners.'
+                'answer' => 'We accept all major credit cards, cash, and certified checks. We also offer various financing options through our trusted lending partners.'
+            ),
+            array(
+                'icon' => 'life-buoy',
+                'question' => 'Do you offer emergency service?',
+                'answer' => 'Yes, we provide emergency service assistance during business hours. For after-hours emergencies, please call our service hotline.'
             )
         ),
         
@@ -275,8 +286,8 @@ function wades_contact_content_callback($post) {
                 </p>
                 <p>
                     <label>
-                        <input type="checkbox" name="form_settings[required_fields][]" value="subject" <?php checked(in_array('subject', $meta['form_settings']['required_fields'])); ?>>
-                        Subject
+                        <input type="checkbox" name="form_settings[required_fields][]" value="phone" <?php checked(in_array('phone', $meta['form_settings']['required_fields'])); ?>>
+                        Phone
                     </label>
                 </p>
                 <p>

@@ -10,52 +10,51 @@ if (!defined('ABSPATH')) {
 /**
  * Add meta boxes for Services template
  */
-function wades_services_meta_boxes() {
-    // Only add meta boxes on page edit screen
-    if (!is_admin()) {
+function wades_add_services_meta_boxes() {
+    // Get current screen
+    $screen = get_current_screen();
+    if (!$screen || $screen->id !== 'page') {
         return;
     }
 
-    global $post;
-    if (!$post) {
+    // Get current template
+    $template = get_page_template_slug();
+    
+    // Only add these meta boxes for the services template
+    if ($template !== 'templates/services.php') {
         return;
     }
 
-    // Check if we're on a page and using the services template
-    if (get_post_type($post) === 'page') {
-        // Get the current template
-        $template = get_page_template_slug($post->ID);
-        
-        // Check if this is the services template
-        if ($template === 'templates/services.php' || basename($template) === 'services.php') {
-            add_meta_box(
-                'services_content',
-                'Services Page Content',
-                'wades_services_content_callback',
-                'page',
-                'normal',
-                'high'
-            );
-        }
-    }
+    // Remove the separate page header meta box
+    remove_meta_box('wades_page_header', 'page', 'normal');
+
+    // Single meta box with tabs
+    add_meta_box(
+        'wades_services_settings',
+        'Services Page Settings',
+        'wades_services_settings_callback',
+        'page',
+        'normal',
+        'high'
+    );
 }
-add_action('add_meta_boxes', 'wades_services_meta_boxes');
+add_action('add_meta_boxes', 'wades_add_services_meta_boxes', 1);
 
 /**
- * Services Content Meta Box Callback
+ * Services Settings Meta Box Callback
  */
-function wades_services_content_callback($post) {
+function wades_services_settings_callback($post) {
     wp_nonce_field('wades_services_meta', 'wades_services_meta_nonce');
 
+    // Get all meta data
     $meta = array(
         'services_title' => get_post_meta($post->ID, '_services_title', true),
         'services_description' => get_post_meta($post->ID, '_services_description', true),
-        'services_grid' => get_post_meta($post->ID, '_services_grid', true),
-        'why_choose_us' => get_post_meta($post->ID, '_why_choose_us', true),
+        'services_grid' => get_post_meta($post->ID, '_services_grid', true) ?: array(),
+        'why_choose_us' => get_post_meta($post->ID, '_why_choose_us', true) ?: array(),
         'service_image' => get_post_meta($post->ID, '_service_image', true),
-        'winterization_packages' => get_post_meta($post->ID, '_winterization_packages', true),
-        'service_policies' => get_post_meta($post->ID, '_service_policies', true),
-        // New layout options
+        'winterization_packages' => get_post_meta($post->ID, '_winterization_packages', true) ?: array(),
+        'service_policies' => get_post_meta($post->ID, '_service_policies', true) ?: array(),
         'grid_columns' => get_post_meta($post->ID, '_grid_columns', true) ?: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',
         'services_per_page' => get_post_meta($post->ID, '_services_per_page', true) ?: '12',
         'show_search' => get_post_meta($post->ID, '_show_search', true) ?: '1',
@@ -66,176 +65,83 @@ function wades_services_content_callback($post) {
             'why_choose_us' => '1',
             'winterization' => '1',
             'policies' => '1'
-        )
+        ),
+        'hero_background_image' => get_post_meta($post->ID, '_hero_background_image', true),
+        'hero_overlay_opacity' => get_post_meta($post->ID, '_hero_overlay_opacity', true) ?: '40',
+        'hero_height' => get_post_meta($post->ID, '_hero_height', true) ?: '70'
     );
     ?>
-    <div class="services-meta-box">
+    <div class="meta-box-container">
+        <!-- Tab Navigation -->
         <div class="meta-box-tabs">
-            <button type="button" class="tab-button active" data-tab="content">Content</button>
-            <button type="button" class="tab-button" data-tab="layout">Layout & Display</button>
-            <button type="button" class="tab-button" data-tab="sections">Sections</button>
+            <button type="button" class="tab-button active" data-tab="layout">Layout & Order</button>
+            <button type="button" class="tab-button" data-tab="header">Page Header</button>
+            <button type="button" class="tab-button" data-tab="services">Services Grid</button>
+            <button type="button" class="tab-button" data-tab="why-choose">Why Choose Us</button>
+            <button type="button" class="tab-button" data-tab="winterization">Winterization</button>
+            <button type="button" class="tab-button" data-tab="policies">Policies</button>
         </div>
 
-        <!-- Content Tab -->
-        <div class="tab-content active" data-tab="content">
-            <!-- Hero Section -->
+        <!-- Layout & Order Tab -->
+        <div class="tab-content active" data-tab="layout">
             <div class="meta-box-section">
-                <h3>Hero Section</h3>
-                <p>
-                    <label for="services_title">Page Title:</label><br>
-                    <input type="text" id="services_title" name="services_title" value="<?php echo esc_attr($meta['services_title']); ?>" class="widefat">
-                </p>
-                <p>
-                    <label for="services_description">Page Description:</label><br>
-                    <textarea id="services_description" name="services_description" rows="3" class="widefat"><?php echo esc_textarea($meta['services_description']); ?></textarea>
-                </p>
-            </div>
-
-            <!-- Services Grid -->
-            <div class="meta-box-section">
-                <h3>Services Grid</h3>
-                <div class="services-grid">
+                <h3>Section Order & Visibility</h3>
+                <p class="description">Enable/disable sections and drag to reorder them.</p>
+                <div class="sections-list" style="margin-top: 15px;">
                     <?php
-                    $services = $meta['services_grid'] ?: array();
-                    if (!empty($services)) :
-                        foreach ($services as $index => $service) :
+                    $sections = explode(',', $meta['section_order']);
+                    $section_labels = array(
+                        'services' => 'Main Services Grid Section',
+                        'why_choose_us' => 'Why Choose Our Service Department Section',
+                        'winterization' => 'Winterization & Service Packages Section',
+                        'policies' => 'Service Policies & Requirements Section'
+                    );
+                    foreach ($sections as $section_id) :
+                        if (isset($section_labels[$section_id])) :
                     ?>
-                        <div class="service-item card">
-                            <div class="card-header">
-                                <h4>Service <?php echo $index + 1; ?></h4>
-                                <button type="button" class="button remove-service">Remove</button>
-                            </div>
-                            <div class="card-body">
-                                <p>
-                                    <label>Icon (Lucide icon name):</label><br>
-                                    <input type="text" name="services_grid[<?php echo $index; ?>][icon]" value="<?php echo esc_attr($service['icon']); ?>" class="widefat">
-                                </p>
-                                <p>
-                                    <label>Title:</label><br>
-                                    <input type="text" name="services_grid[<?php echo $index; ?>][title]" value="<?php echo esc_attr($service['title']); ?>" class="widefat">
-                                </p>
-                                <p>
-                                    <label>Description:</label><br>
-                                    <textarea name="services_grid[<?php echo $index; ?>][description]" rows="3" class="widefat"><?php echo esc_textarea($service['description']); ?></textarea>
-                                </p>
-                            </div>
-                        </div>
-                    <?php
-                        endforeach;
-                    endif;
-                    ?>
-                </div>
-                <button type="button" class="button add-service">Add Service</button>
-            </div>
-
-            <!-- Why Choose Us -->
-            <div class="meta-box-section">
-                <h3>Why Choose Us Section</h3>
-                <div class="reasons-list">
-                    <?php
-                    $reasons = $meta['why_choose_us'] ?: array();
-                    if (!empty($reasons)) :
-                        foreach ($reasons as $index => $reason) :
-                    ?>
-                        <p>
-                            <input type="text" name="why_choose_us[]" value="<?php echo esc_attr($reason); ?>" class="widefat">
-                            <button type="button" class="button remove-reason">Remove</button>
-                        </p>
-                    <?php
-                        endforeach;
-                    endif;
-                    ?>
-                </div>
-                <button type="button" class="button add-reason">Add Reason</button>
-                <p>
-                    <label>Service Department Image:</label><br>
-                    <input type="hidden" name="service_image" value="<?php echo esc_attr($meta['service_image']); ?>" class="widefat">
-                    <button type="button" class="button upload-image">Upload Image</button>
-                    <div class="image-preview">
-                        <?php if ($meta['service_image']) : ?>
-                            <?php echo wp_get_attachment_image($meta['service_image'], 'thumbnail'); ?>
-                        <?php endif; ?>
-                    </div>
-                </p>
-            </div>
-
-            <!-- Winterization Packages -->
-            <div class="meta-box-section">
-                <h3>Winterization Packages</h3>
-                <div class="packages-list">
-                    <?php
-                    $packages = $meta['winterization_packages'] ?: array();
-                    if (!empty($packages)) :
-                        foreach ($packages as $index => $package) :
-                    ?>
-                        <div class="package-item card">
-                            <div class="card-header">
-                                <h4>Package <?php echo $index + 1; ?></h4>
-                                <button type="button" class="button remove-package">Remove</button>
-                            </div>
-                            <div class="card-body">
-                                <p>
-                                    <label>Title:</label><br>
-                                    <input type="text" name="winterization_packages[<?php echo $index; ?>][title]" value="<?php echo esc_attr($package['title']); ?>" class="widefat">
-                                </p>
-                                <p>
-                                    <label>Description:</label><br>
-                                    <textarea name="winterization_packages[<?php echo $index; ?>][description]" rows="2" class="widefat"><?php echo esc_textarea($package['description']); ?></textarea>
-                                </p>
-                                <div class="package-services">
-                                    <label>Services:</label>
-                                    <?php if (!empty($package['services'])) : foreach ($package['services'] as $service_index => $service) : ?>
-                                        <p>
-                                            <input type="text" name="winterization_packages[<?php echo $index; ?>][services][]" value="<?php echo esc_attr($service); ?>" class="widefat">
-                                            <button type="button" class="button remove-package-service">Remove</button>
-                                        </p>
-                                    <?php endforeach; endif; ?>
-                                    <button type="button" class="button add-package-service">Add Service</button>
+                        <div class="section-item" style="padding: 10px; background: #f9f9f9; border: 1px solid #ddd; margin-bottom: 5px;">
+                            <input type="hidden" 
+                                   name="section_order" 
+                                   value="<?php echo esc_attr($meta['section_order']); ?>"
+                                   class="section-order">
+                            <label style="display: flex; align-items: center; gap: 10px;">
+                                <span class="dashicons dashicons-menu" style="cursor: move;"></span>
+                                <input type="checkbox" 
+                                       name="sections_visibility[<?php echo esc_attr($section_id); ?>]" 
+                                       value="1"
+                                       <?php checked($meta['sections_visibility'][$section_id], '1'); ?>>
+                                <div>
+                                    <strong><?php echo esc_html($section_labels[$section_id]); ?></strong>
+                                    <p class="description" style="margin: 2px 0 0 0; font-size: 12px;">
+                                        <?php
+                                        switch ($section_id) {
+                                            case 'services':
+                                                echo 'The main grid displaying all available services with search and filtering options.';
+                                                break;
+                                            case 'why_choose_us':
+                                                echo 'Highlights our expertise, certifications, and service guarantees.';
+                                                break;
+                                            case 'winterization':
+                                                echo 'Displays winterization service packages and seasonal maintenance options.';
+                                                break;
+                                            case 'policies':
+                                                echo 'Lists important service policies, requirements, and warranty information.';
+                                                break;
+                                        }
+                                        ?>
+                                    </p>
                                 </div>
-                                <p>
-                                    <label>Price:</label><br>
-                                    <input type="text" name="winterization_packages[<?php echo $index; ?>][price]" value="<?php echo esc_attr($package['price']); ?>" class="widefat">
-                                </p>
-                                <p>
-                                    <label>Note:</label><br>
-                                    <input type="text" name="winterization_packages[<?php echo $index; ?>][note]" value="<?php echo esc_attr($package['note']); ?>" class="widefat">
-                                </p>
-                            </div>
+                            </label>
                         </div>
-                    <?php
-                        endforeach;
-                    endif;
+                    <?php 
+                        endif;
+                    endforeach; 
                     ?>
                 </div>
-                <button type="button" class="button add-package">Add Package</button>
             </div>
 
-            <!-- Service Policies -->
             <div class="meta-box-section">
-                <h3>Service Policies</h3>
-                <div class="policies-list">
-                    <?php
-                    $policies = $meta['service_policies'] ?: array();
-                    if (!empty($policies)) :
-                        foreach ($policies as $index => $policy) :
-                    ?>
-                        <p>
-                            <input type="text" name="service_policies[]" value="<?php echo esc_attr($policy); ?>" class="widefat">
-                            <button type="button" class="button remove-policy">Remove</button>
-                        </p>
-                    <?php
-                        endforeach;
-                    endif;
-                    ?>
-                </div>
-                <button type="button" class="button add-policy">Add Policy</button>
-            </div>
-        </div>
-
-        <!-- Layout Tab -->
-        <div class="tab-content" data-tab="layout">
-            <div class="meta-box-section">
-                <h3>Grid Layout</h3>
+                <h3>Grid Layout Settings</h3>
                 <p>
                     <label for="grid_columns">Number of Columns:</label><br>
                     <select id="grid_columns" name="grid_columns" class="widefat">
@@ -246,143 +152,185 @@ function wades_services_content_callback($post) {
                 </p>
                 <p>
                     <label for="services_per_page">Services Per Page:</label><br>
-                    <input type="number" id="services_per_page" name="services_per_page" value="<?php echo esc_attr($meta['services_per_page']); ?>" class="small-text" min="1" max="100">
+                    <input type="number" id="services_per_page" name="services_per_page" 
+                           value="<?php echo esc_attr($meta['services_per_page']); ?>" 
+                           class="small-text" min="1" max="100">
                 </p>
-            </div>
-
-            <div class="meta-box-section">
-                <h3>Search & Filters</h3>
                 <p>
                     <label>
-                        <input type="checkbox" name="show_search" value="1" <?php checked($meta['show_search'], '1'); ?>>
+                        <input type="checkbox" name="show_search" value="1" 
+                               <?php checked($meta['show_search'], '1'); ?>>
                         Show Search Bar
                     </label>
                 </p>
                 <p>
                     <label>
-                        <input type="checkbox" name="show_filters" value="1" <?php checked($meta['show_filters'], '1'); ?>>
+                        <input type="checkbox" name="show_filters" value="1" 
+                               <?php checked($meta['show_filters'], '1'); ?>>
                         Show Location Filter
                     </label>
                 </p>
             </div>
         </div>
 
-        <!-- Sections Tab -->
-        <div class="tab-content" data-tab="sections">
+        <!-- Header Tab -->
+        <div class="tab-content" data-tab="header">
             <div class="meta-box-section">
-                <h3>Section Visibility</h3>
-                <p>
-                    <label>
-                        <input type="checkbox" name="sections_visibility[services]" value="1" <?php checked($meta['sections_visibility']['services'], '1'); ?>>
-                        Show Services Grid
+                <h3>Page Header Settings</h3>
+                <!-- Background Image -->
+                <div class="mb-6">
+                    <label class="block mb-2 font-medium">Background Image</label>
+                    <div class="flex items-start gap-4">
+                        <div>
+                            <input type="hidden" name="hero_background_image" id="hero_background_image" 
+                                   value="<?php echo esc_attr($meta['hero_background_image']); ?>">
+                            <div class="button-group">
+                                <button type="button" class="button upload-image" id="upload_hero_image">Select Image</button>
+                                <button type="button" class="button remove-image">Remove Image</button>
+                            </div>
+                        </div>
+                        <div id="hero_image_preview" class="max-w-xs">
+                            <?php 
+                            $bg_image = $meta['hero_background_image'];
+                            if ($bg_image) {
+                                echo wp_get_attachment_image($bg_image, 'thumbnail');
+                            }
+                            ?>
+                        </div>
+                    </div>
+                    <p class="description mt-2">Recommended size: 1920x1080px or larger</p>
+                </div>
+
+                <!-- Overlay Opacity -->
+                <div class="mb-6">
+                    <label for="hero_overlay_opacity" class="block mb-2 font-medium">
+                        Overlay Opacity (%)
                     </label>
+                    <input type="number" id="hero_overlay_opacity" name="hero_overlay_opacity" 
+                           value="<?php echo esc_attr($meta['hero_overlay_opacity']); ?>"
+                           class="regular-text" min="0" max="100" step="5">
+                    <p class="description mt-2">Adjust the darkness of the overlay on the background image</p>
+                </div>
+
+                <!-- Header Height -->
+                <div class="mb-6">
+                    <label for="hero_height" class="block mb-2 font-medium">
+                        Header Height (vh)
+                    </label>
+                    <input type="number" id="hero_height" name="hero_height" 
+                           value="<?php echo esc_attr($meta['hero_height']); ?>"
+                           class="regular-text" min="30" max="100" step="5">
+                    <p class="description mt-2">Set the height of the header (70 = 70% of viewport height)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Services Grid Tab -->
+        <div class="tab-content" data-tab="services">
+            <div class="meta-box-section">
+                <h3>Services Grid Content</h3>
+                <p>
+                    <label for="services_title">Section Title:</label>
+                    <input type="text" id="services_title" name="services_title" 
+                           value="<?php echo esc_attr($meta['services_title']); ?>" class="widefat">
                 </p>
                 <p>
-                    <label>
-                        <input type="checkbox" name="sections_visibility[why_choose_us]" value="1" <?php checked($meta['sections_visibility']['why_choose_us'], '1'); ?>>
-                        Show Why Choose Us Section
-                    </label>
-                </p>
-                <p>
-                    <label>
-                        <input type="checkbox" name="sections_visibility[winterization]" value="1" <?php checked($meta['sections_visibility']['winterization'], '1'); ?>>
-                        Show Winterization Packages
-                    </label>
-                </p>
-                <p>
-                    <label>
-                        <input type="checkbox" name="sections_visibility[policies]" value="1" <?php checked($meta['sections_visibility']['policies'], '1'); ?>>
-                        Show Service Policies
-                    </label>
+                    <label for="services_description">Section Description:</label>
+                    <textarea id="services_description" name="services_description" rows="3" 
+                              class="widefat"><?php echo esc_textarea($meta['services_description']); ?></textarea>
                 </p>
             </div>
+        </div>
 
+        <!-- Why Choose Us Tab -->
+        <div class="tab-content" data-tab="why-choose">
             <div class="meta-box-section">
-                <h3>Section Order</h3>
-                <p class="description">Drag and drop sections to reorder them on the page.</p>
-                <ul id="section-order" class="section-order-list">
-                    <?php
-                    $sections = explode(',', $meta['section_order']);
-                    $section_labels = array(
-                        'services' => 'Services Grid',
-                        'why_choose_us' => 'Why Choose Us',
-                        'winterization' => 'Winterization Packages',
-                        'policies' => 'Service Policies'
-                    );
-                    foreach ($sections as $section) :
-                        if (isset($section_labels[$section])) :
-                    ?>
-                        <li data-section="<?php echo esc_attr($section); ?>">
-                            <i class="dashicons dashicons-menu"></i>
-                            <?php echo esc_html($section_labels[$section]); ?>
-                        </li>
-                    <?php
-                        endif;
-                    endforeach;
-                    ?>
-                </ul>
-                <input type="hidden" name="section_order" id="section-order-input" value="<?php echo esc_attr($meta['section_order']); ?>">
+                <h3>Why Choose Us Content</h3>
+                <div class="reasons-list">
+                    <?php foreach ($meta['why_choose_us'] as $index => $reason) : ?>
+                        <p>
+                            <input type="text" name="why_choose_us[]" 
+                                   value="<?php echo esc_attr($reason); ?>" class="widefat">
+                            <button type="button" class="button remove-reason">Remove</button>
+                        </p>
+                    <?php endforeach; ?>
+                </div>
+                <button type="button" class="button add-reason">Add Reason</button>
+                <p>
+                    <label>Featured Image:</label><br>
+                    <input type="hidden" name="service_image" 
+                           value="<?php echo esc_attr($meta['service_image']); ?>" class="widefat">
+                    <div class="button-group">
+                        <button type="button" class="button upload-image">Select Image</button>
+                        <button type="button" class="button remove-image">Remove Image</button>
+                    </div>
+                    <div class="image-preview">
+                        <?php if ($meta['service_image']) : ?>
+                            <?php echo wp_get_attachment_image($meta['service_image'], 'thumbnail'); ?>
+                        <?php endif; ?>
+                    </div>
+                </p>
+            </div>
+        </div>
+
+        <!-- Winterization Tab -->
+        <div class="tab-content" data-tab="winterization">
+            <div class="meta-box-section">
+                <h3>Winterization Packages</h3>
+                <div class="packages-list">
+                    <?php foreach ($meta['winterization_packages'] as $index => $package) : ?>
+                        <div class="package-item card">
+                            <div class="card-header">
+                                <h4>Package <?php echo $index + 1; ?></h4>
+                                <button type="button" class="button remove-package">Remove</button>
+                            </div>
+                            <div class="card-body">
+                                <p>
+                                    <label>Title:</label>
+                                    <input type="text" name="winterization_packages[<?php echo $index; ?>][title]" 
+                                           value="<?php echo esc_attr($package['title']); ?>" class="widefat">
+                                </p>
+                                <p>
+                                    <label>Description:</label>
+                                    <textarea name="winterization_packages[<?php echo $index; ?>][description]" 
+                                              rows="2" class="widefat"><?php echo esc_textarea($package['description']); ?></textarea>
+                                </p>
+                                <div class="package-services">
+                                    <label>Services:</label>
+                                    <?php foreach ($package['services'] as $service_index => $service) : ?>
+                                        <p>
+                                            <input type="text" name="winterization_packages[<?php echo $index; ?>][services][]" 
+                                                   value="<?php echo esc_attr($service); ?>" class="widefat">
+                                            <button type="button" class="button remove-package-service">Remove</button>
+                                        </p>
+                                    <?php endforeach; ?>
+                                    <button type="button" class="button add-package-service">Add Service</button>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                <button type="button" class="button add-package">Add Package</button>
+            </div>
+        </div>
+
+        <!-- Policies Tab -->
+        <div class="tab-content" data-tab="policies">
+            <div class="meta-box-section">
+                <h3>Service Policies</h3>
+                <div class="policies-list">
+                    <?php foreach ($meta['service_policies'] as $index => $policy) : ?>
+                        <p>
+                            <input type="text" name="service_policies[]" 
+                                   value="<?php echo esc_attr($policy); ?>" class="widefat">
+                            <button type="button" class="button remove-policy">Remove</button>
+                        </p>
+                    <?php endforeach; ?>
+                </div>
+                <button type="button" class="button add-policy">Add Policy</button>
             </div>
         </div>
     </div>
-
-    <style>
-        .meta-box-tabs {
-            margin-bottom: 20px;
-            border-bottom: 1px solid #ccc;
-        }
-        .tab-button {
-            padding: 10px 20px;
-            margin-right: 5px;
-            border: none;
-            background: none;
-            cursor: pointer;
-        }
-        .tab-button.active {
-            border-bottom: 2px solid #2271b1;
-            font-weight: bold;
-        }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        .meta-box-section {
-            margin-bottom: 30px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 4px;
-        }
-        .meta-box-section h3 {
-            margin-top: 0;
-            margin-bottom: 15px;
-        }
-        .section-order-list {
-            margin: 0;
-            padding: 0;
-        }
-        .section-order-list li {
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            margin-bottom: 5px;
-            background: #fff;
-            border: 1px solid #ddd;
-            cursor: move;
-        }
-        .section-order-list .dashicons {
-            margin-right: 10px;
-            color: #666;
-        }
-        .image-preview {
-            margin-top: 10px;
-        }
-        .image-preview img {
-            max-width: 150px;
-            height: auto;
-        }
-    </style>
 
     <script>
     jQuery(document).ready(function($) {
@@ -394,17 +342,75 @@ function wades_services_content_callback($post) {
             $('.tab-content[data-tab="' + $(this).data('tab') + '"]').addClass('active');
         });
 
-        // Section order sorting
-        $('#section-order').sortable({
+        // Section ordering
+        $('.sections-list').sortable({
             handle: '.dashicons-menu',
-            update: function() {
+            update: function(event, ui) {
                 var order = [];
-                $('#section-order li').each(function() {
-                    order.push($(this).data('section'));
+                $('.sections-list .section-item').each(function(index) {
+                    $(this).find('.section-order').val((index + 1) * 10);
                 });
-                $('#section-order-input').val(order.join(','));
             }
         });
+
+        // Image upload functionality
+        function initImageUpload(button, input, preview) {
+            button.on('click', function(e) {
+                e.preventDefault();
+                
+                var frame = wp.media({
+                    title: 'Select Image',
+                    multiple: false
+                });
+
+                frame.on('select', function() {
+                    var attachment = frame.state().get('selection').first().toJSON();
+                    input.val(attachment.id);
+                    preview.html($('<img>', {
+                        src: attachment.url,
+                        style: 'max-width: 200px; height: auto;'
+                    }));
+                });
+
+                frame.open();
+            });
+        }
+
+        // Initialize image uploads
+        $('.upload-image').each(function() {
+            var container = $(this).closest('.meta-box-section');
+            initImageUpload(
+                $(this),
+                container.find('input[type="hidden"]'),
+                container.find('.image-preview')
+            );
+        });
+
+        // Remove image functionality
+        $('.remove-image').on('click', function() {
+            var container = $(this).closest('.meta-box-section');
+            container.find('input[type="hidden"]').val('');
+            container.find('.image-preview').empty();
+        });
+
+        // Dynamic list functionality
+        function setupDynamicList(addButton, container, template) {
+            $(addButton).on('click', function() {
+                var index = container.children().length;
+                container.append(template.replace(/\{index\}/g, index));
+            });
+
+            $(document).on('click', '.remove-item', function() {
+                $(this).closest('.dynamic-item').remove();
+            });
+        }
+
+        // Setup dynamic lists
+        setupDynamicList('.add-reason', $('.reasons-list'), 
+            '<p><input type="text" name="why_choose_us[]" class="widefat"><button type="button" class="button remove-reason">Remove</button></p>');
+        
+        setupDynamicList('.add-policy', $('.policies-list'), 
+            '<p><input type="text" name="service_policies[]" class="widefat"><button type="button" class="button remove-policy">Remove</button></p>');
     });
     </script>
     <?php
@@ -436,7 +442,10 @@ function wades_save_services_meta($post_id) {
         'services_description',
         'grid_columns',
         'services_per_page',
-        'section_order'
+        'section_order',
+        'hero_background_image',
+        'hero_overlay_opacity',
+        'hero_height'
     );
 
     foreach ($text_fields as $field) {
@@ -460,21 +469,6 @@ function wades_save_services_meta($post_id) {
         update_post_meta($post_id, '_sections_visibility', $visibility);
     }
 
-    // Save services grid
-    if (isset($_POST['services_grid'])) {
-        $services = array();
-        foreach ($_POST['services_grid'] as $service) {
-            if (!empty($service['title'])) {
-                $services[] = array(
-                    'icon' => sanitize_text_field($service['icon']),
-                    'title' => sanitize_text_field($service['title']),
-                    'description' => wp_kses_post($service['description'])
-                );
-            }
-        }
-        update_post_meta($post_id, '_services_grid', $services);
-    }
-
     // Save why choose us
     if (isset($_POST['why_choose_us'])) {
         $reasons = array_map('sanitize_text_field', array_filter($_POST['why_choose_us']));
@@ -494,9 +488,7 @@ function wades_save_services_meta($post_id) {
                 $packages[] = array(
                     'title' => sanitize_text_field($package['title']),
                     'description' => wp_kses_post($package['description']),
-                    'services' => isset($package['services']) ? array_map('sanitize_text_field', array_filter($package['services'])) : array(),
-                    'price' => sanitize_text_field($package['price']),
-                    'note' => sanitize_text_field($package['note'])
+                    'services' => isset($package['services']) ? array_map('sanitize_text_field', array_filter($package['services'])) : array()
                 );
             }
         }

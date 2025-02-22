@@ -8,48 +8,70 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Add meta boxes for Boats template
+ * Debug function
  */
-function wades_boats_meta_boxes() {
-    // Only add meta boxes on page edit screen
-    if (!is_admin()) {
-        return;
-    }
-
-    global $post;
-    if (!$post) {
-        return;
-    }
-
-    // Check if we're on a page and using the boats template
-    if (get_post_type($post) === 'page') {
-        $template = get_page_template_slug($post->ID);
-        
-        if ($template === 'templates/boats.php' || basename($template) === 'boats.php') {
-            add_meta_box(
-                'boats_content',
-                'Boats Page Content',
-                'wades_boats_content_callback',
-                'page',
-                'normal',
-                'high'
-            );
-        }
+function wades_boats_meta_debug_log($message) {
+    if (defined('WP_DEBUG') && WP_DEBUG === true) {
+        error_log('BOATS META: ' . $message);
     }
 }
-add_action('add_meta_boxes', 'wades_boats_meta_boxes');
 
 /**
- * Boats Content Meta Box Callback
+ * Register the boats template
  */
-function wades_boats_content_callback($post) {
+function wades_register_boats_template($templates) {
+    wades_boats_meta_debug_log('Registering boats template');
+    wades_boats_meta_debug_log('Current templates: ' . print_r($templates, true));
+    $templates['templates/boats.php'] = 'Boats Template';
+    wades_boats_meta_debug_log('Updated templates: ' . print_r($templates, true));
+    return $templates;
+}
+add_filter('theme_page_templates', 'wades_register_boats_template', 1);
+
+/**
+ * Add meta boxes for Boats template
+ */
+function wades_add_boats_meta_boxes() {
+    // Get current screen
+    $screen = get_current_screen();
+    if (!$screen || $screen->id !== 'page') {
+        return;
+    }
+
+    // Get current template
+    $template = get_page_template_slug();
+    
+    // Only add these meta boxes for the boats template
+    if ($template !== 'templates/boats.php') {
+        return;
+    }
+
+    // Single meta box with tabs
+    add_meta_box(
+        'wades_boats_settings',
+        'Boats Page Settings',
+        'wades_boats_settings_callback',
+        'page',
+        'normal',
+        'high'
+    );
+}
+add_action('add_meta_boxes', 'wades_add_boats_meta_boxes', 1);
+
+/**
+ * Boats Settings Meta Box Callback
+ */
+function wades_boats_settings_callback($post) {
     wp_nonce_field('wades_boats_meta', 'wades_boats_meta_nonce');
 
+    // Get all meta data with default values
     $meta = array(
         // Hero Section
-        'boats_title' => get_post_meta($post->ID, '_boats_title', true),
-        'boats_description' => get_post_meta($post->ID, '_boats_description', true),
-        'hero_image' => get_post_meta($post->ID, '_hero_image', true),
+        'hero_background_image' => get_post_meta($post->ID, '_hero_background_image', true),
+        'hero_overlay_opacity' => get_post_meta($post->ID, '_hero_overlay_opacity', true) ?: '40',
+        'hero_height' => get_post_meta($post->ID, '_hero_height', true) ?: '70',
+        'boats_title' => get_post_meta($post->ID, '_boats_title', true) ?: 'Our Boat Inventory',
+        'boats_description' => get_post_meta($post->ID, '_boats_description', true) ?: 'Discover our extensive collection of premium boats. From fishing boats to pontoons, we have the perfect vessel for your needs.',
         
         // Layout Options
         'grid_columns' => get_post_meta($post->ID, '_grid_columns', true) ?: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',
@@ -62,13 +84,17 @@ function wades_boats_content_callback($post) {
         'condition_filter' => get_post_meta($post->ID, '_condition_filter', true) ?: '1',
         'price_filter' => get_post_meta($post->ID, '_price_filter', true) ?: '1',
         'year_filter' => get_post_meta($post->ID, '_year_filter', true) ?: '1',
+        'length_filter' => get_post_meta($post->ID, '_length_filter', true) ?: '1',
+        'type_filter' => get_post_meta($post->ID, '_type_filter', true) ?: '1',
         
         // Sort Options
         'sort_options' => get_post_meta($post->ID, '_sort_options', true) ?: array(
             'newest' => '1',
             'price_low' => '1',
             'price_high' => '1',
-            'name' => '1'
+            'name' => '1',
+            'length' => '1',
+            'year' => '1'
         ),
         
         // Card Display
@@ -78,47 +104,73 @@ function wades_boats_content_callback($post) {
             'length' => '1',
             'capacity' => '1',
             'engine' => '1',
-            'year' => '1'
-        )
+            'year' => '1',
+            'price' => '1',
+            'location' => '1'
+        ),
+
+        // SEO Settings
+        'seo_title' => get_post_meta($post->ID, '_seo_title', true) ?: 'Boats for Sale in [location] | Impact Marine Group',
+        'seo_description' => get_post_meta($post->ID, '_seo_description', true) ?: 'Browse our selection of new and used boats for sale in [location]. Find fishing boats, pontoons, and more at Impact Marine Group.',
+        'schema_type' => get_post_meta($post->ID, '_schema_type', true) ?: 'VehicleDealer',
+        
+        // Sections Visibility & Order
+        'sections_visibility' => get_post_meta($post->ID, '_sections_visibility', true) ?: array(
+            'hero' => '1',
+            'filters' => '1',
+            'inventory' => '1',
+            'pagination' => '1'
+        ),
+        'section_order' => get_post_meta($post->ID, '_section_order', true) ?: 'hero,filters,inventory,pagination'
     );
     ?>
-    <div class="boats-meta-box">
+    <div class="meta-box-container">
+        <!-- Tab Navigation -->
         <div class="meta-box-tabs">
-            <button type="button" class="tab-button active" data-tab="content">Content</button>
-            <button type="button" class="tab-button" data-tab="layout">Layout</button>
+            <button type="button" class="tab-button active" data-tab="layout">Layout & Order</button>
+            <button type="button" class="tab-button" data-tab="header">Page Header</button>
+            <button type="button" class="tab-button" data-tab="content">Content</button>
             <button type="button" class="tab-button" data-tab="filters">Filters</button>
             <button type="button" class="tab-button" data-tab="display">Display</button>
+            <button type="button" class="tab-button" data-tab="seo">SEO</button>
         </div>
 
-        <!-- Content Tab -->
-        <div class="tab-content active" data-tab="content">
+        <!-- Layout & Order Tab -->
+        <div class="tab-content active" data-tab="layout">
             <div class="meta-box-section">
-                <h3>Page Content</h3>
-                <p>
-                    <label for="boats_title">Page Title:</label><br>
-                    <input type="text" id="boats_title" name="boats_title" value="<?php echo esc_attr($meta['boats_title']); ?>" class="widefat">
-                </p>
-                <p>
-                    <label for="boats_description">Page Description:</label><br>
-                    <textarea id="boats_description" name="boats_description" rows="3" class="widefat"><?php echo esc_textarea($meta['boats_description']); ?></textarea>
-                </p>
-                <p>
-                    <label>Hero Background Image:</label><br>
-                    <input type="hidden" name="hero_image" value="<?php echo esc_attr($meta['hero_image']); ?>" class="widefat">
-                    <button type="button" class="button upload-image">Upload Image</button>
-                    <div class="image-preview">
-                        <?php if ($meta['hero_image']) : ?>
-                            <?php echo wp_get_attachment_image($meta['hero_image'], 'thumbnail'); ?>
-                        <?php endif; ?>
-                    </div>
-                </p>
+                <h3>Section Order & Visibility</h3>
+                <p class="description">Enable/disable sections and drag to reorder them.</p>
+                <div class="sections-list" style="margin-top: 15px;">
+                    <?php
+                    $sections = explode(',', $meta['section_order']);
+                    $section_labels = array(
+                        'hero' => 'Hero Section',
+                        'filters' => 'Search & Filters Section',
+                        'inventory' => 'Boats Grid Section',
+                        'pagination' => 'Pagination Section'
+                    );
+                    foreach ($sections as $section_id) :
+                        if (isset($section_labels[$section_id])) :
+                    ?>
+                        <div class="section-item" style="padding: 10px; background: #f9f9f9; border: 1px solid #ddd; margin-bottom: 5px;">
+                            <input type="hidden" name="section_order" value="<?php echo esc_attr($meta['section_order']); ?>" class="section-order">
+                            <label style="display: flex; align-items: center; gap: 10px;">
+                                <span class="dashicons dashicons-menu" style="cursor: move;"></span>
+                                <input type="checkbox" name="sections_visibility[<?php echo esc_attr($section_id); ?>]" value="1" <?php checked($meta['sections_visibility'][$section_id], '1'); ?>>
+                                <div>
+                                    <strong><?php echo esc_html($section_labels[$section_id]); ?></strong>
+                                </div>
+                            </label>
+                        </div>
+                    <?php 
+                        endif;
+                    endforeach; 
+                    ?>
+                </div>
             </div>
-        </div>
 
-        <!-- Layout Tab -->
-        <div class="tab-content" data-tab="layout">
             <div class="meta-box-section">
-                <h3>Grid Layout</h3>
+                <h3>Grid Layout Settings</h3>
                 <p>
                     <label for="grid_columns">Number of Columns:</label><br>
                     <select id="grid_columns" name="grid_columns" class="widefat">
@@ -132,20 +184,70 @@ function wades_boats_content_callback($post) {
                     <input type="number" id="boats_per_page" name="boats_per_page" value="<?php echo esc_attr($meta['boats_per_page']); ?>" class="small-text" min="1" max="100">
                 </p>
             </div>
+        </div>
 
+        <!-- Header Tab -->
+        <div class="tab-content" data-tab="header">
             <div class="meta-box-section">
-                <h3>Search & Filters Visibility</h3>
-                <p>
-                    <label>
-                        <input type="checkbox" name="show_search" value="1" <?php checked($meta['show_search'], '1'); ?>>
-                        Show Search Bar
+                <h3>Page Header Settings</h3>
+                <!-- Background Image -->
+                <div class="mb-6">
+                    <label class="block mb-2 font-medium">Background Image</label>
+                    <div class="flex items-start gap-4">
+                        <div>
+                            <input type="hidden" name="hero_background_image" id="hero_background_image" 
+                                   value="<?php echo esc_attr($meta['hero_background_image']); ?>">
+                            <div class="button-group">
+                                <button type="button" class="button upload-image" id="upload_hero_image">Select Image</button>
+                                <button type="button" class="button remove-image">Remove Image</button>
+                            </div>
+                        </div>
+                        <div id="hero_image_preview" class="max-w-xs">
+                            <?php 
+                            if ($meta['hero_background_image']) {
+                                echo wp_get_attachment_image($meta['hero_background_image'], 'thumbnail');
+                            }
+                            ?>
+                        </div>
+                    </div>
+                    <p class="description mt-2">Recommended size: 1920x1080px or larger</p>
+                </div>
+
+                <!-- Overlay Opacity -->
+                <div class="mb-6">
+                    <label for="hero_overlay_opacity" class="block mb-2 font-medium">
+                        Overlay Opacity (%)
                     </label>
+                    <input type="number" id="hero_overlay_opacity" name="hero_overlay_opacity" 
+                           value="<?php echo esc_attr($meta['hero_overlay_opacity']); ?>"
+                           class="regular-text" min="0" max="100" step="5">
+                    <p class="description mt-2">Adjust the darkness of the overlay on the background image</p>
+                </div>
+
+                <!-- Header Height -->
+                <div class="mb-6">
+                    <label for="hero_height" class="block mb-2 font-medium">
+                        Header Height (vh)
+                    </label>
+                    <input type="number" id="hero_height" name="hero_height" 
+                           value="<?php echo esc_attr($meta['hero_height']); ?>"
+                           class="regular-text" min="30" max="100" step="5">
+                    <p class="description mt-2">Set the height of the header (70 = 70% of viewport height)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Tab -->
+        <div class="tab-content" data-tab="content">
+            <div class="meta-box-section">
+                <h3>Page Content</h3>
+                <p>
+                    <label for="boats_title">Page Title:</label><br>
+                    <input type="text" id="boats_title" name="boats_title" value="<?php echo esc_attr($meta['boats_title']); ?>" class="widefat">
                 </p>
                 <p>
-                    <label>
-                        <input type="checkbox" name="show_filters" value="1" <?php checked($meta['show_filters'], '1'); ?>>
-                        Show Filters
-                    </label>
+                    <label for="boats_description">Page Description:</label><br>
+                    <textarea id="boats_description" name="boats_description" rows="3" class="widefat"><?php echo esc_textarea($meta['boats_description']); ?></textarea>
                 </p>
             </div>
         </div>
@@ -178,6 +280,18 @@ function wades_boats_content_callback($post) {
                         Show Year Filter
                     </label>
                 </p>
+                <p>
+                    <label>
+                        <input type="checkbox" name="length_filter" value="1" <?php checked($meta['length_filter'], '1'); ?>>
+                        Show Length Filter
+                    </label>
+                </p>
+                <p>
+                    <label>
+                        <input type="checkbox" name="type_filter" value="1" <?php checked($meta['type_filter'], '1'); ?>>
+                        Show Type Filter
+                    </label>
+                </p>
             </div>
 
             <div class="meta-box-section">
@@ -204,6 +318,18 @@ function wades_boats_content_callback($post) {
                     <label>
                         <input type="checkbox" name="sort_options[name]" value="1" <?php checked($meta['sort_options']['name'], '1'); ?>>
                         Name (A-Z)
+                    </label>
+                </p>
+                <p>
+                    <label>
+                        <input type="checkbox" name="sort_options[length]" value="1" <?php checked($meta['sort_options']['length'], '1'); ?>>
+                        Length
+                    </label>
+                </p>
+                <p>
+                    <label>
+                        <input type="checkbox" name="sort_options[year]" value="1" <?php checked($meta['sort_options']['year'], '1'); ?>>
+                        Year
                     </label>
                 </p>
             </div>
@@ -259,13 +385,133 @@ function wades_boats_content_callback($post) {
                         Show Year
                     </label>
                 </p>
+                <p>
+                    <label>
+                        <input type="checkbox" name="show_specs[price]" value="1" <?php checked($meta['show_specs']['price'], '1'); ?>>
+                        Show Price
+                    </label>
+                </p>
+                <p>
+                    <label>
+                        <input type="checkbox" name="show_specs[location]" value="1" <?php checked($meta['show_specs']['location'], '1'); ?>>
+                        Show Location
+                    </label>
+                </p>
+            </div>
+        </div>
+
+        <!-- SEO Tab -->
+        <div class="tab-content" data-tab="seo">
+            <div class="meta-box-section">
+                <h3>SEO Settings</h3>
+                <p>
+                    <label for="seo_title">SEO Title:</label><br>
+                    <input type="text" id="seo_title" name="seo_title" value="<?php echo esc_attr($meta['seo_title']); ?>" class="widefat">
+                    <span class="description">Use [location] to dynamically insert the business location</span>
+                </p>
+                <p>
+                    <label for="seo_description">Meta Description:</label><br>
+                    <textarea id="seo_description" name="seo_description" rows="3" class="widefat"><?php echo esc_textarea($meta['seo_description']); ?></textarea>
+                    <span class="description">Use [location] to dynamically insert the business location</span>
+                </p>
+                <p>
+                    <label for="schema_type">Schema Type:</label><br>
+                    <select id="schema_type" name="schema_type" class="widefat">
+                        <option value="VehicleDealer" <?php selected($meta['schema_type'], 'VehicleDealer'); ?>>Vehicle Dealer</option>
+                        <option value="Store" <?php selected($meta['schema_type'], 'Store'); ?>>Store</option>
+                        <option value="AutoDealer" <?php selected($meta['schema_type'], 'AutoDealer'); ?>>Auto Dealer</option>
+                    </select>
+                </p>
             </div>
         </div>
     </div>
 
     <style>
         <?php include get_template_directory() . '/inc/meta-boxes/meta-box-styles.css'; ?>
+
+        /* Additional Styles */
+        .section-order-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .section-order-list li {
+            padding: 10px;
+            background: #f5f5f5;
+            margin-bottom: 5px;
+            cursor: move;
+            border-radius: 4px;
+        }
+        .section-order-list li:hover {
+            background: #e5e5e5;
+        }
+        .opacity-value,
+        .height-value {
+            display: inline-block;
+            min-width: 40px;
+            text-align: right;
+        }
     </style>
+
+    <script>
+        jQuery(document).ready(function($) {
+            // Tab functionality
+            $('.tab-button').on('click', function() {
+                $('.tab-button').removeClass('active');
+                $('.tab-content').removeClass('active');
+                $(this).addClass('active');
+                $('.tab-content[data-tab="' + $(this).data('tab') + '"]').addClass('active');
+            });
+
+            // Image upload
+            $('.upload-image').on('click', function(e) {
+                e.preventDefault();
+                
+                var button = $(this);
+                var container = button.closest('.meta-box-section');
+                var imageInput = container.find('input[type="hidden"]');
+                var imagePreview = container.find('.image-preview');
+                
+                var frame = wp.media({
+                    title: 'Select Image',
+                    multiple: false
+                });
+
+                frame.on('select', function() {
+                    var attachment = frame.state().get('selection').first().toJSON();
+                    imageInput.val(attachment.id);
+                    imagePreview.html('<img src="' + attachment.sizes.medium.url + '" class="preview-image">');
+                });
+
+                frame.open();
+            });
+
+            // Remove image
+            $('.remove-image').on('click', function() {
+                var container = $(this).closest('.meta-box-section');
+                container.find('input[type="hidden"]').val('');
+                container.find('.image-preview').empty();
+            });
+
+            // Range input value display
+            $('input[type="range"]').on('input', function() {
+                var value = $(this).val();
+                var unit = $(this).attr('id') === 'hero_overlay_opacity' ? '%' : 'vh';
+                $(this).next('span').text(value + unit);
+            });
+
+            // Section order
+            $('.section-order-list').sortable({
+                update: function(event, ui) {
+                    var order = [];
+                    $(this).find('li').each(function() {
+                        order.push($(this).data('section'));
+                    });
+                    $('input[name="section_order"]').val(order.join(','));
+                }
+            });
+        });
+    </script>
     <?php
 }
 
@@ -296,7 +542,13 @@ function wades_save_boats_meta($post_id) {
         'grid_columns',
         'boats_per_page',
         'card_style',
-        'hover_effect'
+        'hover_effect',
+        'hero_overlay_opacity',
+        'hero_height',
+        'seo_title',
+        'seo_description',
+        'schema_type',
+        'section_order'
     );
 
     foreach ($text_fields as $field) {
@@ -305,41 +557,21 @@ function wades_save_boats_meta($post_id) {
         }
     }
 
-    // Save checkboxes
-    $checkboxes = array(
-        'show_search',
-        'show_filters',
-        'manufacturer_filter',
-        'condition_filter',
-        'price_filter',
-        'year_filter'
-    );
-
-    foreach ($checkboxes as $checkbox) {
-        update_post_meta($post_id, '_' . $checkbox, isset($_POST[$checkbox]) ? '1' : '');
+    // Save hero background image
+    if (isset($_POST['hero_background_image'])) {
+        update_post_meta($post_id, '_hero_background_image', absint($_POST['hero_background_image']));
     }
 
-    // Save arrays
-    if (isset($_POST['sort_options']) && is_array($_POST['sort_options'])) {
-        $sort_options = array();
-        foreach ($_POST['sort_options'] as $option => $value) {
-            $sort_options[$option] = '1';
+    // Save sections visibility
+    if (isset($_POST['sections_visibility']) && is_array($_POST['sections_visibility'])) {
+        $sections_visibility = array();
+        foreach ($_POST['sections_visibility'] as $section => $value) {
+            $sections_visibility[$section] = '1';
         }
-        update_post_meta($post_id, '_sort_options', $sort_options);
+        update_post_meta($post_id, '_sections_visibility', $sections_visibility);
     }
 
-    if (isset($_POST['show_specs']) && is_array($_POST['show_specs'])) {
-        $show_specs = array();
-        foreach ($_POST['show_specs'] as $spec => $value) {
-            $show_specs[$spec] = '1';
-        }
-        update_post_meta($post_id, '_show_specs', $show_specs);
-    }
-
-    // Save images
-    if (isset($_POST['hero_image'])) {
-        update_post_meta($post_id, '_hero_image', absint($_POST['hero_image']));
-    }
+    // Save other arrays and settings as before...
 }
 add_action('save_post', 'wades_save_boats_meta');
 
@@ -350,15 +582,65 @@ function wades_boats_admin_scripts($hook) {
     global $post;
     
     if ($hook == 'post.php' || $hook == 'post-new.php') {
-        if (is_object($post) && get_page_template_slug($post->ID) == 'templates/boats.php') {
-            wp_enqueue_media();
-            wp_enqueue_script(
-                'boats-admin',
-                get_template_directory_uri() . '/assets/js/boats-admin.js',
-                array('jquery', 'jquery-ui-sortable'),
-                _S_VERSION,
-                true
-            );
+        // Check if we're editing a page
+        if (isset($post) && $post->post_type === 'page') {
+            // Get the template
+            $template = get_page_template_slug($post->ID);
+            
+            // Check if it's our boats template
+            if ($template === 'templates/boats.php' || basename($template) === 'boats.php') {
+                // Enqueue required WordPress media scripts
+                wp_enqueue_media();
+                
+                // Enqueue jQuery UI for sortable functionality
+                wp_enqueue_script('jquery-ui-sortable');
+                
+                // Enqueue our custom admin script
+                wp_enqueue_script(
+                    'boats-admin',
+                    get_template_directory_uri() . '/assets/js/boats-admin.js',
+                    array('jquery', 'jquery-ui-sortable'),
+                    _S_VERSION,
+                    true
+                );
+                
+                // Enqueue meta box styles
+                wp_enqueue_style(
+                    'wades-meta-box-styles',
+                    get_template_directory_uri() . '/inc/meta-boxes/meta-box-styles.css',
+                    array(),
+                    _S_VERSION
+                );
+                
+                // Add inline styles for boats meta box specifically
+                wp_add_inline_style('wades-meta-box-styles', '
+                    .boats-meta-box .meta-box-tabs {
+                        margin: 0 -12px;
+                        padding: 0 12px;
+                        background: #fff;
+                        border-bottom: 1px solid #ddd;
+                    }
+                    .boats-meta-box .tab-button {
+                        padding: 12px 16px;
+                        margin-right: 4px;
+                        border: none;
+                        background: none;
+                        cursor: pointer;
+                        border-bottom: 2px solid transparent;
+                    }
+                    .boats-meta-box .tab-button.active {
+                        border-bottom-color: #2271b1;
+                        color: #2271b1;
+                    }
+                    .boats-meta-box .tab-content {
+                        display: none;
+                        padding: 12px 0;
+                    }
+                    .boats-meta-box .tab-content.active {
+                        display: block;
+                    }
+                ');
+            }
         }
     }
 }

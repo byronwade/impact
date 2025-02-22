@@ -5,7 +5,9 @@
  * @package wades
  */
 
-get_header(); ?>
+get_header();
+get_template_part('template-parts/template-header');
+?>
 
 <main role="main" aria-label="Main content" class="flex-grow bg-gray-50">
     <?php while (have_posts()) : the_post(); 
@@ -29,80 +31,32 @@ get_header(); ?>
                 break;
         }
     ?>
-        <div class="bg-gradient-to-b from-gray-900 to-gray-800 text-white py-16 md:py-24 relative overflow-hidden">
-            <!-- Breadcrumb -->
-            <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mb-8">
-                <nav class="flex" aria-label="Breadcrumb">
-                    <ol class="flex items-center space-x-2 text-sm text-gray-300">
-                        <li>
-                            <a href="<?php echo home_url(); ?>" class="hover:text-white transition-colors">Home</a>
-                        </li>
-                        <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                        <li>
-                            <a href="<?php echo get_post_type_archive_link('service'); ?>" class="hover:text-white transition-colors">Services</a>
-                        </li>
-                        <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                        <li class="text-white font-medium truncate max-w-[200px]"><?php the_title(); ?></li>
-                    </ol>
-                </nav>
-            </div>
-
-            <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-                <div class="flex items-center gap-6 mb-6">
-                    <?php if ($icon) : ?>
-                        <div class="flex-shrink-0 bg-white/10 rounded-xl p-4">
-                            <i data-lucide="<?php echo esc_attr($icon); ?>" class="h-12 w-12"></i>
-                        </div>
-                    <?php endif; ?>
-                    <div>
-                        <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold"><?php the_title(); ?></h1>
-                        <?php if ($price) : ?>
-                            <p class="text-xl text-gray-200 mt-2">Starting at <?php echo esc_html($price); ?></p>
-                        <?php endif; ?>
-                    </div>
-                </div>
-
-                <?php if (has_excerpt()) : ?>
-                    <div class="max-w-3xl">
-                        <p class="text-xl text-gray-200"><?php echo get_the_excerpt(); ?></p>
-                    </div>
-                <?php endif; ?>
-
-                <?php if ($duration || $location_text) : ?>
-                    <div class="flex gap-6 mt-8">
-                        <?php if ($duration) : ?>
-                            <div class="flex items-center gap-2">
-                                <i data-lucide="clock" class="h-5 w-5 text-gray-400"></i>
-                                <span class="text-gray-200"><?php echo esc_html($duration); ?></span>
-                            </div>
-                        <?php endif; ?>
-                        <?php if ($location_text) : ?>
-                            <div class="flex items-center gap-2">
-                                <i data-lucide="map-pin" class="h-5 w-5 text-gray-400"></i>
-                                <span class="text-gray-200"><?php echo esc_html($location_text); ?></span>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                <?php endif; ?>
-            </div>
-
-            <!-- Background Pattern -->
-            <div class="absolute inset-0 opacity-10">
-                <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                    <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-                        <path d="M 10 0 L 0 0 0 10" fill="none" stroke="currentColor" stroke-width="0.5"/>
-                    </pattern>
-                    <rect width="100" height="100" fill="url(#grid)"/>
-                </svg>
-            </div>
-        </div>
-
-        <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+        <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
                 <!-- Main Content -->
                 <div class="lg:col-span-2">
-                    <div class="prose prose-lg max-w-none prose-headings:font-bold prose-headings:text-gray-900 prose-p:text-gray-600 prose-a:text-primary prose-a:no-underline hover:prose-a:text-primary/80 prose-img:rounded-xl prose-strong:text-gray-900 prose-code:text-primary prose-code:bg-gray-100 prose-code:rounded prose-code:px-1 prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-ol:list-decimal prose-ul:list-disc">
-                        <?php the_content(); ?>
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                        <?php if (has_post_thumbnail()) : ?>
+                            <div class="aspect-w-16 aspect-h-9">
+                                <?php the_post_thumbnail('full', array(
+                                    'class' => 'w-full h-full object-cover',
+                                )); ?>
+                            </div>
+                        <?php else : ?>
+                            <div class="aspect-w-16 aspect-h-9 bg-gray-100">
+                                <img src="<?php echo get_theme_file_uri('assets/images/default-service.jpg'); ?>" 
+                                     alt="<?php echo esc_attr(get_the_title()); ?>"
+                                     class="w-full h-full object-cover">
+                            </div>
+                        <?php endif; ?>
+                        
+                        <div class="p-8">
+                            <article class="prose prose-lg max-w-none">
+                                <div class="prose-headings:font-bold prose-headings:text-gray-900 prose-p:text-gray-600 prose-a:text-primary prose-a:no-underline hover:prose-a:text-primary/80 prose-img:rounded-xl prose-strong:text-gray-900 prose-code:text-primary prose-code:bg-gray-100 prose-code:rounded prose-code:px-1 prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-ol:list-decimal prose-ul:list-disc">
+                                    <?php the_content(); ?>
+                                </div>
+                            </article>
+                        </div>
                     </div>
                 </div>
 

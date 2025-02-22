@@ -227,571 +227,29 @@ require get_template_directory() . '/inc/class-wade-mobile-nav-walker.php';
 /**
  * Load post types
  */
-require get_template_directory() . '/inc/post-types.php';
+require_once get_template_directory() . '/inc/post-types/service.php';
 
 /**
  * Custom Meta Boxes
  */
-require get_template_directory() . '/inc/meta-boxes/about-meta.php';
-require get_template_directory() . '/inc/meta-boxes/home-meta.php';
-require get_template_directory() . '/inc/meta-boxes/shared-meta.php';
-require get_template_directory() . '/inc/meta-boxes/boat-meta.php';
-require get_template_directory() . '/inc/meta-boxes/services-meta.php';
+require_once get_template_directory() . '/inc/meta-boxes/about-meta.php';
+require_once get_template_directory() . '/inc/meta-boxes/home-meta.php';
+require_once get_template_directory() . '/inc/meta-boxes/shared-meta.php';
+require_once get_template_directory() . '/inc/meta-boxes/boat-meta.php';
+require_once get_template_directory() . '/inc/meta-boxes/boats-meta.php';
+require_once get_template_directory() . '/inc/meta-boxes/services-meta.php';
+require_once get_template_directory() . '/inc/meta-boxes/financing-meta.php';
 
-/**
- * Add meta boxes only when editing pages
- */
-function wades_add_meta_boxes($post_type, $post) {
-    if ($post_type !== 'page') {
-        return;
-    }
+// Load meta boxes
+require_once get_template_directory() . '/inc/meta-boxes.php';
 
-    $template = get_page_template_slug($post->ID);
+// Remove old meta box loading code
+remove_action('init', 'wades_load_template_files', 5);
+remove_action('add_meta_boxes', 'wades_add_meta_boxes', 10);
+remove_action('add_meta_boxes', 'wades_add_template_meta_boxes', 10, 2);
 
-    // Add meta boxes based on template
-    switch ($template) {
-        case 'templates/home.php':
-            require_once get_template_directory() . '/inc/meta-boxes/home-meta.php';
-            break;
-        case 'templates/services.php':
-            require_once get_template_directory() . '/inc/meta-boxes/services-meta.php';
-            break;
-        case 'templates/boats.php':
-            require_once get_template_directory() . '/inc/meta-boxes/boats-meta.php';
-            break;
-        case 'templates/blog.php':
-            require_once get_template_directory() . '/inc/meta-boxes/blog-meta.php';
-            break;
-    }
-}
-add_action('add_meta_boxes', 'wades_add_meta_boxes', 10, 2);
-
-/**
- * Enqueue template-specific styles
- */
-function wades_template_styles() {
-    if (is_page_template('templates/home.php')) {
-        wp_enqueue_style('wades-home-template', get_template_directory_uri() . '/assets/css/home-template.css', array(), _S_VERSION);
-    }
-
-    // Add blog styles for posts and blog index
-    if (is_singular('post') || is_home() || is_archive()) {
-        wp_enqueue_style('wades-blog', get_template_directory_uri() . '/assets/css/blog.css', array(), _S_VERSION);
-        
-        wp_add_inline_style('wades-blog', '
-            /* Blog Grid Styles */
-            .blog-grid {
-                display: grid;
-                grid-template-columns: repeat(1, 1fr);
-                gap: 2rem;
-                margin-bottom: 2rem;
-            }
-            
-            @media (min-width: 768px) {
-                .blog-grid {
-                    grid-template-columns: repeat(2, 1fr);
-                }
-            }
-            
-            @media (min-width: 1024px) {
-                .blog-grid {
-                    grid-template-columns: repeat(3, 1fr);
-                }
-            }
-            
-            /* Blog Card Styles */
-            .blog-card {
-                background: white;
-                border-radius: 0.75rem;
-                box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-                overflow: hidden;
-                transition: transform 0.2s;
-            }
-            
-            .blog-card:hover {
-                transform: translateY(-4px);
-            }
-            
-            .blog-card__image {
-                aspect-ratio: 16/9;
-                overflow: hidden;
-            }
-            
-            .blog-card__image img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                transition: transform 0.3s;
-            }
-            
-            .blog-card:hover .blog-card__image img {
-                transform: scale(1.05);
-            }
-            
-            .blog-card__content {
-                padding: 1.5rem;
-            }
-            
-            .blog-card__meta {
-                display: flex;
-                align-items: center;
-                gap: 1rem;
-                font-size: 0.875rem;
-                color: #6b7280;
-                margin-bottom: 0.75rem;
-            }
-            
-            .blog-card__title {
-                font-size: 1.25rem;
-                font-weight: 600;
-                color: #111827;
-                margin-bottom: 0.75rem;
-                line-height: 1.4;
-            }
-            
-            .blog-card__excerpt {
-                color: #4b5563;
-                font-size: 0.875rem;
-                line-height: 1.5;
-                margin-bottom: 1rem;
-            }
-            
-            .blog-card__link {
-                color: var(--primary-color, #004AAD);
-                font-size: 0.875rem;
-                font-weight: 500;
-                display: inline-flex;
-                align-items: center;
-                gap: 0.5rem;
-                transition: color 0.2s;
-            }
-            
-            .blog-card__link:hover {
-                color: var(--primary-color-dark, #003c8a);
-            }
-            
-            /* Featured Post Styles */
-            .featured-post {
-                background: white;
-                border-radius: 0.75rem;
-                box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-                margin-bottom: 3rem;
-                overflow: hidden;
-            }
-            
-            @media (min-width: 768px) {
-                .featured-post {
-                    display: grid;
-                    grid-template-columns: repeat(2, 1fr);
-                }
-            }
-            
-            .featured-post__image {
-                aspect-ratio: 16/9;
-                position: relative;
-            }
-            
-            @media (min-width: 768px) {
-                .featured-post__image {
-                    aspect-ratio: auto;
-                    height: 100%;
-                }
-            }
-            
-            .featured-post__image img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-            }
-            
-            .featured-post__content {
-                padding: 2rem;
-            }
-            
-            .featured-post__badge {
-                display: inline-block;
-                background: var(--primary-color, #004AAD);
-                color: white;
-                font-size: 0.875rem;
-                font-weight: 500;
-                padding: 0.25rem 0.75rem;
-                border-radius: 9999px;
-                margin-bottom: 1rem;
-            }
-            
-            .featured-post__meta {
-                display: flex;
-                align-items: center;
-                gap: 1rem;
-                font-size: 0.875rem;
-                color: #6b7280;
-                margin-bottom: 1rem;
-            }
-            
-            .featured-post__title {
-                font-size: 1.875rem;
-                font-weight: 700;
-                color: #111827;
-                margin-bottom: 1rem;
-                line-height: 1.3;
-            }
-            
-            .featured-post__excerpt {
-                color: #4b5563;
-                font-size: 1rem;
-                line-height: 1.6;
-                margin-bottom: 1.5rem;
-            }
-            
-            .featured-post__link {
-                display: inline-flex;
-                align-items: center;
-                gap: 0.5rem;
-                background: var(--primary-color, #004AAD);
-                color: white;
-                font-size: 0.875rem;
-                font-weight: 500;
-                padding: 0.5rem 1rem;
-                border-radius: 0.5rem;
-                transition: background-color 0.2s;
-            }
-            
-            .featured-post__link:hover {
-                background: var(--primary-color-dark, #003c8a);
-            }
-            
-            /* Blog Header Styles */
-            .blog-header {
-                text-align: center;
-                margin-bottom: 3rem;
-            }
-            
-            .blog-header__title {
-                font-size: 2.25rem;
-                font-weight: 700;
-                color: #111827;
-                margin-bottom: 1rem;
-            }
-            
-            .blog-header__description {
-                font-size: 1.125rem;
-                color: #4b5563;
-                max-width: 42rem;
-                margin: 0 auto;
-            }
-            
-            /* Single Post Styles */
-            .single-post__header {
-                margin-bottom: 2rem;
-            }
-            
-            .single-post__meta {
-                display: flex;
-                align-items: center;
-                gap: 1rem;
-                font-size: 0.875rem;
-                color: #6b7280;
-                margin-bottom: 1rem;
-            }
-            
-            .single-post__title {
-                font-size: 2.5rem;
-                font-weight: 700;
-                color: #111827;
-                margin-bottom: 1rem;
-                line-height: 1.2;
-            }
-            
-            .single-post__excerpt {
-                font-size: 1.25rem;
-                color: #4b5563;
-                line-height: 1.6;
-            }
-            
-            .single-post__featured-image {
-                margin-bottom: 2rem;
-                border-radius: 0.75rem;
-                overflow: hidden;
-            }
-            
-            .single-post__featured-image img {
-                width: 100%;
-                height: auto;
-            }
-            
-            .single-post__content {
-                max-width: 65ch;
-                margin: 0 auto;
-            }
-            
-            /* Prose Styles */
-            .prose {
-                color: #374151;
-                max-width: 65ch;
-            }
-            
-            .prose p {
-                margin-bottom: 1.5rem;
-                line-height: 1.75;
-            }
-            
-            .prose h2 {
-                font-size: 1.875rem;
-                font-weight: 700;
-                color: #111827;
-                margin: 2.5rem 0 1.5rem;
-            }
-            
-            .prose h3 {
-                font-size: 1.5rem;
-                font-weight: 600;
-                color: #111827;
-                margin: 2rem 0 1.25rem;
-            }
-            
-            .prose ul, .prose ol {
-                margin: 1.5rem 0;
-                padding-left: 1.5rem;
-            }
-            
-            .prose li {
-                margin: 0.5rem 0;
-            }
-            
-            .prose a {
-                color: var(--primary-color, #004AAD);
-                text-decoration: none;
-            }
-            
-            .prose a:hover {
-                text-decoration: underline;
-            }
-            
-            .prose blockquote {
-                border-left: 4px solid var(--primary-color, #004AAD);
-                margin: 1.5rem 0;
-                padding: 1rem 0 1rem 1.5rem;
-                font-style: italic;
-                color: #4b5563;
-            }
-            
-            .prose code {
-                background: #f3f4f6;
-                padding: 0.2rem 0.4rem;
-                border-radius: 0.25rem;
-                font-size: 0.875em;
-            }
-            
-            .prose pre {
-                background: #1f2937;
-                color: #f3f4f6;
-                padding: 1.25rem 1.5rem;
-                border-radius: 0.5rem;
-                overflow-x: auto;
-                margin: 1.5rem 0;
-            }
-            
-            .prose img {
-                border-radius: 0.75rem;
-                margin: 1.5rem 0;
-            }
-            
-            .prose figure {
-                margin: 1.5rem 0;
-            }
-            
-            .prose figcaption {
-                font-size: 0.875rem;
-                color: #6b7280;
-                text-align: center;
-                margin-top: 0.5rem;
-            }
-        ');
-    }
-}
-add_action('wp_enqueue_scripts', 'wades_template_styles');
-
-/**
- * Add featured post meta box
- */
-function wades_add_featured_post_meta_box() {
-    add_meta_box(
-        'wades_featured_post',
-        'Featured Post',
-        'wades_featured_post_meta_box_callback',
-        'post',
-        'side',
-        'high'
-    );
-}
-add_action('add_meta_boxes', 'wades_add_featured_post_meta_box');
-
-/**
- * Featured post meta box callback
- */
-function wades_featured_post_meta_box_callback($post) {
-    wp_nonce_field('wades_featured_post', 'wades_featured_post_nonce');
-    $is_featured = get_post_meta($post->ID, '_is_featured_post', true);
-    ?>
-    <label>
-        <input type="checkbox" name="is_featured_post" value="1" <?php checked($is_featured, '1'); ?>>
-        Mark as featured post
-    </label>
-    <?php
-}
-
-/**
- * Save featured post meta
- */
-function wades_save_featured_post_meta($post_id) {
-    if (!isset($_POST['wades_featured_post_nonce'])) {
-        return;
-    }
-
-    if (!wp_verify_nonce($_POST['wades_featured_post_nonce'], 'wades_featured_post')) {
-        return;
-    }
-
-    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
-        return;
-    }
-
-    if (!current_user_can('edit_post', $post_id)) {
-        return;
-    }
-
-    $is_featured = isset($_POST['is_featured_post']) ? '1' : '';
-    update_post_meta($post_id, '_is_featured_post', $is_featured);
-}
-add_action('save_post', 'wades_save_featured_post_meta');
-
-/**
- * Custom comment callback function
- */
-function wades_comment_callback($comment, $args, $depth) {
-    $tag = ('div' === $args['style']) ? 'div' : 'li';
-    ?>
-    <<?php echo $tag; ?> id="comment-<?php comment_ID(); ?>" <?php comment_class(empty($args['has_children']) ? 'bg-white rounded-xl shadow-md p-6' : 'bg-white rounded-xl shadow-md p-6 ml-12 mt-6', null, null, false); ?>>
-        <article id="div-comment-<?php comment_ID(); ?>" class="comment-body">
-            <footer class="comment-meta mb-4">
-                <div class="flex items-start gap-4">
-                    <?php
-                    if (0 != $args['avatar_size']) {
-                        echo get_avatar($comment, $args['avatar_size'], '', '', array('class' => 'rounded-full'));
-                    }
-                    ?>
-                    <div>
-                        <div class="comment-author vcard">
-                            <?php printf('<b class="fn">%s</b>', get_comment_author_link()); ?>
-                        </div>
-                        <div class="comment-metadata">
-                            <time datetime="<?php comment_time('c'); ?>" class="text-sm text-muted-foreground">
-                                <?php
-                                printf(
-                                    '<a href="%s" class="hover:text-primary transition-colors">%s</a>',
-                                    esc_url(get_comment_link($comment->comment_ID)),
-                                    sprintf(
-                                        /* translators: 1: comment date, 2: comment time */
-                                        __('%1$s at %2$s', 'wades'),
-                                        get_comment_date('', $comment),
-                                        get_comment_time()
-                                    )
-                                );
-                                ?>
-                            </time>
-                            <?php edit_comment_link(__('Edit', 'wades'), ' <span class="edit-link text-sm text-primary hover:text-primary/80 transition-colors">', '</span>'); ?>
-                        </div>
-                    </div>
-                </div>
-
-                <?php if ('0' == $comment->comment_approved) : ?>
-                    <p class="comment-awaiting-moderation text-sm text-yellow-600 mt-2"><?php _e('Your comment is awaiting moderation.', 'wades'); ?></p>
-                <?php endif; ?>
-            </footer>
-
-            <div class="comment-content prose prose-sm max-w-none">
-                <?php comment_text(); ?>
-            </div>
-
-            <?php
-            comment_reply_link(array_merge($args, array(
-                'add_below' => 'div-comment',
-                'depth'     => $depth,
-                'max_depth' => $args['max_depth'],
-                'before'    => '<div class="reply mt-4">',
-                'after'     => '</div>',
-                'reply_text' => sprintf(
-                    '<span class="inline-flex items-center text-sm font-medium text-primary hover:text-primary/80 transition-colors">%s <i data-lucide="reply" class="w-4 h-4 ml-1"></i></span>',
-                    __('Reply', 'wades')
-                ),
-            )));
-            ?>
-        </article>
-    </<?php echo $tag; ?>>
-    <?php
-}
-
-/**
- * Create default pages and add them to menu
- */
-function wades_create_default_pages() {
-    // Create Services page if it doesn't exist
-    $services_page = get_page_by_path('services');
-    if (!$services_page) {
-        // Create the page
-        $services_page_id = wp_insert_post(array(
-            'post_title'    => 'Services',
-            'post_name'     => 'services',
-            'post_status'   => 'publish',
-            'post_type'     => 'page',
-            'post_content'  => '<!-- wp:paragraph --><p>Our comprehensive marine services.</p><!-- /wp:paragraph -->',
-            'menu_order'    => 20
-        ));
-
-        if (!is_wp_error($services_page_id)) {
-            // Set the template
-            update_post_meta($services_page_id, '_wp_page_template', 'templates/services.php');
-            
-            // Add to primary menu
-            $menu_name = 'Primary';
-            $menu_exists = wp_get_nav_menu_object($menu_name);
-            
-            if (!$menu_exists) {
-                $menu_id = wp_create_nav_menu($menu_name);
-            } else {
-                $menu_id = $menu_exists->term_id;
-            }
-
-            wp_update_nav_menu_item($menu_id, 0, array(
-                'menu-item-title' => 'Services',
-                'menu-item-object' => 'page',
-                'menu-item-object-id' => $services_page_id,
-                'menu-item-type' => 'post_type',
-                'menu-item-status' => 'publish'
-            ));
-        }
-    }
-}
-add_action('after_switch_theme', 'wades_create_default_pages');
-
-// Run this once to ensure pages exist and are in menu
-if (!get_option('wades_pages_created_v2')) {
-    wades_create_default_pages();
-    update_option('wades_pages_created_v2', true);
-}
-
-// Load template files and meta boxes on init to prevent header issues
-function wades_load_template_files() {
-    require_once get_template_directory() . '/inc/post-types.php';
-    require_once get_template_directory() . '/inc/meta-boxes/about-meta.php';
-    require_once get_template_directory() . '/inc/meta-boxes/home-meta.php';
-    require_once get_template_directory() . '/inc/meta-boxes/shared-meta.php';
-    require_once get_template_directory() . '/inc/meta-boxes/boat-meta.php';
-    require_once get_template_directory() . '/inc/meta-boxes/blog-meta.php';
-    require_once get_template_directory() . '/inc/block-patterns/templates.php';
-    require_once get_template_directory() . '/inc/template-blocks.php';
-}
-add_action('init', 'wades_load_template_files', 5);
+// Remove the old page header meta box registration
+remove_action('add_meta_boxes', 'wades_add_page_header_meta_box', 10);
 
 /**
  * Helper function to get meta values
@@ -827,48 +285,66 @@ function wades_enqueue_block_editor_assets() {
     );
 }
 
-/**
- * Register and handle page templates
- */
+// Debug function for template registration
+function wades_debug_log($message) {
+    if (defined('WP_DEBUG') && WP_DEBUG === true) {
+        error_log('WADES TEMPLATE: ' . $message);
+    }
+}
+
+// Register page templates with debugging
 function wades_add_page_templates($templates) {
+    wades_debug_log('Registering page templates');
+    wades_debug_log('Current templates: ' . print_r($templates, true));
+    
     $custom_templates = array(
-        'templates/about.php'     => 'About Template',
-        'templates/boats.php'     => 'Boats Template',
-        'templates/blog.php'      => 'Blog Template',
-        'templates/contact.php'   => 'Contact Template',
+        'templates/boats.php' => 'Boats Template',
+        'templates/about.php' => 'About Template',
+        'templates/blog.php' => 'Blog Template',
+        'templates/contact.php' => 'Contact Template',
         'templates/financing.php' => 'Financing Template',
-        'templates/home.php'      => 'Home Template',
-        'templates/services.php'  => 'Services Template'
+        'templates/home.php' => 'Home Template',
+        'templates/services.php' => 'Services Template'
     );
     
-    return array_merge($templates, $custom_templates);
+    $merged_templates = array_merge($templates, $custom_templates);
+    wades_debug_log('Final templates: ' . print_r($merged_templates, true));
+    
+    return $merged_templates;
 }
 add_filter('theme_page_templates', 'wades_add_page_templates');
 
-/**
- * Load custom page templates
- */
+// Load page templates with debugging
 function wades_load_page_templates($template) {
     global $post;
-
-    if (!is_page() || !$post) {
+    
+    if (!$post) {
+        wades_debug_log('No post object found');
         return $template;
     }
-
-    // Get the template slug
+    
+    if (!is_page()) {
+        wades_debug_log('Not a page');
+        return $template;
+    }
+    
     $template_slug = get_page_template_slug($post->ID);
+    wades_debug_log('Template slug: ' . $template_slug);
     
     if (empty($template_slug)) {
+        wades_debug_log('No template slug found');
         return $template;
     }
-
-    // Check if template file exists in theme directory
+    
     $template_path = get_template_directory() . '/' . $template_slug;
+    wades_debug_log('Looking for template at: ' . $template_path);
     
     if (file_exists($template_path)) {
+        wades_debug_log('Template found, loading: ' . $template_path);
         return $template_path;
     }
-
+    
+    wades_debug_log('Template not found, using default: ' . $template);
     return $template;
 }
 add_filter('template_include', 'wades_load_page_templates', 99);
@@ -879,6 +355,16 @@ remove_all_filters('template_include', 98);
 function wades_admin_scripts() {
     if (is_admin()) {
         wp_enqueue_media();
+        wp_enqueue_script('jquery');
+        wp_enqueue_script('jquery-ui-sortable');
+        
+        // Enqueue meta box styles
+        wp_enqueue_style(
+            'wades-meta-box-styles',
+            get_template_directory_uri() . '/inc/meta-boxes/meta-box-styles.css',
+            array(),
+            _S_VERSION
+        );
     }
 }
 add_action('admin_enqueue_scripts', 'wades_admin_scripts');

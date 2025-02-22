@@ -17,7 +17,14 @@
             <div class="space-y-6">
                 <?php if (has_custom_logo()) : ?>
                     <div class="mb-6">
-                        <?php the_custom_logo(); ?>
+                        <?php
+                        $custom_logo_id = get_theme_mod('custom_logo');
+                        $logo = wp_get_attachment_image_src($custom_logo_id, 'full');
+                        ?>
+                        <img src="<?php echo esc_url($logo[0]); ?>"
+                             alt="<?php bloginfo('name'); ?>"
+                             class="w-auto h-16 max-w-[240px] object-contain bg-white p-3 rounded-lg"
+                        >
                     </div>
                 <?php else : ?>
                     <h3 class="text-2xl font-bold text-white mb-6"><?php bloginfo('name'); ?></h3>

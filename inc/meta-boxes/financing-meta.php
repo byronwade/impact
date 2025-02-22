@@ -1,286 +1,436 @@
 <?php
 /**
- * Meta Boxes for Financing Template
+ * Custom Meta Boxes for Financing Page Template
  */
 
 if (!defined('ABSPATH')) {
-    exit;
+    exit; // Exit if accessed directly
 }
 
 /**
  * Add meta boxes for Financing template
  */
-function wades_financing_meta_boxes() {
-    // Only add meta boxes on page edit screen
-    if (!is_admin()) {
+function wades_add_financing_meta_boxes() {
+    // Get current screen
+    $screen = get_current_screen();
+    if (!$screen || $screen->id !== 'page') {
         return;
     }
 
-    global $post;
-    if (!$post) {
+    // Get current template
+    $template = get_page_template_slug();
+    
+    // Only add these meta boxes for the financing template
+    if ($template !== 'templates/financing.php') {
         return;
     }
 
-    // Check if we're on a page and using the financing template
-    if (get_post_type($post) === 'page') {
-        $template = get_page_template_slug($post->ID);
-        
-        if ($template === 'templates/financing.php' || basename($template) === 'financing.php') {
-            add_meta_box(
-                'financing_content',
-                'Financing Page Content',
-                'wades_financing_content_callback',
-                'page',
-                'normal',
-                'high'
-            );
-        }
-    }
+    // Single meta box with tabs
+    add_meta_box(
+        'wades_financing_settings',
+        'Financing Page Settings',
+        'wades_financing_settings_callback',
+        'page',
+        'normal',
+        'high'
+    );
 }
-add_action('add_meta_boxes', 'wades_financing_meta_boxes');
+add_action('add_meta_boxes', 'wades_add_financing_meta_boxes', 1);
 
 /**
- * Financing Content Meta Box Callback
+ * Financing Settings Meta Box Callback
  */
-function wades_financing_content_callback($post) {
+function wades_financing_settings_callback($post) {
     wp_nonce_field('wades_financing_meta', 'wades_financing_meta_nonce');
 
+    // Get all meta data
     $meta = array(
-        // Hero Section
-        'hero_title' => get_post_meta($post->ID, '_hero_title', true) ?: 'Financing Options',
-        'hero_description' => get_post_meta($post->ID, '_hero_description', true) ?: 'Flexible financing solutions for your dream boat and expert service work',
-        'hero_background' => get_post_meta($post->ID, '_hero_background', true),
-        
-        // Financing Options
-        'financing_options' => get_post_meta($post->ID, '_financing_options', true) ?: array(
+        'hero_background_image' => get_post_meta($post->ID, '_hero_background_image', true),
+        'hero_overlay_opacity' => get_post_meta($post->ID, '_hero_overlay_opacity', true) ?: '40',
+        'hero_height' => get_post_meta($post->ID, '_hero_height', true) ?: '70',
+        'financing_intro' => get_post_meta($post->ID, '_financing_intro', true) ?: 'At Impact Marine Group, we understand that purchasing your dream boat is a significant investment. That\'s why we\'ve partnered with leading marine financing institutions to provide you with flexible, competitive financing options. Our dedicated team will work with you to find the best financing solution tailored to your needs, ensuring a smooth and hassle-free process from application to approval.',
+        'financing_partners' => get_post_meta($post->ID, '_financing_partners', true) ?: array(
             array(
-                'icon' => 'anchor',
-                'title' => 'Boat Financing',
-                'description' => 'Find the perfect loan for your new or used boat',
-                'features' => array(
-                    'Competitive interest rates',
-                    'Flexible terms up to 20 years',
-                    'Financing available for boats up to $5 million',
-                    'Quick and easy application process'
-                )
+                'name' => 'Marine Lending',
+                'logo' => '',
+                'description' => 'Specializing in boat loans with competitive rates and flexible terms up to 20 years.',
+                'link' => '#'
             ),
             array(
-                'icon' => 'wrench',
-                'title' => 'Service Financing',
-                'description' => 'Affordable options for repairs and maintenance',
-                'features' => array(
-                    '0% interest for 12 months on services over $2,000',
-                    'Low monthly payments',
-                    'Cover unexpected repairs or planned upgrades',
-                    'Quick approval process'
-                )
+                'name' => 'Boat Finance Direct',
+                'logo' => '',
+                'description' => 'Quick approvals and customized financing solutions for new and used boats.',
+                'link' => '#'
+            ),
+            array(
+                'name' => 'Nautical Credit',
+                'logo' => '',
+                'description' => 'Expert marine financing with industry-leading rates and exceptional customer service.',
+                'link' => '#'
             )
         ),
-        
-        // Calculator Settings
-        'calculator_settings' => get_post_meta($post->ID, '_calculator_settings', true) ?: array(
-            'default_amount' => '50000',
-            'default_rate' => '5',
-            'default_term' => '60',
-            'min_amount' => '5000',
-            'max_amount' => '5000000',
-            'min_rate' => '3',
-            'max_rate' => '15',
-            'min_term' => '12',
-            'max_term' => '240'
-        ),
-        
-        // FAQ Section
-        'faqs' => get_post_meta($post->ID, '_faqs', true) ?: array(
+        'financing_steps' => get_post_meta($post->ID, '_financing_steps', true) ?: array(
             array(
-                'question' => 'What credit score do I need to qualify?',
-                'answer' => 'While we consider various factors, a credit score of 640 or higher typically results in the best rates and terms. However, we offer options for a wide range of credit profiles.'
+                'title' => 'Complete Application',
+                'description' => 'Fill out our simple online application form with your basic information and financing preferences.',
+                'icon' => 'clipboard-list'
+            ),
+            array(
+                'title' => 'Document Submission',
+                'description' => 'Provide required documentation such as proof of income and identification.',
+                'icon' => 'file-text'
+            ),
+            array(
+                'title' => 'Credit Review',
+                'description' => 'Our financing partners will review your application and credit history.',
+                'icon' => 'search'
+            ),
+            array(
+                'title' => 'Approval & Terms',
+                'description' => 'Receive your approval with detailed terms and conditions for your boat loan.',
+                'icon' => 'check-circle'
+            ),
+            array(
+                'title' => 'Closing',
+                'description' => 'Sign the final paperwork and take delivery of your new boat.',
+                'icon' => 'boat'
+            )
+        ),
+        'required_documents' => get_post_meta($post->ID, '_required_documents', true) ?: array(
+            array(
+                'title' => 'Personal Identification',
+                'description' => 'Valid government-issued photo ID and proof of residence.'
+            ),
+            array(
+                'title' => 'Income Verification',
+                'description' => 'Recent pay stubs, W-2s, or tax returns from the past two years.'
+            ),
+            array(
+                'title' => 'Bank Statements',
+                'description' => 'Last three months of personal bank statements.'
+            ),
+            array(
+                'title' => 'Employment Information',
+                'description' => 'Current employer details and employment history.'
+            ),
+            array(
+                'title' => 'Boat Information',
+                'description' => 'Details about the boat you wish to finance, including make, model, and year.'
+            )
+        ),
+        'faq_items' => get_post_meta($post->ID, '_faq_items', true) ?: array(
+            array(
+                'question' => 'What credit score do I need to qualify for boat financing?',
+                'answer' => 'While requirements vary by lender, a credit score of 680 or higher typically results in the best rates and terms. However, we work with multiple lenders who can accommodate various credit profiles.'
+            ),
+            array(
+                'question' => 'How long can I finance my boat?',
+                'answer' => 'Boat loans typically range from 10-20 years, depending on the loan amount and type of boat. Longer terms mean lower monthly payments, but may result in higher total interest costs.'
+            ),
+            array(
+                'question' => 'What is the minimum down payment required?',
+                'answer' => 'Down payment requirements typically range from 10-20% of the boat\'s value, though this can vary based on the loan amount, your credit profile, and the lender\'s requirements.'
+            ),
+            array(
+                'question' => 'Can I finance a used boat?',
+                'answer' => 'Yes, we offer financing for both new and used boats. The terms and rates may vary based on the boat\'s age and condition.'
             ),
             array(
                 'question' => 'How long does the approval process take?',
-                'answer' => 'Our streamlined process often provides a decision within 24-48 hours of receiving a completed application.'
+                'answer' => 'Most applications receive an initial response within 24-48 hours. The complete process, from application to closing, typically takes 5-7 business days.'
             ),
             array(
-                'question' => 'Can I finance both new and used boats?',
-                'answer' => 'Yes, we offer financing options for both new and used boats, as well as refinancing for your current boat.'
-            ),
-            array(
-                'question' => 'Is there a minimum or maximum loan amount?',
-                'answer' => 'We offer financing from $5,000 up to $5 million, accommodating a wide range of boats and budgets.'
+                'question' => 'Do you offer financing for service and accessories?',
+                'answer' => 'Yes, you can include accessories, electronics, and even extended warranties in your boat loan. We also offer separate financing options for major service work.'
             )
         ),
-        
-        // CTA Section
-        'cta_settings' => get_post_meta($post->ID, '_cta_settings', true) ?: array(
-            'title' => 'Ready to Get Started?',
-            'description' => 'Our financing experts are here to help you navigate your options and find the best solution for your needs.',
-            'button_text' => 'Contact Us Today',
-            'button_link' => '/contact',
-            'phone_number' => '(770) 881-7808'
-        ),
-        
-        // Layout Options
         'sections_visibility' => get_post_meta($post->ID, '_sections_visibility', true) ?: array(
-            'hero' => '1',
-            'financing_options' => '1',
-            'calculator' => '1',
-            'faqs' => '1',
-            'cta' => '1'
+            'intro' => '1',
+            'partners' => '1',
+            'steps' => '1',
+            'documents' => '1',
+            'faq' => '1'
         ),
-        'section_order' => get_post_meta($post->ID, '_section_order', true) ?: 'hero,financing_options,calculator,faqs,cta'
+        'section_order' => get_post_meta($post->ID, '_section_order', true) ?: 'intro,partners,steps,documents,faq'
     );
     ?>
-    <div class="financing-meta-box">
+    <div class="meta-box-container">
+        <!-- Tab Navigation -->
         <div class="meta-box-tabs">
-            <button type="button" class="tab-button active" data-tab="hero">Hero</button>
-            <button type="button" class="tab-button" data-tab="options">Financing Options</button>
-            <button type="button" class="tab-button" data-tab="calculator">Calculator</button>
-            <button type="button" class="tab-button" data-tab="faqs">FAQs</button>
-            <button type="button" class="tab-button" data-tab="cta">CTA</button>
-            <button type="button" class="tab-button" data-tab="layout">Layout</button>
+            <button type="button" class="tab-button active" data-tab="layout">Layout & Order</button>
+            <button type="button" class="tab-button" data-tab="header">Page Header</button>
+            <button type="button" class="tab-button" data-tab="intro">Introduction</button>
+            <button type="button" class="tab-button" data-tab="partners">Financing Partners</button>
+            <button type="button" class="tab-button" data-tab="steps">Application Steps</button>
+            <button type="button" class="tab-button" data-tab="documents">Required Documents</button>
+            <button type="button" class="tab-button" data-tab="faq">FAQ</button>
         </div>
 
-        <!-- Hero Tab -->
-        <div class="tab-content active" data-tab="hero">
+        <!-- Layout & Order Tab -->
+        <div class="tab-content active" data-tab="layout">
             <div class="meta-box-section">
-                <h3>Hero Section</h3>
-                <p>
-                    <label for="hero_title">Page Title:</label><br>
-                    <input type="text" id="hero_title" name="hero_title" value="<?php echo esc_attr($meta['hero_title']); ?>" class="widefat">
-                </p>
-                <p>
-                    <label for="hero_description">Description:</label><br>
-                    <textarea id="hero_description" name="hero_description" rows="3" class="widefat"><?php echo esc_textarea($meta['hero_description']); ?></textarea>
-                </p>
-                <p>
-                    <label>Background Image:</label><br>
-                    <input type="hidden" name="hero_background" value="<?php echo esc_attr($meta['hero_background']); ?>" class="widefat">
-                    <button type="button" class="button upload-image">Upload Image</button>
-                    <div class="image-preview">
-                        <?php if ($meta['hero_background']) : ?>
-                            <?php echo wp_get_attachment_image($meta['hero_background'], 'thumbnail'); ?>
-                        <?php endif; ?>
+                <h3>Section Order & Visibility</h3>
+                <p class="description">Enable/disable sections and drag to reorder them.</p>
+                <div class="sections-list" style="margin-top: 15px;">
+                    <?php
+                    $sections = explode(',', $meta['section_order']);
+                    $section_labels = array(
+                        'intro' => 'Introduction Section',
+                        'partners' => 'Financing Partners Section',
+                        'steps' => 'Application Steps Section',
+                        'documents' => 'Required Documents Section',
+                        'faq' => 'FAQ Section'
+                    );
+                    foreach ($sections as $section_id) :
+                        if (isset($section_labels[$section_id])) :
+                    ?>
+                        <div class="section-item" style="padding: 10px; background: #f9f9f9; border: 1px solid #ddd; margin-bottom: 5px;">
+                            <input type="hidden" 
+                                   name="section_order" 
+                                   value="<?php echo esc_attr($meta['section_order']); ?>"
+                                   class="section-order">
+                            <label style="display: flex; align-items: center; gap: 10px;">
+                                <span class="dashicons dashicons-menu" style="cursor: move;"></span>
+                                <input type="checkbox" 
+                                       name="sections_visibility[<?php echo esc_attr($section_id); ?>]" 
+                                       value="1"
+                                       <?php checked($meta['sections_visibility'][$section_id], '1'); ?>>
+                                <?php echo esc_html($section_labels[$section_id]); ?>
+                            </label>
+                        </div>
+                    <?php 
+                        endif;
+                    endforeach; 
+                    ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- Header Tab -->
+        <div class="tab-content" data-tab="header">
+            <div class="meta-box-section">
+                <h3>Page Header Settings</h3>
+                <div class="mb-6">
+                    <label class="block mb-2 font-medium">Background Image</label>
+                    <div class="flex items-start gap-4">
+                        <div>
+                            <input type="hidden" name="hero_background_image" id="hero_background_image" 
+                                   value="<?php echo esc_attr($meta['hero_background_image']); ?>">
+                            <div class="button-group">
+                                <button type="button" class="button upload-image" id="upload_hero_image">Select Image</button>
+                                <button type="button" class="button remove-image">Remove Image</button>
+                            </div>
+                        </div>
+                        <div id="hero_image_preview" class="max-w-xs">
+                            <?php 
+                            if ($meta['hero_background_image']) {
+                                echo wp_get_attachment_image($meta['hero_background_image'], 'thumbnail');
+                            }
+                            ?>
+                        </div>
                     </div>
+                </div>
+
+                <div class="mb-6">
+                    <label for="hero_overlay_opacity" class="block mb-2 font-medium">
+                        Overlay Opacity (%)
+                    </label>
+                    <input type="number" id="hero_overlay_opacity" name="hero_overlay_opacity" 
+                           value="<?php echo esc_attr($meta['hero_overlay_opacity']); ?>"
+                           class="regular-text" min="0" max="100" step="5">
+                </div>
+
+                <div class="mb-6">
+                    <label for="hero_height" class="block mb-2 font-medium">
+                        Header Height (vh)
+                    </label>
+                    <input type="number" id="hero_height" name="hero_height" 
+                           value="<?php echo esc_attr($meta['hero_height']); ?>"
+                           class="regular-text" min="30" max="100" step="5">
+                </div>
+            </div>
+        </div>
+
+        <!-- Introduction Tab -->
+        <div class="tab-content" data-tab="intro">
+            <div class="meta-box-section">
+                <h3>Introduction Content</h3>
+                <p>
+                    <label for="financing_intro">Introduction Text:</label>
+                    <?php 
+                    wp_editor(
+                        $meta['financing_intro'],
+                        'financing_intro',
+                        array(
+                            'textarea_name' => 'financing_intro',
+                            'media_buttons' => true,
+                            'textarea_rows' => 10
+                        )
+                    );
+                    ?>
                 </p>
             </div>
         </div>
 
-        <!-- Financing Options Tab -->
-        <div class="tab-content" data-tab="options">
+        <!-- Financing Partners Tab -->
+        <div class="tab-content" data-tab="partners">
             <div class="meta-box-section">
-                <h3>Financing Options</h3>
-                <div class="financing-options-list">
-                    <?php foreach ($meta['financing_options'] as $index => $option) : ?>
-                        <div class="card">
+                <h3>Financing Partners</h3>
+                <div class="partners-list">
+                    <?php 
+                    $partners = $meta['financing_partners'];
+                    if (empty($partners)) {
+                        $partners = array(array('name' => '', 'logo' => '', 'description' => '', 'link' => ''));
+                    }
+                    foreach ($partners as $index => $partner) : 
+                    ?>
+                        <div class="partner-item card">
                             <div class="card-header">
-                                <h4>Option <?php echo $index + 1; ?></h4>
-                                <button type="button" class="button remove-option">Remove</button>
+                                <h4>Partner <?php echo $index + 1; ?></h4>
+                                <button type="button" class="button remove-partner">Remove</button>
                             </div>
                             <div class="card-body">
                                 <p>
-                                    <label>Icon (Lucide icon name):</label><br>
-                                    <input type="text" name="financing_options[<?php echo $index; ?>][icon]" value="<?php echo esc_attr($option['icon']); ?>" class="widefat">
+                                    <label>Partner Name:</label>
+                                    <input type="text" name="financing_partners[<?php echo $index; ?>][name]" 
+                                           value="<?php echo esc_attr($partner['name']); ?>" class="widefat">
                                 </p>
                                 <p>
-                                    <label>Title:</label><br>
-                                    <input type="text" name="financing_options[<?php echo $index; ?>][title]" value="<?php echo esc_attr($option['title']); ?>" class="widefat">
+                                    <label>Partner Logo:</label>
+                                    <input type="hidden" name="financing_partners[<?php echo $index; ?>][logo]" 
+                                           value="<?php echo esc_attr($partner['logo']); ?>" class="partner-logo-input">
+                                    <div class="button-group">
+                                        <button type="button" class="button upload-partner-logo">Select Logo</button>
+                                        <button type="button" class="button remove-partner-logo">Remove Logo</button>
+                                    </div>
+                                    <div class="partner-logo-preview">
+                                        <?php if ($partner['logo']) : ?>
+                                            <?php echo wp_get_attachment_image($partner['logo'], 'thumbnail'); ?>
+                                        <?php endif; ?>
+                                    </div>
                                 </p>
                                 <p>
-                                    <label>Description:</label><br>
-                                    <textarea name="financing_options[<?php echo $index; ?>][description]" rows="2" class="widefat"><?php echo esc_textarea($option['description']); ?></textarea>
+                                    <label>Description:</label>
+                                    <textarea name="financing_partners[<?php echo $index; ?>][description]" 
+                                              rows="3" class="widefat"><?php echo esc_textarea($partner['description']); ?></textarea>
                                 </p>
-                                <div class="features-list">
-                                    <label>Features:</label>
-                                    <?php foreach ($option['features'] as $feature_index => $feature) : ?>
-                                        <p>
-                                            <input type="text" name="financing_options[<?php echo $index; ?>][features][]" value="<?php echo esc_attr($feature); ?>" class="widefat">
-                                            <button type="button" class="button remove-feature">Remove</button>
-                                        </p>
-                                    <?php endforeach; ?>
-                                </div>
-                                <button type="button" class="button add-feature">Add Feature</button>
+                                <p>
+                                    <label>Website Link:</label>
+                                    <input type="url" name="financing_partners[<?php echo $index; ?>][link]" 
+                                           value="<?php echo esc_url($partner['link']); ?>" class="widefat">
+                                </p>
                             </div>
                         </div>
                     <?php endforeach; ?>
                 </div>
-                <button type="button" class="button add-option">Add Financing Option</button>
+                <button type="button" class="button add-partner">Add Partner</button>
             </div>
         </div>
 
-        <!-- Calculator Tab -->
-        <div class="tab-content" data-tab="calculator">
+        <!-- Application Steps Tab -->
+        <div class="tab-content" data-tab="steps">
             <div class="meta-box-section">
-                <h3>Loan Calculator Settings</h3>
-                <div class="grid-2">
-                    <p>
-                        <label for="default_amount">Default Loan Amount ($):</label><br>
-                        <input type="number" id="default_amount" name="calculator_settings[default_amount]" value="<?php echo esc_attr($meta['calculator_settings']['default_amount']); ?>" class="widefat">
-                    </p>
-                    <p>
-                        <label for="default_rate">Default Interest Rate (%):</label><br>
-                        <input type="number" id="default_rate" name="calculator_settings[default_rate]" value="<?php echo esc_attr($meta['calculator_settings']['default_rate']); ?>" step="0.1" class="widefat">
-                    </p>
+                <h3>Application Steps</h3>
+                <div class="steps-list">
+                    <?php 
+                    $steps = $meta['financing_steps'];
+                    if (empty($steps)) {
+                        $steps = array(array('title' => '', 'description' => '', 'icon' => ''));
+                    }
+                    foreach ($steps as $index => $step) : 
+                    ?>
+                        <div class="step-item card">
+                            <div class="card-header">
+                                <h4>Step <?php echo $index + 1; ?></h4>
+                                <button type="button" class="button remove-step">Remove</button>
+                            </div>
+                            <div class="card-body">
+                                <p>
+                                    <label>Step Title:</label>
+                                    <input type="text" name="financing_steps[<?php echo $index; ?>][title]" 
+                                           value="<?php echo esc_attr($step['title']); ?>" class="widefat">
+                                </p>
+                                <p>
+                                    <label>Description:</label>
+                                    <textarea name="financing_steps[<?php echo $index; ?>][description]" 
+                                              rows="2" class="widefat"><?php echo esc_textarea($step['description']); ?></textarea>
+                                </p>
+                                <p>
+                                    <label>Icon (Lucide icon name):</label>
+                                    <input type="text" name="financing_steps[<?php echo $index; ?>][icon]" 
+                                           value="<?php echo esc_attr($step['icon']); ?>" class="widefat">
+                                </p>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
-                <p>
-                    <label for="default_term">Default Loan Term (months):</label><br>
-                    <input type="number" id="default_term" name="calculator_settings[default_term]" value="<?php echo esc_attr($meta['calculator_settings']['default_term']); ?>" class="widefat">
-                </p>
-            </div>
-
-            <div class="meta-box-section">
-                <h3>Calculator Limits</h3>
-                <div class="grid-2">
-                    <p>
-                        <label for="min_amount">Minimum Amount ($):</label><br>
-                        <input type="number" id="min_amount" name="calculator_settings[min_amount]" value="<?php echo esc_attr($meta['calculator_settings']['min_amount']); ?>" class="widefat">
-                    </p>
-                    <p>
-                        <label for="max_amount">Maximum Amount ($):</label><br>
-                        <input type="number" id="max_amount" name="calculator_settings[max_amount]" value="<?php echo esc_attr($meta['calculator_settings']['max_amount']); ?>" class="widefat">
-                    </p>
-                </div>
-                <div class="grid-2">
-                    <p>
-                        <label for="min_rate">Minimum Rate (%):</label><br>
-                        <input type="number" id="min_rate" name="calculator_settings[min_rate]" value="<?php echo esc_attr($meta['calculator_settings']['min_rate']); ?>" step="0.1" class="widefat">
-                    </p>
-                    <p>
-                        <label for="max_rate">Maximum Rate (%):</label><br>
-                        <input type="number" id="max_rate" name="calculator_settings[max_rate]" value="<?php echo esc_attr($meta['calculator_settings']['max_rate']); ?>" step="0.1" class="widefat">
-                    </p>
-                </div>
-                <div class="grid-2">
-                    <p>
-                        <label for="min_term">Minimum Term (months):</label><br>
-                        <input type="number" id="min_term" name="calculator_settings[min_term]" value="<?php echo esc_attr($meta['calculator_settings']['min_term']); ?>" class="widefat">
-                    </p>
-                    <p>
-                        <label for="max_term">Maximum Term (months):</label><br>
-                        <input type="number" id="max_term" name="calculator_settings[max_term]" value="<?php echo esc_attr($meta['calculator_settings']['max_term']); ?>" class="widefat">
-                    </p>
-                </div>
+                <button type="button" class="button add-step">Add Step</button>
             </div>
         </div>
 
-        <!-- FAQs Tab -->
-        <div class="tab-content" data-tab="faqs">
+        <!-- Required Documents Tab -->
+        <div class="tab-content" data-tab="documents">
+            <div class="meta-box-section">
+                <h3>Required Documents</h3>
+                <div class="documents-list">
+                    <?php 
+                    $documents = $meta['required_documents'];
+                    if (empty($documents)) {
+                        $documents = array(array('title' => '', 'description' => ''));
+                    }
+                    foreach ($documents as $index => $document) : 
+                    ?>
+                        <div class="document-item card">
+                            <div class="card-header">
+                                <h4>Document <?php echo $index + 1; ?></h4>
+                                <button type="button" class="button remove-document">Remove</button>
+                            </div>
+                            <div class="card-body">
+                                <p>
+                                    <label>Document Title:</label>
+                                    <input type="text" name="required_documents[<?php echo $index; ?>][title]" 
+                                           value="<?php echo esc_attr($document['title']); ?>" class="widefat">
+                                </p>
+                                <p>
+                                    <label>Description:</label>
+                                    <textarea name="required_documents[<?php echo $index; ?>][description]" 
+                                              rows="2" class="widefat"><?php echo esc_textarea($document['description']); ?></textarea>
+                                </p>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                <button type="button" class="button add-document">Add Document</button>
+            </div>
+        </div>
+
+        <!-- FAQ Tab -->
+        <div class="tab-content" data-tab="faq">
             <div class="meta-box-section">
                 <h3>Frequently Asked Questions</h3>
-                <div class="faqs-list">
-                    <?php foreach ($meta['faqs'] as $index => $faq) : ?>
-                        <div class="card">
+                <div class="faq-list">
+                    <?php 
+                    $faqs = $meta['faq_items'];
+                    if (empty($faqs)) {
+                        $faqs = array(array('question' => '', 'answer' => ''));
+                    }
+                    foreach ($faqs as $index => $faq) : 
+                    ?>
+                        <div class="faq-item card">
                             <div class="card-header">
                                 <h4>FAQ <?php echo $index + 1; ?></h4>
                                 <button type="button" class="button remove-faq">Remove</button>
                             </div>
                             <div class="card-body">
                                 <p>
-                                    <label>Question:</label><br>
-                                    <input type="text" name="faqs[<?php echo $index; ?>][question]" value="<?php echo esc_attr($faq['question']); ?>" class="widefat">
+                                    <label>Question:</label>
+                                    <input type="text" name="faq_items[<?php echo $index; ?>][question]" 
+                                           value="<?php echo esc_attr($faq['question']); ?>" class="widefat">
                                 </p>
                                 <p>
-                                    <label>Answer:</label><br>
-                                    <textarea name="faqs[<?php echo $index; ?>][answer]" rows="3" class="widefat"><?php echo esc_textarea($faq['answer']); ?></textarea>
+                                    <label>Answer:</label>
+                                    <textarea name="faq_items[<?php echo $index; ?>][answer]" 
+                                              rows="3" class="widefat"><?php echo esc_textarea($faq['answer']); ?></textarea>
                                 </p>
                             </div>
                         </div>
@@ -289,109 +439,7 @@ function wades_financing_content_callback($post) {
                 <button type="button" class="button add-faq">Add FAQ</button>
             </div>
         </div>
-
-        <!-- CTA Tab -->
-        <div class="tab-content" data-tab="cta">
-            <div class="meta-box-section">
-                <h3>Call to Action</h3>
-                <p>
-                    <label for="cta_title">Title:</label><br>
-                    <input type="text" id="cta_title" name="cta_settings[title]" value="<?php echo esc_attr($meta['cta_settings']['title']); ?>" class="widefat">
-                </p>
-                <p>
-                    <label for="cta_description">Description:</label><br>
-                    <textarea id="cta_description" name="cta_settings[description]" rows="3" class="widefat"><?php echo esc_textarea($meta['cta_settings']['description']); ?></textarea>
-                </p>
-                <p>
-                    <label for="cta_button_text">Button Text:</label><br>
-                    <input type="text" id="cta_button_text" name="cta_settings[button_text]" value="<?php echo esc_attr($meta['cta_settings']['button_text']); ?>" class="widefat">
-                </p>
-                <p>
-                    <label for="cta_button_link">Button Link:</label><br>
-                    <input type="text" id="cta_button_link" name="cta_settings[button_link]" value="<?php echo esc_attr($meta['cta_settings']['button_link']); ?>" class="widefat">
-                </p>
-                <p>
-                    <label for="cta_phone_number">Phone Number:</label><br>
-                    <input type="text" id="cta_phone_number" name="cta_settings[phone_number]" value="<?php echo esc_attr($meta['cta_settings']['phone_number']); ?>" class="widefat">
-                </p>
-            </div>
-        </div>
-
-        <!-- Layout Tab -->
-        <div class="tab-content" data-tab="layout">
-            <div class="meta-box-section">
-                <h3>Section Visibility</h3>
-                <p>
-                    <label>
-                        <input type="checkbox" name="sections_visibility[hero]" value="1" <?php checked($meta['sections_visibility']['hero'], '1'); ?>>
-                        Show Hero Section
-                    </label>
-                </p>
-                <p>
-                    <label>
-                        <input type="checkbox" name="sections_visibility[financing_options]" value="1" <?php checked($meta['sections_visibility']['financing_options'], '1'); ?>>
-                        Show Financing Options
-                    </label>
-                </p>
-                <p>
-                    <label>
-                        <input type="checkbox" name="sections_visibility[calculator]" value="1" <?php checked($meta['sections_visibility']['calculator'], '1'); ?>>
-                        Show Loan Calculator
-                    </label>
-                </p>
-                <p>
-                    <label>
-                        <input type="checkbox" name="sections_visibility[faqs]" value="1" <?php checked($meta['sections_visibility']['faqs'], '1'); ?>>
-                        Show FAQs Section
-                    </label>
-                </p>
-                <p>
-                    <label>
-                        <input type="checkbox" name="sections_visibility[cta]" value="1" <?php checked($meta['sections_visibility']['cta'], '1'); ?>>
-                        Show CTA Section
-                    </label>
-                </p>
-            </div>
-
-            <div class="meta-box-section">
-                <h3>Section Order</h3>
-                <p class="description">Drag and drop sections to reorder them on the page.</p>
-                <ul id="section-order" class="section-order-list">
-                    <?php
-                    $sections = explode(',', $meta['section_order']);
-                    $section_labels = array(
-                        'hero' => 'Hero Section',
-                        'financing_options' => 'Financing Options',
-                        'calculator' => 'Loan Calculator',
-                        'faqs' => 'FAQs Section',
-                        'cta' => 'Call to Action'
-                    );
-                    foreach ($sections as $section) :
-                        if (isset($section_labels[$section])) :
-                    ?>
-                        <li data-section="<?php echo esc_attr($section); ?>">
-                            <i class="dashicons dashicons-menu"></i>
-                            <?php echo esc_html($section_labels[$section]); ?>
-                        </li>
-                    <?php
-                        endif;
-                    endforeach;
-                    ?>
-                </ul>
-                <input type="hidden" name="section_order" id="section-order-input" value="<?php echo esc_attr($meta['section_order']); ?>">
-            </div>
-        </div>
     </div>
-
-    <style>
-        <?php include get_template_directory() . '/inc/meta-boxes/meta-box-styles.css'; ?>
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-    </style>
 
     <script>
     jQuery(document).ready(function($) {
@@ -403,101 +451,194 @@ function wades_financing_content_callback($post) {
             $('.tab-content[data-tab="' + $(this).data('tab') + '"]').addClass('active');
         });
 
-        // Section order sorting
-        $('#section-order').sortable({
+        // Section ordering
+        $('.sections-list').sortable({
             handle: '.dashicons-menu',
-            update: function() {
+            update: function(event, ui) {
                 var order = [];
-                $('#section-order li').each(function() {
-                    order.push($(this).data('section'));
+                $('.sections-list .section-item').each(function() {
+                    var sectionId = $(this).find('input[type="checkbox"]').attr('name').match(/\[(.*?)\]/)[1];
+                    order.push(sectionId);
                 });
-                $('#section-order-input').val(order.join(','));
+                $('input[name="section_order"]').val(order.join(','));
             }
         });
 
-        // Add financing option
-        $('.add-option').on('click', function() {
-            var index = $('.financing-options-list .card').length;
-            var template = `
-                <div class="card">
-                    <div class="card-header">
-                        <h4>Option ${index + 1}</h4>
-                        <button type="button" class="button remove-option">Remove</button>
-                    </div>
-                    <div class="card-body">
-                        <p>
-                            <label>Icon (Lucide icon name):</label><br>
-                            <input type="text" name="financing_options[${index}][icon]" class="widefat">
-                        </p>
-                        <p>
-                            <label>Title:</label><br>
-                            <input type="text" name="financing_options[${index}][title]" class="widefat">
-                        </p>
-                        <p>
-                            <label>Description:</label><br>
-                            <textarea name="financing_options[${index}][description]" rows="2" class="widefat"></textarea>
-                        </p>
-                        <div class="features-list">
-                            <label>Features:</label>
-                        </div>
-                        <button type="button" class="button add-feature">Add Feature</button>
-                    </div>
-                </div>
-            `;
-            $('.financing-options-list').append(template);
+        // Image upload functionality
+        function initImageUpload(button, input, preview) {
+            button.on('click', function(e) {
+                e.preventDefault();
+                
+                var frame = wp.media({
+                    title: 'Select Image',
+                    multiple: false
+                });
+
+                frame.on('select', function() {
+                    var attachment = frame.state().get('selection').first().toJSON();
+                    input.val(attachment.id);
+                    preview.html($('<img>', {
+                        src: attachment.url,
+                        style: 'max-width: 200px; height: auto;'
+                    }));
+                });
+
+                frame.open();
+            });
+        }
+
+        // Initialize image uploads
+        $('.upload-image, .upload-partner-logo').each(function() {
+            var container = $(this).closest('.meta-box-section, .partner-item');
+            initImageUpload(
+                $(this),
+                container.find('input[type="hidden"]'),
+                container.find('.image-preview, .partner-logo-preview')
+            );
         });
 
-        // Remove financing option
-        $(document).on('click', '.remove-option', function() {
-            $(this).closest('.card').remove();
+        // Remove image functionality
+        $('.remove-image, .remove-partner-logo').on('click', function() {
+            var container = $(this).closest('.meta-box-section, .partner-item');
+            container.find('input[type="hidden"]').val('');
+            container.find('.image-preview, .partner-logo-preview').empty();
         });
 
-        // Add feature
-        $(document).on('click', '.add-feature', function() {
-            var $featuresList = $(this).siblings('.features-list');
-            var template = `
-                <p>
-                    <input type="text" name="financing_options[${$(this).closest('.card').index()}][features][]" class="widefat">
-                    <button type="button" class="button remove-feature">Remove</button>
-                </p>
-            `;
-            $featuresList.append(template);
+        // Dynamic list functionality
+        function addListItem(container, template) {
+            var index = container.children().length;
+            container.append(template.replace(/\[\d+\]/g, '[' + index + ']'));
+            
+            // Initialize image upload for new partner if applicable
+            var newItem = container.children().last();
+            if (newItem.find('.upload-partner-logo').length) {
+                initImageUpload(
+                    newItem.find('.upload-partner-logo'),
+                    newItem.find('.partner-logo-input'),
+                    newItem.find('.partner-logo-preview')
+                );
+            }
+        }
+
+        // Add partner
+        $('.add-partner').on('click', function() {
+            addListItem($('.partners-list'), $('#partner-template').html());
         });
 
-        // Remove feature
-        $(document).on('click', '.remove-feature', function() {
-            $(this).closest('p').remove();
+        // Add step
+        $('.add-step').on('click', function() {
+            addListItem($('.steps-list'), $('#step-template').html());
+        });
+
+        // Add document
+        $('.add-document').on('click', function() {
+            addListItem($('.documents-list'), $('#document-template').html());
         });
 
         // Add FAQ
         $('.add-faq').on('click', function() {
-            var index = $('.faqs-list .card').length;
-            var template = `
-                <div class="card">
-                    <div class="card-header">
-                        <h4>FAQ ${index + 1}</h4>
-                        <button type="button" class="button remove-faq">Remove</button>
-                    </div>
-                    <div class="card-body">
-                        <p>
-                            <label>Question:</label><br>
-                            <input type="text" name="faqs[${index}][question]" class="widefat">
-                        </p>
-                        <p>
-                            <label>Answer:</label><br>
-                            <textarea name="faqs[${index}][answer]" rows="3" class="widefat"></textarea>
-                        </p>
-                    </div>
-                </div>
-            `;
-            $('.faqs-list').append(template);
+            addListItem($('.faq-list'), $('#faq-template').html());
         });
 
-        // Remove FAQ
-        $(document).on('click', '.remove-faq', function() {
+        // Remove items
+        $(document).on('click', '.remove-partner, .remove-step, .remove-document, .remove-faq', function() {
             $(this).closest('.card').remove();
         });
     });
+    </script>
+
+    <!-- Templates for dynamic items -->
+    <script type="text/template" id="partner-template">
+        <div class="partner-item card">
+            <div class="card-header">
+                <h4>New Partner</h4>
+                <button type="button" class="button remove-partner">Remove</button>
+            </div>
+            <div class="card-body">
+                <p>
+                    <label>Partner Name:</label>
+                    <input type="text" name="financing_partners[0][name]" class="widefat">
+                </p>
+                <p>
+                    <label>Partner Logo:</label>
+                    <input type="hidden" name="financing_partners[0][logo]" class="partner-logo-input">
+                    <div class="button-group">
+                        <button type="button" class="button upload-partner-logo">Select Logo</button>
+                        <button type="button" class="button remove-partner-logo">Remove Logo</button>
+                    </div>
+                    <div class="partner-logo-preview"></div>
+                </p>
+                <p>
+                    <label>Description:</label>
+                    <textarea name="financing_partners[0][description]" rows="3" class="widefat"></textarea>
+                </p>
+                <p>
+                    <label>Website Link:</label>
+                    <input type="url" name="financing_partners[0][link]" class="widefat">
+                </p>
+            </div>
+        </div>
+    </script>
+
+    <script type="text/template" id="step-template">
+        <div class="step-item card">
+            <div class="card-header">
+                <h4>New Step</h4>
+                <button type="button" class="button remove-step">Remove</button>
+            </div>
+            <div class="card-body">
+                <p>
+                    <label>Step Title:</label>
+                    <input type="text" name="financing_steps[0][title]" class="widefat">
+                </p>
+                <p>
+                    <label>Description:</label>
+                    <textarea name="financing_steps[0][description]" rows="2" class="widefat"></textarea>
+                </p>
+                <p>
+                    <label>Icon (Lucide icon name):</label>
+                    <input type="text" name="financing_steps[0][icon]" class="widefat">
+                </p>
+            </div>
+        </div>
+    </script>
+
+    <script type="text/template" id="document-template">
+        <div class="document-item card">
+            <div class="card-header">
+                <h4>New Document</h4>
+                <button type="button" class="button remove-document">Remove</button>
+            </div>
+            <div class="card-body">
+                <p>
+                    <label>Document Title:</label>
+                    <input type="text" name="required_documents[0][title]" class="widefat">
+                </p>
+                <p>
+                    <label>Description:</label>
+                    <textarea name="required_documents[0][description]" rows="2" class="widefat"></textarea>
+                </p>
+            </div>
+        </div>
+    </script>
+
+    <script type="text/template" id="faq-template">
+        <div class="faq-item card">
+            <div class="card-header">
+                <h4>New FAQ</h4>
+                <button type="button" class="button remove-faq">Remove</button>
+            </div>
+            <div class="card-body">
+                <p>
+                    <label>Question:</label>
+                    <input type="text" name="faq_items[0][question]" class="widefat">
+                </p>
+                <p>
+                    <label>Answer:</label>
+                    <textarea name="faq_items[0][answer]" rows="3" class="widefat"></textarea>
+                </p>
+            </div>
+        </div>
     </script>
     <?php
 }
@@ -522,67 +663,19 @@ function wades_save_financing_meta($post_id) {
         return;
     }
 
-    // Save text fields
+    // Save basic fields
     $text_fields = array(
-        'hero_title',
-        'hero_description'
+        'hero_background_image',
+        'hero_overlay_opacity',
+        'hero_height',
+        'financing_intro',
+        'section_order'
     );
 
     foreach ($text_fields as $field) {
         if (isset($_POST[$field])) {
             update_post_meta($post_id, '_' . $field, sanitize_text_field($_POST[$field]));
         }
-    }
-
-    // Save financing options
-    if (isset($_POST['financing_options']) && is_array($_POST['financing_options'])) {
-        $options = array();
-        foreach ($_POST['financing_options'] as $option) {
-            if (!empty($option['title'])) {
-                $options[] = array(
-                    'icon' => sanitize_text_field($option['icon']),
-                    'title' => sanitize_text_field($option['title']),
-                    'description' => wp_kses_post($option['description']),
-                    'features' => isset($option['features']) ? array_map('sanitize_text_field', array_filter($option['features'])) : array()
-                );
-            }
-        }
-        update_post_meta($post_id, '_financing_options', $options);
-    }
-
-    // Save calculator settings
-    if (isset($_POST['calculator_settings'])) {
-        $calculator_settings = array();
-        foreach ($_POST['calculator_settings'] as $key => $value) {
-            $calculator_settings[$key] = absint($value);
-        }
-        update_post_meta($post_id, '_calculator_settings', $calculator_settings);
-    }
-
-    // Save FAQs
-    if (isset($_POST['faqs']) && is_array($_POST['faqs'])) {
-        $faqs = array();
-        foreach ($_POST['faqs'] as $faq) {
-            if (!empty($faq['question'])) {
-                $faqs[] = array(
-                    'question' => sanitize_text_field($faq['question']),
-                    'answer' => wp_kses_post($faq['answer'])
-                );
-            }
-        }
-        update_post_meta($post_id, '_faqs', $faqs);
-    }
-
-    // Save CTA settings
-    if (isset($_POST['cta_settings'])) {
-        $cta_settings = array(
-            'title' => sanitize_text_field($_POST['cta_settings']['title']),
-            'description' => wp_kses_post($_POST['cta_settings']['description']),
-            'button_text' => sanitize_text_field($_POST['cta_settings']['button_text']),
-            'button_link' => esc_url_raw($_POST['cta_settings']['button_link']),
-            'phone_number' => sanitize_text_field($_POST['cta_settings']['phone_number'])
-        );
-        update_post_meta($post_id, '_cta_settings', $cta_settings);
     }
 
     // Save section visibility
@@ -594,14 +687,63 @@ function wades_save_financing_meta($post_id) {
         update_post_meta($post_id, '_sections_visibility', $visibility);
     }
 
-    // Save section order
-    if (isset($_POST['section_order'])) {
-        update_post_meta($post_id, '_section_order', sanitize_text_field($_POST['section_order']));
+    // Save financing partners
+    if (isset($_POST['financing_partners'])) {
+        $partners = array();
+        foreach ($_POST['financing_partners'] as $partner) {
+            if (!empty($partner['name'])) {
+                $partners[] = array(
+                    'name' => sanitize_text_field($partner['name']),
+                    'logo' => absint($partner['logo']),
+                    'description' => wp_kses_post($partner['description']),
+                    'link' => esc_url_raw($partner['link'])
+                );
+            }
+        }
+        update_post_meta($post_id, '_financing_partners', $partners);
     }
 
-    // Save hero background
-    if (isset($_POST['hero_background'])) {
-        update_post_meta($post_id, '_hero_background', absint($_POST['hero_background']));
+    // Save financing steps
+    if (isset($_POST['financing_steps'])) {
+        $steps = array();
+        foreach ($_POST['financing_steps'] as $step) {
+            if (!empty($step['title'])) {
+                $steps[] = array(
+                    'title' => sanitize_text_field($step['title']),
+                    'description' => wp_kses_post($step['description']),
+                    'icon' => sanitize_text_field($step['icon'])
+                );
+            }
+        }
+        update_post_meta($post_id, '_financing_steps', $steps);
+    }
+
+    // Save required documents
+    if (isset($_POST['required_documents'])) {
+        $documents = array();
+        foreach ($_POST['required_documents'] as $document) {
+            if (!empty($document['title'])) {
+                $documents[] = array(
+                    'title' => sanitize_text_field($document['title']),
+                    'description' => wp_kses_post($document['description'])
+                );
+            }
+        }
+        update_post_meta($post_id, '_required_documents', $documents);
+    }
+
+    // Save FAQ items
+    if (isset($_POST['faq_items'])) {
+        $faqs = array();
+        foreach ($_POST['faq_items'] as $faq) {
+            if (!empty($faq['question'])) {
+                $faqs[] = array(
+                    'question' => sanitize_text_field($faq['question']),
+                    'answer' => wp_kses_post($faq['answer'])
+                );
+            }
+        }
+        update_post_meta($post_id, '_faq_items', $faqs);
     }
 }
 add_action('save_post', 'wades_save_financing_meta'); 
