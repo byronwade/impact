@@ -5,12 +5,12 @@
  * @package wades
  */
 
-get_header(); ?>
+get_header(); 
+get_template_part('template-parts/template-header');
+?>
 
 <main role="main" aria-label="Main content" class="flex-grow">
-    <?php get_template_part('template-parts/template-header'); ?>
-
-    <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+    <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24">
         <?php
         // Get customization options
         $show_search = get_post_meta(get_the_ID(), '_show_search', true) !== '';
@@ -24,216 +24,154 @@ get_header(); ?>
             'policies' => '1'
         );
         $section_order = explode(',', get_post_meta(get_the_ID(), '_section_order', true) ?: 'services,why_choose_us,winterization,policies');
-        ?>
 
-        <!-- Search and Filter Section -->
-        <?php if ($show_search || $show_filters) : ?>
-        <div class="mb-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <?php if ($show_search) : ?>
-            <div class="relative w-full sm:w-96">
-                <input type="text" id="service-search" placeholder="Search services..." class="pl-10 w-full rounded-lg border border-input bg-background px-3 py-2">
-                <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground"></i>
-            </div>
-            <?php endif; ?>
-            <?php if ($show_filters) : ?>
-            <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-                <select id="location-filter" class="w-full sm:w-[200px] rounded-lg border border-input bg-background px-3 py-2">
-                    <option value="">All Locations</option>
-                    <option value="shop">At Our Shop</option>
-                    <option value="mobile">Mobile Service</option>
-                    <option value="both">Both Available</option>
-                </select>
-            </div>
-            <?php endif; ?>
-        </div>
-        <?php endif; ?>
-
-        <!-- Results Count -->
-        <p id="results-count" class="text-sm text-muted-foreground mb-4"></p>
-
-        <?php
-        // Render sections in the specified order
+        // Loop through sections in order
         foreach ($section_order as $section) {
-            if (!isset($sections_visibility[$section]) || $sections_visibility[$section] !== '1') {
-                continue;
-            }
-
             switch ($section) {
                 case 'services':
                     if ($sections_visibility['services']) :
-        ?>
-                    <!-- Services Grid -->
-                    <div id="services-grid" class="grid <?php echo esc_attr($grid_columns); ?> gap-8 mb-16">
-                        <?php
-                        $paged = (get_query_var('paged')) ? get_query_var('paged') : 1;
-
-                        $args = array(
-                            'post_type' => 'service',
-                            'posts_per_page' => $services_per_page,
-                            'orderby' => 'title',
-                            'order' => 'ASC',
-                            'paged' => $paged
-                        );
-
-                        $services_query = new WP_Query($args);
-                        $total_services = $services_query->found_posts;
-
-                        if ($services_query->have_posts()) :
-                            while ($services_query->have_posts()) : $services_query->the_post();
-                                $icon = get_post_meta(get_the_ID(), '_service_icon', true);
-                                $price = get_post_meta(get_the_ID(), '_service_price', true);
-                                $duration = get_post_meta(get_the_ID(), '_service_duration', true);
-                                $location = get_post_meta(get_the_ID(), '_service_location', true);
-                                $features = get_post_meta(get_the_ID(), '_service_features', true);
+                        // Search and Filter Section
+                        if ($show_search || $show_filters) :
                         ?>
-                        <div class="service-card rounded-xl overflow-hidden bg-white shadow-md <?php 
-                            echo esc_attr(get_post_meta(get_the_ID(), '_card_style', true)); ?> hover:<?php 
-                            echo esc_attr(get_post_meta(get_the_ID(), '_hover_effect', true)); ?>" 
-                            data-location="<?php echo esc_attr($location); ?>"
-                            data-name="<?php echo esc_attr(get_the_title()); ?>"
-                            data-description="<?php echo esc_attr(get_the_excerpt()); ?>">
-                            <div class="p-6">
-                                <div class="flex items-center gap-4 mb-4">
-                                    <?php if ($icon) : ?>
-                                        <div class="flex-shrink-0">
-                                            <i data-lucide="<?php echo esc_attr($icon); ?>" 
-                                               class="h-8 w-8" 
-                                               style="color: <?php echo esc_attr(get_post_meta(get_the_ID(), '_service_icon_color', true)); ?>">
-                                            </i>
-                                        </div>
-                                    <?php endif; ?>
-                                    <div>
-                                        <h3 class="text-xl font-semibold"><?php the_title(); ?></h3>
-                                        <?php if ($price) : ?>
-                                            <p class="text-sm text-muted-foreground">Starting at <?php echo esc_html($price); ?></p>
-                                        <?php endif; ?>
-                                    </div>
+                        <div class="mb-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+                            <?php if ($show_search) : ?>
+                                <div class="relative w-full sm:w-96">
+                                    <input type="text" id="service-search" placeholder="Search services..." class="pl-10 w-full rounded-lg border border-input bg-background px-3 py-2">
+                                    <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground"></i>
                                 </div>
+                            <?php endif; ?>
 
-                                <div class="prose prose-sm mb-6">
-                                    <?php the_excerpt(); ?>
-                                </div>
+                            <?php if ($show_filters) : ?>
+                                <select id="location-filter" class="w-full sm:w-[200px] rounded-lg border border-input bg-background px-3 py-2">
+                                    <option value="">All Locations</option>
+                                    <option value="shop">Shop Services</option>
+                                    <option value="mobile">Mobile Services</option>
+                                    <option value="both">Both</option>
+                                </select>
+                            <?php endif; ?>
+                        </div>
+                        <?php endif; ?>
 
-                                <?php if ($features && is_array($features)) : ?>
-                                    <ul class="space-y-2 mb-6">
-                                        <?php foreach (array_slice($features, 0, 3) as $feature) : ?>
-                                            <li class="flex items-center gap-2 text-sm">
-                                                <i data-lucide="check" class="h-4 w-4 text-green-500"></i>
-                                                <span><?php echo esc_html($feature); ?></span>
-                                            </li>
-                                        <?php endforeach; ?>
-                                        <?php if (count($features) > 3) : ?>
-                                            <li class="text-sm text-muted-foreground">
-                                                +<?php echo count($features) - 3; ?> more features
-                                            </li>
-                                        <?php endif; ?>
-                                    </ul>
-                                <?php endif; ?>
-
-                                <div class="flex items-center justify-between mt-4 pt-4 border-t">
-                                    <div class="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <?php if ($duration) : ?>
-                                            <i data-lucide="clock" class="h-4 w-4"></i>
-                                            <span><?php echo esc_html($duration); ?></span>
-                                        <?php endif; ?>
-                                    </div>
-                                    <a href="<?php the_permalink(); ?>" 
-                                       class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2">
-                                        Learn More
-                                        <i data-lucide="chevron-right" class="ml-2 h-4 w-4"></i>
-                                    </a>
-                                </div>
-                            </div>
-
+                        <!-- Services Grid -->
+                        <div id="services-grid" class="grid <?php echo esc_attr($grid_columns); ?> gap-8 mb-16">
                             <?php
-                            // Add Schema.org markup
-                            $schema_type = get_post_meta(get_the_ID(), '_schema_type', true) ?: 'Service';
-                            $seo_title = get_post_meta(get_the_ID(), '_seo_title', true) ?: get_the_title();
-                            $seo_description = get_post_meta(get_the_ID(), '_seo_description', true) ?: get_the_excerpt();
-                            
-                            $schema = array(
-                                '@context' => 'https://schema.org',
-                                '@type' => $schema_type,
-                                'name' => $seo_title,
-                                'description' => wp_strip_all_tags($seo_description),
-                                'provider' => array(
-                                    '@type' => 'Organization',
-                                    'name' => get_bloginfo('name'),
-                                    'url' => home_url()
-                                ),
-                                'areaServed' => array(
-                                    '@type' => 'Place',
-                                    'address' => array(
-                                        '@type' => 'PostalAddress',
-                                        'addressLocality' => 'Your City', // You should customize this
-                                        'addressRegion' => 'Your State', // You should customize this
-                                        'addressCountry' => 'US'
-                                    )
-                                )
+                            $paged = (get_query_var('paged')) ? get_query_var('paged') : 1;
+
+                            $args = array(
+                                'post_type' => 'service',
+                                'posts_per_page' => $services_per_page,
+                                'orderby' => 'menu_order',
+                                'order' => 'ASC',
+                                'paged' => $paged
                             );
 
-                            if ($price) {
-                                $schema['offers'] = array(
-                                    '@type' => 'Offer',
-                                    'price' => preg_replace('/[^0-9.]/', '', $price),
-                                    'priceCurrency' => 'USD'
-                                );
-                            }
+                            $services_query = new WP_Query($args);
+                            $total_services = $services_query->found_posts;
+
+                            if ($services_query->have_posts()) :
+                                while ($services_query->have_posts()) : $services_query->the_post();
+                                    $icon = get_post_meta(get_the_ID(), '_service_icon', true);
+                                    $price = get_post_meta(get_the_ID(), '_service_price', true);
+                                    $duration = get_post_meta(get_the_ID(), '_service_duration', true);
+                                    $location = get_post_meta(get_the_ID(), '_service_location', true);
+                                    $features = get_post_meta(get_the_ID(), '_service_features', true);
+                                    $card_style = get_post_meta(get_the_ID(), '_card_style', true) ?: 'default';
+                                    $hover_effect = get_post_meta(get_the_ID(), '_hover_effect', true) ?: 'scale';
                             ?>
-                            <script type="application/ld+json"><?php echo json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES); ?></script>
+                            <div class="service-card rounded-xl overflow-hidden bg-white shadow-md <?php 
+                                echo esc_attr($card_style); ?> hover:<?php 
+                                echo esc_attr($hover_effect); ?>" 
+                                data-location="<?php echo esc_attr($location); ?>"
+                                data-name="<?php echo esc_attr(get_the_title()); ?>"
+                                data-description="<?php echo esc_attr(get_the_excerpt()); ?>">
+                                <div class="p-6">
+                                    <div class="flex items-center gap-4 mb-4">
+                                        <?php if ($icon) : ?>
+                                            <div class="flex-shrink-0">
+                                                <i data-lucide="<?php echo esc_attr($icon); ?>" 
+                                                   class="h-8 w-8" 
+                                                   style="color: <?php echo esc_attr(get_post_meta(get_the_ID(), '_service_icon_color', true)); ?>">
+                                                </i>
+                                            </div>
+                                        <?php endif; ?>
+                                        <div>
+                                            <h3 class="text-xl font-semibold"><?php the_title(); ?></h3>
+                                            <?php if ($price) : ?>
+                                                <p class="text-sm text-muted-foreground">Starting at <?php echo esc_html($price); ?></p>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+
+                                    <div class="prose prose-sm mb-6">
+                                        <?php the_excerpt(); ?>
+                                    </div>
+
+                                    <?php if (!empty($features)) : ?>
+                                        <div class="flex flex-wrap gap-2 mb-6">
+                                            <?php foreach ($features as $feature) : ?>
+                                                <span class="inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-medium">
+                                                    <i data-lucide="check" class="w-3 h-3 mr-1"></i>
+                                                    <?php echo esc_html($feature); ?>
+                                                </span>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php endif; ?>
+
+                                    <div class="flex items-center justify-between mt-6">
+                                        <?php if ($location) : ?>
+                                            <span class="inline-flex items-center text-sm text-muted-foreground">
+                                                <i data-lucide="map-pin" class="w-4 h-4 mr-1"></i>
+                                                <?php
+                                                switch ($location) {
+                                                    case 'shop':
+                                                        echo 'Shop Service';
+                                                        break;
+                                                    case 'mobile':
+                                                        echo 'Mobile Service';
+                                                        break;
+                                                    case 'both':
+                                                        echo 'Shop & Mobile';
+                                                        break;
+                                                }
+                                                ?>
+                                            </span>
+                                        <?php endif; ?>
+
+                                        <a href="<?php the_permalink(); ?>" 
+                                           class="inline-flex items-center text-sm font-medium text-primary hover:text-primary/80 transition-colors">
+                                            Learn More
+                                            <i data-lucide="chevron-right" class="w-4 h-4 ml-1"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <?php 
+                                endwhile;
+                                wp_reset_postdata();
+                            endif;
+                            ?>
                         </div>
-                        <?php 
-                            endwhile;
-                            wp_reset_postdata();
-                        endif;
-                        ?>
-                    </div>
 
-                    <!-- No Results Message -->
-                    <div id="no-results" class="hidden text-center py-12">
-                        <h3 class="text-xl font-semibold mb-2">No services found</h3>
-                        <p class="text-muted-foreground">Try adjusting your search to find what you're looking for.</p>
-                    </div>
+                        <!-- No Results Message -->
+                        <div id="no-results" class="hidden text-center py-12">
+                            <h3 class="text-xl font-semibold mb-2">No services found</h3>
+                            <p class="text-muted-foreground">Try adjusting your search to find what you're looking for.</p>
+                        </div>
 
-                    <!-- Pagination -->
-                    <?php if ($total_services > $services_per_page) : ?>
-                    <div class="mt-12 mb-16 flex justify-center items-center gap-2">
-                        <?php
-                        $total_pages = ceil($total_services / $services_per_page);
-                        $current_page = max(1, $paged);
-
-                        // Previous page
-                        if ($current_page > 1) : ?>
-                            <a href="<?php echo get_pagenum_link($current_page - 1); ?>" 
-                               class="inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm font-medium border border-input hover:bg-accent hover:text-accent-foreground transition-colors">
-                                <i data-lucide="chevron-left" class="w-4 h-4 mr-1"></i>
-                                Previous
-                            </a>
-                        <?php endif; ?>
-
-                        <!-- Page numbers -->
-                        <div class="flex items-center gap-1">
+                        <!-- Pagination -->
+                        <?php if ($total_services > $services_per_page) : ?>
+                        <div class="mt-12 flex justify-center items-center gap-2">
                             <?php
-                            for ($i = 1; $i <= $total_pages; $i++) {
-                                if ($i == $current_page) {
-                                    echo '<span class="inline-flex items-center justify-center rounded-lg w-10 h-10 text-sm font-medium bg-primary text-white">' . $i . '</span>';
-                                } else {
-                                    echo '<a href="' . get_pagenum_link($i) . '" class="inline-flex items-center justify-center rounded-lg w-10 h-10 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors">' . $i . '</a>';
-                                }
-                            }
+                            echo paginate_links(array(
+                                'total' => ceil($total_services / $services_per_page),
+                                'current' => $paged,
+                                'prev_text' => '<i data-lucide="chevron-left" class="w-4 h-4"></i> Previous',
+                                'next_text' => 'Next <i data-lucide="chevron-right" class="w-4 h-4"></i>',
+                                'type' => 'list'
+                            ));
                             ?>
                         </div>
-
-                        <!-- Next page -->
-                        <?php if ($current_page < $total_pages) : ?>
-                            <a href="<?php echo get_pagenum_link($current_page + 1); ?>" 
-                               class="inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm font-medium border border-input hover:bg-accent hover:text-accent-foreground transition-colors">
-                                Next
-                                <i data-lucide="chevron-right" class="w-4 h-4 ml-1"></i>
-                            </a>
                         <?php endif; ?>
-                    </div>
-                    <?php endif; ?>
                     <?php
                     endif;
                     break;
@@ -242,36 +180,46 @@ get_header(); ?>
                     if ($sections_visibility['why_choose_us']) :
                     ?>
                     <!-- Why Choose Us Section -->
-                    <section class="bg-white rounded-xl shadow-lg p-8 md:p-12 mb-16">
-                        <div class="grid md:grid-cols-2 gap-12">
-                            <div class="space-y-6">
-                                <h2 class="text-3xl font-bold">Why Choose Our Service Department?</h2>
-                                <?php
-                                $reasons = get_post_meta(get_the_ID(), '_why_choose_us', true) ?: array(
-                                    'Factory trained and certified technicians',
-                                    'State-of-the-art diagnostic equipment',
-                                    'Comprehensive service for all boat brands',
-                                    'Convenient mobile service options',
-                                    'Transparent pricing and estimates',
-                                    'Quality OEM parts and materials'
-                                );
-                                if ($reasons) : ?>
-                                    <ul class="space-y-4">
-                                        <?php foreach ($reasons as $reason) : ?>
-                                            <li class="flex items-start gap-3">
-                                                <i data-lucide="check-circle" class="w-6 h-6 text-green-500 flex-shrink-0"></i>
-                                                <span><?php echo esc_html($reason); ?></span>
-                                            </li>
-                                        <?php endforeach; ?>
-                                    </ul>
-                                <?php endif; ?>
+                    <section class="bg-primary text-white rounded-xl overflow-hidden mb-16">
+                        <div class="grid md:grid-cols-2 gap-8">
+                            <div class="p-8 md:p-12">
+                                <h2 class="text-3xl font-bold mb-6">Why Choose Our Service Department?</h2>
+                                <div class="space-y-6">
+                                    <div class="flex items-start gap-4">
+                                        <div class="flex-shrink-0 bg-white/10 rounded-lg p-3">
+                                            <i data-lucide="award" class="w-6 h-6"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-xl font-semibold mb-2">Certified Technicians</h3>
+                                            <p class="text-white/80">Our team of factory-trained technicians ensures your boat receives expert care.</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-4">
+                                        <div class="flex-shrink-0 bg-white/10 rounded-lg p-3">
+                                            <i data-lucide="clock" class="w-6 h-6"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-xl font-semibold mb-2">Quick Turnaround</h3>
+                                            <p class="text-white/80">We understand your time is valuable and strive for efficient service completion.</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-4">
+                                        <div class="flex-shrink-0 bg-white/10 rounded-lg p-3">
+                                            <i data-lucide="shield" class="w-6 h-6"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-xl font-semibold mb-2">Quality Guarantee</h3>
+                                            <p class="text-white/80">All our work is backed by our satisfaction guarantee for your peace of mind.</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <div>
                                 <?php
                                 $service_image = get_post_meta(get_the_ID(), '_service_image', true);
                                 if ($service_image) :
                                     echo wp_get_attachment_image($service_image, 'large', false, array(
-                                        'class' => 'rounded-xl shadow-lg w-full h-full object-cover',
+                                        'class' => 'w-full h-full object-cover',
                                         'alt' => 'Our Service Department'
                                     ));
                                 endif;
@@ -294,41 +242,35 @@ get_header(); ?>
                             $packages = get_post_meta(get_the_ID(), '_winterization_packages', true) ?: array(
                                 array(
                                     'title' => 'Basic Winterization',
-                                    'description' => 'Essential winterization service for basic protection',
+                                    'description' => 'Essential winterization service for basic boat protection.',
                                     'services' => array(
                                         'Engine oil & filter change',
                                         'Fuel system treatment',
-                                        'Battery check & service',
+                                        'Battery check & maintenance',
                                         'Basic systems check'
-                                    ),
-                                    'price' => '$299',
-                                    'note' => 'Perfect for smaller boats'
+                                    )
                                 ),
                                 array(
                                     'title' => 'Premium Winterization',
-                                    'description' => 'Comprehensive winterization with added protection',
+                                    'description' => 'Comprehensive winterization with added protection.',
                                     'services' => array(
                                         'All Basic package services',
-                                        'Gear oil change',
-                                        'Engine fogging',
-                                        'Antifreeze flush',
-                                        'Detailed systems check'
-                                    ),
-                                    'price' => '$499',
-                                    'note' => 'Recommended for most boats'
+                                        'Detailed systems inspection',
+                                        'Antifreeze protection',
+                                        'Interior dehumidification',
+                                        'Shrink wrap protection'
+                                    )
                                 ),
                                 array(
-                                    'title' => 'Ultimate Winterization',
-                                    'description' => 'Complete winterization with full-service care',
+                                    'title' => 'Ultimate Protection',
+                                    'description' => 'Complete winter protection and storage solution.',
                                     'services' => array(
                                         'All Premium package services',
-                                        'Complete detail service',
-                                        'Shrink wrap protection',
-                                        'Storage preparation',
-                                        'Spring readiness check'
-                                    ),
-                                    'price' => '$799',
-                                    'note' => 'Best for long-term protection'
+                                        'Climate-controlled storage',
+                                        'Monthly battery maintenance',
+                                        'Spring recommissioning',
+                                        'Priority spring launch'
+                                    )
                                 )
                             );
 
@@ -350,17 +292,9 @@ get_header(); ?>
                                         </ul>
                                     <?php endif; ?>
 
-                                    <div class="border-t pt-4">
-                                        <div class="flex items-center justify-between mb-2">
-                                            <span class="text-2xl font-bold"><?php echo esc_html($package['price']); ?></span>
-                                            <a href="#" class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium bg-primary text-white hover:bg-primary/90 transition-colors">
-                                                Schedule Now
-                                            </a>
-                                        </div>
-                                        <?php if (!empty($package['note'])) : ?>
-                                            <p class="text-sm text-muted-foreground"><?php echo esc_html($package['note']); ?></p>
-                                        <?php endif; ?>
-                                    </div>
+                                    <a href="#contact" class="inline-flex items-center justify-center w-full rounded-lg px-4 py-2 text-sm font-medium bg-primary text-white hover:bg-primary/90 transition-colors">
+                                        Get Started
+                                    </a>
                                 </div>
                             <?php
                                 endforeach;
@@ -405,66 +339,44 @@ get_header(); ?>
             }
         }
         ?>
-
-        <!-- Call to Action -->
-        <section class="text-center mt-16">
-            <h2 class="text-3xl font-bold mb-4">Ready to Schedule Your Service?</h2>
-            <p class="text-xl text-muted-foreground mb-8">Contact us today to book your appointment or discuss your service needs.</p>
-            <a href="tel:+17708817808" class="inline-flex items-center justify-center rounded-lg px-6 py-3 text-lg font-medium bg-primary text-white hover:bg-primary/90 transition-colors">
-                <i data-lucide="phone" class="w-6 h-6 mr-2"></i>
-                Call (770) 881-7808
-            </a>
-        </section>
     </div>
 </main>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const serviceSearch = document.getElementById('service-search');
+    const searchInput = document.getElementById('service-search');
     const locationFilter = document.getElementById('location-filter');
     const serviceCards = document.querySelectorAll('.service-card');
-    const resultsCount = document.getElementById('results-count');
     const noResults = document.getElementById('no-results');
     const servicesGrid = document.getElementById('services-grid');
 
-    // Get URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const searchParam = urlParams.get('search');
-    const locationParam = urlParams.get('location');
-
-    // Set initial filter values from URL parameters
-    if (searchParam) serviceSearch.value = searchParam;
-    if (locationParam) locationFilter.value = locationParam;
-
     function filterServices() {
-        const searchTerm = serviceSearch.value.toLowerCase();
-        const location = locationFilter.value.toLowerCase();
+        const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+        const location = locationFilter ? locationFilter.value : '';
         let visibleCount = 0;
 
         serviceCards.forEach(card => {
-            const cardData = {
-                location: card.dataset.location.toLowerCase(),
-                name: card.dataset.name.toLowerCase(),
-                description: card.dataset.description.toLowerCase()
-            };
+            const name = card.dataset.name.toLowerCase();
+            const description = card.dataset.description.toLowerCase();
+            const cardLocation = card.dataset.location;
 
-            const matchesSearch = searchTerm === '' || 
-                                cardData.name.includes(searchTerm) || 
-                                cardData.description.includes(searchTerm);
-            
-            const matchesLocation = location === '' || cardData.location === location;
+            const matchesSearch = !searchTerm || 
+                name.includes(searchTerm) || 
+                description.includes(searchTerm);
+
+            const matchesLocation = !location || 
+                cardLocation === location || 
+                (location === 'both' && ['shop', 'mobile', 'both'].includes(cardLocation));
 
             if (matchesSearch && matchesLocation) {
-                card.classList.remove('hidden');
+                card.style.display = '';
                 visibleCount++;
             } else {
-                card.classList.add('hidden');
+                card.style.display = 'none';
             }
         });
 
-        // Update results count and visibility
-        resultsCount.textContent = `Showing ${visibleCount} service${visibleCount !== 1 ? 's' : ''}`;
-        
+        // Show/hide no results message
         if (visibleCount === 0) {
             noResults.classList.remove('hidden');
             servicesGrid.classList.add('hidden');
@@ -472,36 +384,25 @@ document.addEventListener('DOMContentLoaded', function() {
             noResults.classList.add('hidden');
             servicesGrid.classList.remove('hidden');
         }
-
-        // Update URL with filter parameters
-        const params = new URLSearchParams();
-        if (searchTerm) params.set('search', searchTerm);
-        if (location) params.set('location', location);
-        
-        const newUrl = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`;
-        window.history.replaceState({}, '', newUrl);
     }
 
-    // Add event listeners with debounce for search
-    let searchTimeout;
-    serviceSearch.addEventListener('input', () => {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(filterServices, 300);
-    });
+    // Add event listeners
+    if (searchInput) {
+        searchInput.addEventListener('input', filterServices);
+    }
+    if (locationFilter) {
+        locationFilter.addEventListener('change', filterServices);
+    }
 
-    // Immediate filtering for dropdowns
-    locationFilter.addEventListener('change', filterServices);
-
-    // Initial filtering
-    filterServices();
+    // Initialize Lucide icons
+    lucide.createIcons();
 });
 </script>
 
 <style>
-/* Card Styles */
-.service-card.minimal {
-    box-shadow: none;
-    border: 1px solid #e5e7eb;
+/* Service Card Styles */
+.service-card {
+    transition: all 0.2s ease-in-out;
 }
 
 .service-card.featured {
@@ -516,17 +417,52 @@ document.addEventListener('DOMContentLoaded', function() {
 /* Hover Effects */
 .service-card.hover\:scale:hover {
     transform: scale(1.02);
-    transition: transform 0.2s ease-in-out;
 }
 
 .service-card.hover\:lift:hover {
     transform: translateY(-4px);
-    transition: transform 0.2s ease-in-out;
 }
 
 .service-card.hover\:glow:hover {
     box-shadow: 0 0 20px rgba(15, 118, 110, 0.2);
-    transition: box-shadow 0.2s ease-in-out;
+}
+
+/* Pagination Styles */
+.pagination {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
+}
+
+.pagination .page-numbers {
+    display: inline-flex;
+    align-items: center;
+    justify-center;
+    min-width: 2.5rem;
+    height: 2.5rem;
+    padding: 0 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+}
+
+.pagination .page-numbers.current {
+    background-color: var(--primary);
+    color: white;
+}
+
+.pagination .page-numbers:not(.current):hover {
+    background-color: var(--accent);
+    color: var(--accent-foreground);
+}
+
+.pagination .prev,
+.pagination .next {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 1rem;
 }
 </style>
 

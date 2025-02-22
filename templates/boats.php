@@ -5,14 +5,17 @@
  * @package wades
  */
 
-get_header(); ?>
+// Get customization options
+$custom_title = get_post_meta(get_the_ID(), '_boats_title', true);
+$custom_description = get_post_meta(get_the_ID(), '_boats_description', true);
+$custom_sub_header = get_post_meta(get_the_ID(), '_boats_sub_header', true);
+
+get_header();
+get_template_part('template-parts/template-header');
+?>
 
 <main role="main" aria-label="Main content" class="flex-grow">
-    <?php get_template_part('template-parts/template-header'); ?>
-
     <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
-        <h1 class="text-4xl font-bold text-center mb-8"><?php echo wades_get_meta('boats_title') ?: 'Our Boat Inventory'; ?></h1>
-        
         <!-- Search and Filter Section -->
         <div class="mb-8 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div class="relative w-full sm:w-96">
@@ -110,7 +113,27 @@ get_header(); ?>
                         </span>
                     </h3>
                     <p class="text-muted-foreground mb-2 mt-2"><?php echo esc_html($type); ?></p>
-                    <p class="font-semibold text-lg">$<?php echo number_format($price); ?></p>
+                    <?php
+                    // Get all price fields
+                    $retail_price = get_post_meta(get_the_ID(), '_boat_retail_price', true);
+                    $sales_price = get_post_meta(get_the_ID(), '_boat_sales_price', true);
+                    $web_price = get_post_meta(get_the_ID(), '_boat_web_price', true);
+                    
+                    // Determine which price to show (prioritize sales price)
+                    $display_price = 0;
+                    if (!empty($sales_price) && is_numeric($sales_price) && $sales_price > 0) {
+                        $display_price = $sales_price;
+                    } elseif (!empty($retail_price) && is_numeric($retail_price) && $retail_price > 0) {
+                        $display_price = $retail_price;
+                    } elseif (!empty($web_price) && is_numeric($web_price) && $web_price > 0) {
+                        $display_price = $web_price;
+                    }
+                    ?>
+                    <?php if ($display_price > 0) : ?>
+                        <p class="font-semibold text-lg">$<?php echo number_format($display_price); ?></p>
+                    <?php else : ?>
+                        <p class="font-semibold text-lg">Call for Price</p>
+                    <?php endif; ?>
                     <p class="text-sm text-muted-foreground">Status: <?php echo esc_html($status); ?></p>
                     <div class="mt-4 flex justify-between items-center">
                         <a href="#" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">

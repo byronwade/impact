@@ -227,11 +227,6 @@ require get_template_directory() . '/inc/class-wade-mobile-nav-walker.php';
 /**
  * Load post types
  */
-require get_template_directory() . '/inc/post-types/service.php';
-
-/**
- * Custom Post Types and Taxonomies
- */
 require get_template_directory() . '/inc/post-types.php';
 
 /**
@@ -241,116 +236,7 @@ require get_template_directory() . '/inc/meta-boxes/about-meta.php';
 require get_template_directory() . '/inc/meta-boxes/home-meta.php';
 require get_template_directory() . '/inc/meta-boxes/shared-meta.php';
 require get_template_directory() . '/inc/meta-boxes/boat-meta.php';
-
-/**
- * Include meta boxes
- */
-require_once get_template_directory() . '/inc/meta-boxes/services-meta.php';
-
-// Load template files and meta boxes on init to prevent header issues
-function wades_load_template_files() {
-    require_once get_template_directory() . '/inc/post-types.php';
-    require_once get_template_directory() . '/inc/meta-boxes/about-meta.php';
-    require_once get_template_directory() . '/inc/meta-boxes/home-meta.php';
-    require_once get_template_directory() . '/inc/meta-boxes/shared-meta.php';
-    require_once get_template_directory() . '/inc/meta-boxes/boat-meta.php';
-    require_once get_template_directory() . '/inc/block-patterns/templates.php';
-    require_once get_template_directory() . '/inc/template-blocks.php';
-}
-add_action('init', 'wades_load_template_files', 5);
-
-/**
- * Helper function to get meta values
- */
-function wades_get_meta($key, $post_id = null) {
-    if (!$post_id) {
-        $post_id = get_the_ID();
-    }
-    return get_post_meta($post_id, '_' . $key, true);
-}
-
-function wades_block_editor_styles() {
-    wp_enqueue_style(
-        'wades-editor-styles',
-        get_template_directory_uri() . '/assets/css/editor-styles.css',
-        array(),
-        _S_VERSION
-    );
-}
-add_action('enqueue_block_editor_assets', 'wades_block_editor_styles');
-
-// Add theme support for editor styles
-add_theme_support('editor-styles');
-
-// Add these near your other requires at the top
-require get_template_directory() . '/inc/block-patterns/templates.php';
-require get_template_directory() . '/inc/template-blocks.php';
-
-// Add this function to enqueue the block editor assets
-function wades_enqueue_block_editor_assets() {
-    // Enqueue the editor styles
-    wp_enqueue_style(
-        'wades-editor-styles',
-        get_template_directory_uri() . '/assets/css/editor-styles.css',
-        array(),
-        _S_VERSION
-    );
-}
-
-/**
- * Register and handle page templates
- */
-function wades_add_page_templates($templates) {
-    $custom_templates = array(
-        'templates/about.php'     => 'About Template',
-        'templates/boats.php'     => 'Boats Template',
-        'templates/contact.php'   => 'Contact Template',
-        'templates/financing.php' => 'Financing Template',
-        'templates/home.php'      => 'Home Template',
-        'templates/services.php'  => 'Services Template'
-    );
-    
-    return array_merge($templates, $custom_templates);
-}
-add_filter('theme_page_templates', 'wades_add_page_templates');
-
-/**
- * Load custom page templates
- */
-function wades_load_page_templates($template) {
-    global $post;
-
-    if (!is_page() || !$post) {
-        return $template;
-    }
-
-    // Get the template slug
-    $template_slug = get_page_template_slug($post->ID);
-    
-    if (empty($template_slug)) {
-        return $template;
-    }
-
-    // Check if template file exists in theme directory
-    $template_path = get_template_directory() . '/' . $template_slug;
-    
-    if (file_exists($template_path)) {
-        return $template_path;
-    }
-
-    return $template;
-}
-add_filter('template_include', 'wades_load_page_templates', 99);
-
-// Remove conflicting filters
-remove_all_filters('template_include', 98);
-
-function wades_admin_scripts() {
-    if (is_admin()) {
-        wp_enqueue_media();
-    }
-}
-add_action('admin_enqueue_scripts', 'wades_admin_scripts');
+require get_template_directory() . '/inc/meta-boxes/services-meta.php';
 
 /**
  * Add meta boxes only when editing pages
@@ -373,6 +259,9 @@ function wades_add_meta_boxes($post_type, $post) {
         case 'templates/boats.php':
             require_once get_template_directory() . '/inc/meta-boxes/boats-meta.php';
             break;
+        case 'templates/blog.php':
+            require_once get_template_directory() . '/inc/meta-boxes/blog-meta.php';
+            break;
     }
 }
 add_action('add_meta_boxes', 'wades_add_meta_boxes', 10, 2);
@@ -385,59 +274,337 @@ function wades_template_styles() {
         wp_enqueue_style('wades-home-template', get_template_directory_uri() . '/assets/css/home-template.css', array(), _S_VERSION);
     }
 
-    // Add blog styles for posts
+    // Add blog styles for posts and blog index
     if (is_singular('post') || is_home() || is_archive()) {
-        wp_add_inline_style('wades-style', '
-            /* Custom Prose Styles */
-            .prose :where(h1):not(:where([class~="not-prose"] *)) {
-                margin-top: 2em;
-                margin-bottom: 1em;
+        wp_enqueue_style('wades-blog', get_template_directory_uri() . '/assets/css/blog.css', array(), _S_VERSION);
+        
+        wp_add_inline_style('wades-blog', '
+            /* Blog Grid Styles */
+            .blog-grid {
+                display: grid;
+                grid-template-columns: repeat(1, 1fr);
+                gap: 2rem;
+                margin-bottom: 2rem;
             }
-            .prose :where(h2, h3, h4):not(:where([class~="not-prose"] *)) {
-                margin-top: 2em;
-                margin-bottom: 1em;
+            
+            @media (min-width: 768px) {
+                .blog-grid {
+                    grid-template-columns: repeat(2, 1fr);
+                }
             }
-            .prose :where(img):not(:where([class~="not-prose"] *)) {
+            
+            @media (min-width: 1024px) {
+                .blog-grid {
+                    grid-template-columns: repeat(3, 1fr);
+                }
+            }
+            
+            /* Blog Card Styles */
+            .blog-card {
+                background: white;
                 border-radius: 0.75rem;
-                box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+                box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+                overflow: hidden;
+                transition: transform 0.2s;
             }
-            .prose :where(blockquote):not(:where([class~="not-prose"] *)) {
-                border-left-color: var(--primary-color, #004AAD);
-                background-color: rgb(241 245 249);
-                padding: 1rem 1.5rem;
+            
+            .blog-card:hover {
+                transform: translateY(-4px);
+            }
+            
+            .blog-card__image {
+                aspect-ratio: 16/9;
+                overflow: hidden;
+            }
+            
+            .blog-card__image img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                transition: transform 0.3s;
+            }
+            
+            .blog-card:hover .blog-card__image img {
+                transform: scale(1.05);
+            }
+            
+            .blog-card__content {
+                padding: 1.5rem;
+            }
+            
+            .blog-card__meta {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                font-size: 0.875rem;
+                color: #6b7280;
+                margin-bottom: 0.75rem;
+            }
+            
+            .blog-card__title {
+                font-size: 1.25rem;
+                font-weight: 600;
+                color: #111827;
+                margin-bottom: 0.75rem;
+                line-height: 1.4;
+            }
+            
+            .blog-card__excerpt {
+                color: #4b5563;
+                font-size: 0.875rem;
+                line-height: 1.5;
+                margin-bottom: 1rem;
+            }
+            
+            .blog-card__link {
+                color: var(--primary-color, #004AAD);
+                font-size: 0.875rem;
+                font-weight: 500;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                transition: color 0.2s;
+            }
+            
+            .blog-card__link:hover {
+                color: var(--primary-color-dark, #003c8a);
+            }
+            
+            /* Featured Post Styles */
+            .featured-post {
+                background: white;
+                border-radius: 0.75rem;
+                box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+                margin-bottom: 3rem;
+                overflow: hidden;
+            }
+            
+            @media (min-width: 768px) {
+                .featured-post {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                }
+            }
+            
+            .featured-post__image {
+                aspect-ratio: 16/9;
+                position: relative;
+            }
+            
+            @media (min-width: 768px) {
+                .featured-post__image {
+                    aspect-ratio: auto;
+                    height: 100%;
+                }
+            }
+            
+            .featured-post__image img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+            
+            .featured-post__content {
+                padding: 2rem;
+            }
+            
+            .featured-post__badge {
+                display: inline-block;
+                background: var(--primary-color, #004AAD);
+                color: white;
+                font-size: 0.875rem;
+                font-weight: 500;
+                padding: 0.25rem 0.75rem;
+                border-radius: 9999px;
+                margin-bottom: 1rem;
+            }
+            
+            .featured-post__meta {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                font-size: 0.875rem;
+                color: #6b7280;
+                margin-bottom: 1rem;
+            }
+            
+            .featured-post__title {
+                font-size: 1.875rem;
+                font-weight: 700;
+                color: #111827;
+                margin-bottom: 1rem;
+                line-height: 1.3;
+            }
+            
+            .featured-post__excerpt {
+                color: #4b5563;
+                font-size: 1rem;
+                line-height: 1.6;
+                margin-bottom: 1.5rem;
+            }
+            
+            .featured-post__link {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                background: var(--primary-color, #004AAD);
+                color: white;
+                font-size: 0.875rem;
+                font-weight: 500;
+                padding: 0.5rem 1rem;
                 border-radius: 0.5rem;
+                transition: background-color 0.2s;
             }
-            .prose :where(code):not(:where([class~="not-prose"] *)) {
-                background-color: rgb(241 245 249);
-                padding: 0.2em 0.4em;
+            
+            .featured-post__link:hover {
+                background: var(--primary-color-dark, #003c8a);
+            }
+            
+            /* Blog Header Styles */
+            .blog-header {
+                text-align: center;
+                margin-bottom: 3rem;
+            }
+            
+            .blog-header__title {
+                font-size: 2.25rem;
+                font-weight: 700;
+                color: #111827;
+                margin-bottom: 1rem;
+            }
+            
+            .blog-header__description {
+                font-size: 1.125rem;
+                color: #4b5563;
+                max-width: 42rem;
+                margin: 0 auto;
+            }
+            
+            /* Single Post Styles */
+            .single-post__header {
+                margin-bottom: 2rem;
+            }
+            
+            .single-post__meta {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                font-size: 0.875rem;
+                color: #6b7280;
+                margin-bottom: 1rem;
+            }
+            
+            .single-post__title {
+                font-size: 2.5rem;
+                font-weight: 700;
+                color: #111827;
+                margin-bottom: 1rem;
+                line-height: 1.2;
+            }
+            
+            .single-post__excerpt {
+                font-size: 1.25rem;
+                color: #4b5563;
+                line-height: 1.6;
+            }
+            
+            .single-post__featured-image {
+                margin-bottom: 2rem;
+                border-radius: 0.75rem;
+                overflow: hidden;
+            }
+            
+            .single-post__featured-image img {
+                width: 100%;
+                height: auto;
+            }
+            
+            .single-post__content {
+                max-width: 65ch;
+                margin: 0 auto;
+            }
+            
+            /* Prose Styles */
+            .prose {
+                color: #374151;
+                max-width: 65ch;
+            }
+            
+            .prose p {
+                margin-bottom: 1.5rem;
+                line-height: 1.75;
+            }
+            
+            .prose h2 {
+                font-size: 1.875rem;
+                font-weight: 700;
+                color: #111827;
+                margin: 2.5rem 0 1.5rem;
+            }
+            
+            .prose h3 {
+                font-size: 1.5rem;
+                font-weight: 600;
+                color: #111827;
+                margin: 2rem 0 1.25rem;
+            }
+            
+            .prose ul, .prose ol {
+                margin: 1.5rem 0;
+                padding-left: 1.5rem;
+            }
+            
+            .prose li {
+                margin: 0.5rem 0;
+            }
+            
+            .prose a {
+                color: var(--primary-color, #004AAD);
+                text-decoration: none;
+            }
+            
+            .prose a:hover {
+                text-decoration: underline;
+            }
+            
+            .prose blockquote {
+                border-left: 4px solid var(--primary-color, #004AAD);
+                margin: 1.5rem 0;
+                padding: 1rem 0 1rem 1.5rem;
+                font-style: italic;
+                color: #4b5563;
+            }
+            
+            .prose code {
+                background: #f3f4f6;
+                padding: 0.2rem 0.4rem;
                 border-radius: 0.25rem;
                 font-size: 0.875em;
             }
-            .prose :where(pre):not(:where([class~="not-prose"] *)) {
-                background-color: rgb(15 23 42);
+            
+            .prose pre {
+                background: #1f2937;
+                color: #f3f4f6;
                 padding: 1.25rem 1.5rem;
                 border-radius: 0.5rem;
                 overflow-x: auto;
+                margin: 1.5rem 0;
             }
-            .prose :where(ul, ol):not(:where([class~="not-prose"] *)) {
-                padding-left: 1.625em;
+            
+            .prose img {
+                border-radius: 0.75rem;
+                margin: 1.5rem 0;
             }
-            .prose :where(li):not(:where([class~="not-prose"] *)) {
-                margin-top: 0.5em;
-                margin-bottom: 0.5em;
+            
+            .prose figure {
+                margin: 1.5rem 0;
             }
-            .prose :where(table):not(:where([class~="not-prose"] *)) {
-                border-collapse: collapse;
-                width: 100%;
-                margin-top: 2em;
-                margin-bottom: 2em;
-            }
-            .prose :where(th, td):not(:where([class~="not-prose"] *)) {
-                border: 1px solid rgb(226 232 240);
-                padding: 0.75rem 1rem;
-            }
-            .prose :where(th):not(:where([class~="not-prose"] *)) {
-                background-color: rgb(241 245 249);
+            
+            .prose figcaption {
+                font-size: 0.875rem;
+                color: #6b7280;
+                text-align: center;
+                margin-top: 0.5rem;
             }
         ');
     }
@@ -562,5 +729,309 @@ function wades_comment_callback($comment, $args, $depth) {
         </article>
     </<?php echo $tag; ?>>
     <?php
+}
+
+/**
+ * Create default pages and add them to menu
+ */
+function wades_create_default_pages() {
+    // Create Services page if it doesn't exist
+    $services_page = get_page_by_path('services');
+    if (!$services_page) {
+        // Create the page
+        $services_page_id = wp_insert_post(array(
+            'post_title'    => 'Services',
+            'post_name'     => 'services',
+            'post_status'   => 'publish',
+            'post_type'     => 'page',
+            'post_content'  => '<!-- wp:paragraph --><p>Our comprehensive marine services.</p><!-- /wp:paragraph -->',
+            'menu_order'    => 20
+        ));
+
+        if (!is_wp_error($services_page_id)) {
+            // Set the template
+            update_post_meta($services_page_id, '_wp_page_template', 'templates/services.php');
+            
+            // Add to primary menu
+            $menu_name = 'Primary';
+            $menu_exists = wp_get_nav_menu_object($menu_name);
+            
+            if (!$menu_exists) {
+                $menu_id = wp_create_nav_menu($menu_name);
+            } else {
+                $menu_id = $menu_exists->term_id;
+            }
+
+            wp_update_nav_menu_item($menu_id, 0, array(
+                'menu-item-title' => 'Services',
+                'menu-item-object' => 'page',
+                'menu-item-object-id' => $services_page_id,
+                'menu-item-type' => 'post_type',
+                'menu-item-status' => 'publish'
+            ));
+        }
+    }
+}
+add_action('after_switch_theme', 'wades_create_default_pages');
+
+// Run this once to ensure pages exist and are in menu
+if (!get_option('wades_pages_created_v2')) {
+    wades_create_default_pages();
+    update_option('wades_pages_created_v2', true);
+}
+
+// Load template files and meta boxes on init to prevent header issues
+function wades_load_template_files() {
+    require_once get_template_directory() . '/inc/post-types.php';
+    require_once get_template_directory() . '/inc/meta-boxes/about-meta.php';
+    require_once get_template_directory() . '/inc/meta-boxes/home-meta.php';
+    require_once get_template_directory() . '/inc/meta-boxes/shared-meta.php';
+    require_once get_template_directory() . '/inc/meta-boxes/boat-meta.php';
+    require_once get_template_directory() . '/inc/meta-boxes/blog-meta.php';
+    require_once get_template_directory() . '/inc/block-patterns/templates.php';
+    require_once get_template_directory() . '/inc/template-blocks.php';
+}
+add_action('init', 'wades_load_template_files', 5);
+
+/**
+ * Helper function to get meta values
+ */
+function wades_get_meta($key, $post_id = null) {
+    if (!$post_id) {
+        $post_id = get_the_ID();
+    }
+    return get_post_meta($post_id, '_' . $key, true);
+}
+
+function wades_block_editor_styles() {
+    wp_enqueue_style(
+        'wades-editor-styles',
+        get_template_directory_uri() . '/assets/css/editor-styles.css',
+        array(),
+        _S_VERSION
+    );
+}
+add_action('enqueue_block_editor_assets', 'wades_block_editor_styles');
+
+// Add theme support for editor styles
+add_theme_support('editor-styles');
+
+// Add this function to enqueue the block editor assets
+function wades_enqueue_block_editor_assets() {
+    // Enqueue the editor styles
+    wp_enqueue_style(
+        'wades-editor-styles',
+        get_template_directory_uri() . '/assets/css/editor-styles.css',
+        array(),
+        _S_VERSION
+    );
+}
+
+/**
+ * Register and handle page templates
+ */
+function wades_add_page_templates($templates) {
+    $custom_templates = array(
+        'templates/about.php'     => 'About Template',
+        'templates/boats.php'     => 'Boats Template',
+        'templates/blog.php'      => 'Blog Template',
+        'templates/contact.php'   => 'Contact Template',
+        'templates/financing.php' => 'Financing Template',
+        'templates/home.php'      => 'Home Template',
+        'templates/services.php'  => 'Services Template'
+    );
+    
+    return array_merge($templates, $custom_templates);
+}
+add_filter('theme_page_templates', 'wades_add_page_templates');
+
+/**
+ * Load custom page templates
+ */
+function wades_load_page_templates($template) {
+    global $post;
+
+    if (!is_page() || !$post) {
+        return $template;
+    }
+
+    // Get the template slug
+    $template_slug = get_page_template_slug($post->ID);
+    
+    if (empty($template_slug)) {
+        return $template;
+    }
+
+    // Check if template file exists in theme directory
+    $template_path = get_template_directory() . '/' . $template_slug;
+    
+    if (file_exists($template_path)) {
+        return $template_path;
+    }
+
+    return $template;
+}
+add_filter('template_include', 'wades_load_page_templates', 99);
+
+// Remove conflicting filters
+remove_all_filters('template_include', 98);
+
+function wades_admin_scripts() {
+    if (is_admin()) {
+        wp_enqueue_media();
+    }
+}
+add_action('admin_enqueue_scripts', 'wades_admin_scripts');
+
+/**
+ * Create default services when theme is activated
+ */
+function wades_create_default_services() {
+    $default_services = array(
+        array(
+            'title' => 'Winterization',
+            'content' => 'Comprehensive winterization services to protect your boat during the off-season.',
+            'icon' => 'snowflake',
+            'features' => array(
+                'Engine winterization',
+                'Antifreeze protection',
+                'Battery maintenance',
+                'Shrink wrap protection',
+                'Climate-controlled storage'
+            ),
+            'location' => 'shop',
+            'show_on_home' => true,
+            'home_order' => 1
+        ),
+        array(
+            'title' => 'Trailer Repair',
+            'content' => 'Professional trailer repair services to keep your boat transport safe and reliable.',
+            'icon' => 'truck',
+            'features' => array('Brake service', 'Bearing replacement', 'Frame repair', 'Wiring repairs'),
+            'location' => 'both'
+        ),
+        array(
+            'title' => 'Speed Control Install',
+            'content' => 'Expert installation of precision speed control systems for optimal performance.',
+            'icon' => 'gauge',
+            'features' => array('Zero-Off installation', 'Perfect Pass systems', 'Custom calibration', 'Performance testing'),
+            'location' => 'shop'
+        ),
+        array(
+            'title' => 'Engine Repair',
+            'content' => 'Comprehensive engine repair and maintenance services for all marine engines.',
+            'icon' => 'engine',
+            'features' => array('Diagnostic testing', 'Engine rebuilds', 'Performance tuning', 'Preventive maintenance'),
+            'location' => 'both'
+        ),
+        array(
+            'title' => 'Marine Audio Install',
+            'content' => 'Custom marine audio installations for the ultimate on-water entertainment.',
+            'icon' => 'music',
+            'features' => array('Waterproof systems', 'Custom speaker installation', 'Amplifier setup', 'Bluetooth integration'),
+            'location' => 'shop'
+        ),
+        array(
+            'title' => 'Complete Boat Detail',
+            'content' => 'Thorough boat detailing services to keep your vessel looking its best.',
+            'icon' => 'sparkles',
+            'features' => array('Hull cleaning', 'Interior detailing', 'Waxing & polishing', 'Carpet cleaning'),
+            'location' => 'both'
+        ),
+        array(
+            'title' => 'Fiberglass Repair',
+            'content' => 'Expert fiberglass repair and restoration services.',
+            'icon' => 'hammer',
+            'features' => array('Structural repairs', 'Gelcoat matching', 'Surface restoration', 'Custom fabrication'),
+            'location' => 'shop'
+        ),
+        array(
+            'title' => 'Ceramic Coating',
+            'content' => 'Professional ceramic coating application for superior protection.',
+            'icon' => 'shield',
+            'features' => array('UV protection', 'Long-lasting finish', 'Easy maintenance', 'Scratch resistance'),
+            'location' => 'shop'
+        ),
+        array(
+            'title' => 'Heater Install',
+            'content' => 'Custom heater installations for comfortable boating in any weather.',
+            'icon' => 'thermometer',
+            'features' => array('Custom fitting', 'Multiple zone control', 'Efficient systems', 'Professional installation'),
+            'location' => 'shop'
+        ),
+        array(
+            'title' => 'Tower Install',
+            'content' => 'Professional tower installation and customization services.',
+            'icon' => 'tower',
+            'features' => array('Custom fitting', 'Speaker integration', 'Light installation', 'Accessory mounting'),
+            'location' => 'shop'
+        ),
+        array(
+            'title' => 'Swim Deck Reteak',
+            'content' => 'Expert swim deck restoration and teak replacement services.',
+            'icon' => 'ruler',
+            'features' => array('Custom fitting', 'Weather resistance', 'Non-slip surface', 'Professional finish'),
+            'location' => 'shop'
+        ),
+        array(
+            'title' => 'L.E.D. Lighting Install',
+            'content' => 'Custom LED lighting solutions for your boat.',
+            'icon' => 'lightbulb',
+            'features' => array('Underwater lights', 'Interior lighting', 'Navigation lights', 'Custom effects'),
+            'location' => 'shop'
+        ),
+        array(
+            'title' => 'Dockside Service',
+            'content' => 'Convenient dockside maintenance and repair services.',
+            'icon' => 'anchor',
+            'features' => array('Basic maintenance', 'System checks', 'Emergency repairs', 'Seasonal service'),
+            'location' => 'mobile'
+        )
+    );
+
+    foreach ($default_services as $service) {
+        // Check if service already exists
+        $existing_service = get_page_by_title($service['title'], OBJECT, 'service');
+        
+        if (!$existing_service) {
+            // Create the service
+            $service_data = array(
+                'post_title'    => $service['title'],
+                'post_content'  => $service['content'],
+                'post_status'   => 'publish',
+                'post_type'     => 'service'
+            );
+            
+            $service_id = wp_insert_post($service_data);
+            
+            if (!is_wp_error($service_id)) {
+                // Add service meta
+                update_post_meta($service_id, '_service_icon', $service['icon']);
+                update_post_meta($service_id, '_service_features', $service['features']);
+                update_post_meta($service_id, '_service_location', $service['location']);
+                
+                // Set default price range
+                update_post_meta($service_id, '_service_price', 'Contact for Quote');
+                
+                // Set to show on homepage by default if specified
+                if (isset($service['show_on_home']) && $service['show_on_home']) {
+                    update_post_meta($service_id, '_show_on_home', '1');
+                    update_post_meta($service_id, '_home_order', $service['home_order']);
+                } else {
+                    update_post_meta($service_id, '_show_on_home', '0');
+                    update_post_meta($service_id, '_home_order', '10');
+                }
+            }
+        }
+    }
+}
+
+// Run this when theme is activated
+add_action('after_switch_theme', 'wades_create_default_services');
+
+// Run this once to ensure services exist
+if (!get_option('wades_services_created')) {
+    wades_create_default_services();
+    update_option('wades_services_created', true);
 }
 

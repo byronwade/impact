@@ -5,31 +5,13 @@
  * @package wades
  */
 
-get_header(); ?>
+get_header();
+get_template_part('template-parts/template-header');
+?>
 
 <main role="main" aria-label="Main content" class="flex-grow">
-    <!-- Hero Section with Background -->
-    <div class="relative bg-gradient-to-b from-gray-900 to-gray-800 text-white py-24">
-        <div class="absolute inset-0 overflow-hidden">
-            <?php 
-            $about_image_id = wades_get_meta('about_image');
-            if ($about_image_id) :
-                echo wp_get_attachment_image($about_image_id, 'full', false, array(
-                    'class' => 'w-full h-full object-cover opacity-20',
-                ));
-            endif;
-            ?>
-        </div>
-        <div class="relative container mx-auto px-4 max-w-7xl">
-            <h1 class="text-5xl md:text-6xl font-bold mb-6"><?php echo wades_get_meta('about_title') ?: 'About Impact Marine Group'; ?></h1>
-            <div class="max-w-3xl">
-                <p class="text-xl mb-4 text-gray-200">Impact Marine Group is dedicated to providing our customers personal service and quality boat brands. Whether you are flying through the air on a wakeboard or just learning, tearing up a slalom course or taking a few easy turns, slinging on a tube, or slowing it down Wake Surfing - Impact is your place to find great products and connect with people who share the love of being on the water.</p>
-            </div>
-        </div>
-    </div>
-
     <div class="bg-gray-50">
-        <main class="container mx-auto px-4 -mt-16 relative z-10 space-y-24 max-w-7xl pb-24">
+        <div class="container mx-auto px-4 -mt-16 relative z-10 space-y-24 max-w-7xl pb-24">
             <!-- Our Story Section -->
             <section class="bg-white rounded-2xl shadow-xl p-8 md:p-12">
                 <div class="grid md:grid-cols-2 gap-12">
@@ -213,72 +195,107 @@ get_header(); ?>
 
             <!-- Contact Section -->
             <section id="contact" class="bg-white rounded-2xl shadow-xl overflow-hidden">
-                <div class="grid md:grid-cols-2">
-                    <div class="p-8 lg:p-12 space-y-8">
-                        <div>
-                            <h2 class="text-4xl font-bold mb-4">Visit Our Location</h2>
-                            <p class="text-xl text-gray-600">Your trusted partner in marine excellence</p>
-                        </div>
-
-                        <div class="space-y-6">
-                            <div class="flex items-start">
-                                <i data-lucide="map-pin" class="w-6 h-6 text-blue-600 mt-1 mr-4"></i>
-                                <p class="text-gray-700">5185 Browns Bridge Rd</p>
+                <div class="grid md:grid-cols-2 gap-0">
+                    <!-- Contact Info -->
+                    <div class="p-8 lg:p-12 bg-gradient-to-br from-blue-50 to-white">
+                        <div class="max-w-lg">
+                            <div class="mb-10">
+                                <span class="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800 mb-4">
+                                    <i data-lucide="map-pin" class="w-4 h-4 mr-1"></i>
+                                    Our Location
+                                </span>
+                                <h2 class="text-4xl font-bold mb-4">Visit Our Dealership</h2>
+                                <p class="text-lg text-gray-600">Experience our exceptional service and explore our premium boat selection in person.</p>
                             </div>
 
-                            <?php 
-                            $business_hours = wades_get_meta('business_hours');
-                            if ($business_hours && is_array($business_hours)) :
-                            ?>
-                                <div class="flex items-start">
-                                    <i data-lucide="clock" class="w-6 h-6 text-blue-600 mt-1 mr-4"></i>
-                                    <div class="text-gray-700">
-                                        <?php foreach ($business_hours as $hours) : ?>
-                                            <p><?php echo esc_html($hours); ?></p>
-                                        <?php endforeach; ?>
+                            <div class="space-y-8">
+                                <!-- Address -->
+                                <div class="flex items-start group">
+                                    <div class="flex-shrink-0 bg-blue-100 rounded-full p-3 mr-4 group-hover:bg-blue-200 transition-colors">
+                                        <i data-lucide="map-pin" class="w-6 h-6 text-blue-600"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-gray-900 mb-1">Address</h3>
+                                        <p class="text-gray-600">5185 Browns Bridge Rd</p>
+                                        <a href="https://maps.google.com/?q=5185+Browns+Bridge+Rd" target="_blank" rel="noopener noreferrer" 
+                                           class="inline-flex items-center text-sm text-blue-600 hover:text-blue-700 mt-2">
+                                            Get Directions
+                                            <i data-lucide="arrow-up-right" class="w-4 h-4 ml-1"></i>
+                                        </a>
                                     </div>
                                 </div>
-                            <?php endif; ?>
 
-                            <div class="flex items-start">
-                                <i data-lucide="phone" class="w-6 h-6 text-blue-600 mt-1 mr-4"></i>
-                                <div class="text-gray-700">
-                                    <p><a href="tel:770-881-7808" class="hover:text-blue-600 transition-colors">770-881-7808</a></p>
+                                <!-- Phone -->
+                                <div class="flex items-start group">
+                                    <div class="flex-shrink-0 bg-blue-100 rounded-full p-3 mr-4 group-hover:bg-blue-200 transition-colors">
+                                        <i data-lucide="phone" class="w-6 h-6 text-blue-600"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-gray-900 mb-1">Phone</h3>
+                                        <a href="tel:770-881-7808" class="text-gray-600 hover:text-blue-600 transition-colors">
+                                            (770) 881-7808
+                                        </a>
+                                        <p class="text-sm text-gray-500 mt-1">Mon-Fri: 8am - 5pm</p>
+                                    </div>
+                                </div>
+
+                                <!-- Email -->
+                                <div class="flex items-start group">
+                                    <div class="flex-shrink-0 bg-blue-100 rounded-full p-3 mr-4 group-hover:bg-blue-200 transition-colors">
+                                        <i data-lucide="mail" class="w-6 h-6 text-blue-600"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-gray-900 mb-1">Email</h3>
+                                        <a href="mailto:info@impactmarinegroup.com" class="text-gray-600 hover:text-blue-600 transition-colors">
+                                            info@impactmarinegroup.com
+                                        </a>
+                                        <p class="text-sm text-gray-500 mt-1">We'll respond within 24 hours</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
+                    <!-- Map and CTA -->
                     <div class="relative">
-                        <?php 
-                        $map_image_id = wades_get_meta('map_image');
-                        if ($map_image_id) :
-                            echo wp_get_attachment_image($map_image_id, 'large', false, array(
-                                'class' => 'absolute inset-0 w-full h-full object-cover',
-                                'alt' => 'Map to Impact Marine Group'
+                        <!-- Map Image -->
+                        <?php
+                        $map_image = get_post_meta(get_the_ID(), '_map_image', true);
+                        if ($map_image) :
+                            echo wp_get_attachment_image($map_image, 'large', false, array(
+                                'class' => 'w-full h-full object-cover',
+                                'alt' => 'Location Map'
                             ));
-                        else:
+                        else :
                         ?>
-                            <div class="absolute inset-0 bg-gray-100 flex items-center justify-center">
-                                <i data-lucide="map" class="w-24 h-24 text-gray-400"></i>
+                            <div class="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                                <div class="text-center">
+                                    <i data-lucide="map" class="w-24 h-24 text-gray-400 mx-auto mb-4"></i>
+                                    <p class="text-gray-500">Map preview not available</p>
+                                </div>
                             </div>
                         <?php endif; ?>
 
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-8">
-                            <div class="bg-white rounded-xl shadow-lg p-6 w-full">
-                                <h3 class="font-semibold mb-2">Ready to Get Started?</h3>
-                                <p class="text-sm text-gray-600 mb-4">Contact us today to discuss your boating needs or schedule a service appointment.</p>
-                                <a href="/contact" 
-                                   class="inline-flex items-center justify-center w-full bg-blue-600 text-white rounded-lg px-6 py-3 font-medium hover:bg-blue-700 transition-colors">
-                                    Contact Us Now
-                                    <i data-lucide="arrow-right" class="w-5 h-5 ml-2"></i>
-                                </a>
+                        <!-- Overlay with CTA -->
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-end p-8">
+                            <div class="bg-white rounded-xl shadow-lg p-8 w-full backdrop-blur-sm bg-white/95">
+                                <div class="flex items-start gap-6">
+                                    <div class="flex-grow">
+                                        <h3 class="text-xl font-bold mb-2">Ready to Experience Impact Marine?</h3>
+                                        <p class="text-gray-600 mb-0">Visit our showroom or schedule a service appointment today.</p>
+                                    </div>
+                                    <a href="/contact" 
+                                       class="flex-shrink-0 inline-flex items-center justify-center bg-blue-600 text-white rounded-lg px-6 py-3 font-medium hover:bg-blue-700 transition-colors group">
+                                        Contact Us
+                                        <i data-lucide="arrow-right" class="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1"></i>
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
-        </main>
+        </div>
     </div>
 </main>
 

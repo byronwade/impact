@@ -183,9 +183,9 @@ uasort($sections, function($a, $b) {
 
         <?php elseif ($section_id === 'featured_brands') : ?>
             <!-- Featured Brands Section -->
-            <section aria-label="Featured Brands" class="bg-muted py-6 overflow-hidden hidden md:block">
-                <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div class="flex flex-wrap justify-center gap-8 sm:gap-12 md:gap-16">
+            <section aria-label="Featured Brands" class="bg-white border-b border-gray-100">
+                <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+                    <div class="flex flex-wrap justify-center items-center gap-12 sm:gap-16 md:gap-24">
                         <?php
                         $brands = get_post_meta(get_the_ID(), '_home_brands', true);
                         if ($brands) :
@@ -194,7 +194,7 @@ uasort($sections, function($a, $b) {
                                     $image = wp_get_attachment_image_src($brand['image'], 'full');
                                     if ($image) :
                         ?>
-                                <div class="flex items-center justify-center w-1/2 sm:w-1/3 md:w-1/4 lg:w-auto">
+                                <div class="flex items-center justify-center">
                                     <?php if (!empty($brand['url'])) : ?>
                                         <a href="<?php echo esc_url($brand['url']); ?>" target="_blank" rel="noopener noreferrer">
                                     <?php endif; ?>
@@ -204,9 +204,7 @@ uasort($sections, function($a, $b) {
                                         width="<?php echo esc_attr($image[1]); ?>"
                                         height="<?php echo esc_attr($image[2]); ?>"
                                         decoding="async"
-                                        data-nimg="1"
-                                        class="w-auto h-[24px] sm:h-[28px] md:h-[32px] grayscale hover:grayscale-0 transition-all duration-300"
-                                        style="color:transparent"
+                                        class="w-auto h-[40px] opacity-70 hover:opacity-100 transition-opacity duration-300"
                                         src="<?php echo esc_url($image[0]); ?>"
                                     >
                                     <?php if (!empty($brand['url'])) : ?>
@@ -300,9 +298,18 @@ uasort($sections, function($a, $b) {
                                         <?php if ($boat_price) : ?>
                                             <p class="text-2xl font-bold mb-6">$<?php echo number_format($boat_price); ?></p>
                                         <?php endif; ?>
-                                        <a href="<?php the_permalink(); ?>" class="inline-flex items-center justify-center whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-10 rounded-md w-full sm:w-auto text-lg px-8 py-3">
-                                            Request a Viewing
-                                        </a>
+                                        <div class="flex flex-col sm:flex-row gap-4">
+                                            <a href="<?php the_permalink(); ?>" 
+                                               class="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all duration-300 shadow-lg hover:shadow-blue-500/25">
+                                                <i data-lucide="eye" class="w-5 h-5 mr-2"></i>
+                                                View Details
+                                            </a>
+                                            <a href="/contact?boat=<?php echo urlencode(get_the_title()); ?>" 
+                                               class="inline-flex items-center justify-center px-6 py-3 text-base font-medium bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-300">
+                                                <i data-lucide="calendar" class="w-5 h-5 mr-2"></i>
+                                                Request Viewing
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
                             <?php
@@ -321,20 +328,29 @@ uasort($sections, function($a, $b) {
 
         <?php elseif ($section_id === 'services') : ?>
             <!-- Services Section -->
-            <section id="services" aria-labelledby="services-heading" class="py-24 bg-muted">
-                <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
-                    <div class="text-center mb-16">
-                        <div class="inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 mb-4 text-foreground font-medium">
-                            <i data-lucide="award" class="w-4 h-4 mr-2"></i>
-                            Premier Boat Services
+            <section id="services" class="relative py-24 overflow-hidden">
+                <!-- Background Pattern -->
+                <div class="absolute inset-0 bg-gradient-to-b from-gray-50 to-white">
+                    <div class="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,transparent,black)] dark:bg-grid-slate-700/25 dark:bg-grid-slate-700/25"></div>
+                </div>
+                
+                <div class="container relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <!-- Section Header -->
+                    <div class="relative">
+                        <div class="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700 mb-6">
+                            <i data-lucide="tool" class="w-4 h-4 mr-2"></i>
+                            Professional Marine Services
                         </div>
-                        <h2 id="services-heading" class="text-4xl md:text-5xl font-bold mb-6">Georgia's Leader in Boat Sales &amp; Marine Service</h2>
-                        <p class="text-xl text-foreground max-w-3xl mx-auto">
-                            Offering active boaters comprehensive marine services with expert technicians and state-of-the-art facilities.
+                        <h2 class="text-4xl font-bold tracking-tight sm:text-5xl mb-4">
+                            Expert Boat Services
+                        </h2>
+                        <p class="text-xl text-gray-600 max-w-3xl">
+                            Factory-certified expertise for all your boating needs, backed by decades of experience and the latest marine technology.
                         </p>
                     </div>
 
-                    <div class="grid grid-cols-1 gap-12 mb-16">
+                    <!-- Services Grid -->
+                    <div class="mt-16">
                         <?php
                         // Query services that are marked to show on homepage
                         $services_args = array(
@@ -348,9 +364,9 @@ uasort($sections, function($a, $b) {
                                 )
                             ),
                             'orderby' => array(
-                                'meta_value_num' => 'ASC'
-                            ),
-                            'meta_key' => '_home_order'
+                                'menu_order' => 'ASC',
+                                'date' => 'DESC'
+                            )
                         );
                         
                         $services_query = new WP_Query($services_args);
@@ -358,168 +374,102 @@ uasort($sections, function($a, $b) {
                         if ($services_query->have_posts()) :
                             $count = 0;
                             while ($services_query->have_posts()) : $services_query->the_post();
-                                $meta = array(
-                                    'icon' => get_post_meta(get_the_ID(), '_service_icon', true) ?: 'tool',
-                                    'price' => get_post_meta(get_the_ID(), '_service_price', true),
-                                    'duration' => get_post_meta(get_the_ID(), '_service_duration', true),
-                                    'location' => get_post_meta(get_the_ID(), '_service_location', true),
-                                    'features' => get_post_meta(get_the_ID(), '_service_features', true) ?: array()
-                                );
                                 $count++;
-                                $layout_reverse = $count % 2 === 0;
+                                $icon = get_post_meta(get_the_ID(), '_service_icon', true) ?: 'tool';
+                                $features = get_post_meta(get_the_ID(), '_service_features', true) ?: array();
+                                $is_even = $count % 2 === 0;
                         ?>
-                            <div class="rounded-xl border bg-card text-card-foreground shadow overflow-hidden transition-all duration-300 hover:shadow-xl">
-                                <div class="md:flex">
-                                    <?php if (!$layout_reverse) : ?>
-                                    <div class="md:w-3/5">
-                                        <div class="flex flex-col space-y-1.5 p-6 bg-muted">
-                                            <h3 class="tracking-tight text-2xl font-bold flex items-center">
-                                                <i data-lucide="<?php echo esc_attr($meta['icon']); ?>" class="w-6 h-6 mr-3"></i>
-                                                <?php the_title(); ?>
-                                            </h3>
-                                            <?php if ($meta['duration'] || $meta['location']) : ?>
-                                                <p class="text-lg text-foreground">
-                                                    <?php 
-                                                    $service_details = array();
-                                                    if ($meta['duration']) $service_details[] = $meta['duration'];
-                                                    if ($meta['location'] === 'mobile') {
-                                                        $service_details[] = 'Mobile Service Available';
-                                                    } elseif ($meta['location'] === 'both') {
-                                                        $service_details[] = 'Shop & Mobile Service';
-                                                    }
-                                                    echo esc_html(implode(' • ', $service_details));
-                                                    ?>
-                                                </p>
-                                            <?php endif; ?>
-                                        </div>
-                                        <div class="p-6">
-                                            <?php if (has_excerpt()) : ?>
-                                                <p class="text-foreground mb-6"><?php echo get_the_excerpt(); ?></p>
-                                            <?php endif; ?>
-                                            <?php if (!empty($meta['features'])) : ?>
-                                                <div class="flex flex-wrap gap-3 mb-6">
-                                                    <?php foreach ($meta['features'] as $feature) : ?>
-                                                        <div class="inline-flex items-center rounded-md border px-2.5 py-0.5 text-sm">
-                                                            <i data-lucide="check" class="w-4 h-4 mr-2"></i>
-                                                            <?php echo esc_html($feature); ?>
-                                                        </div>
+                                <div class="relative <?php echo $count > 1 ? 'mt-12' : ''; ?>">
+                                    <div class="grid md:grid-cols-2 gap-8 items-center <?php echo $is_even ? 'md:grid-flow-col-dense' : ''; ?>">
+                                        <!-- Content -->
+                                        <div class="<?php echo $is_even ? 'md:col-start-2' : ''; ?>">
+                                            <div class="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 mb-6">
+                                                <i data-lucide="<?php echo esc_attr($icon); ?>" class="h-6 w-6 text-white"></i>
+                                            </div>
+                                            <h3 class="text-2xl font-bold mb-4"><?php the_title(); ?></h3>
+                                            <div class="text-lg text-gray-600 mb-6">
+                                                <?php the_excerpt(); ?>
+                                            </div>
+                                            <?php if (!empty($features)) : ?>
+                                                <ul class="space-y-3 mb-8">
+                                                    <?php foreach (array_slice($features, 0, 3) as $feature) : ?>
+                                                        <li class="flex items-start">
+                                                            <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-50 flex items-center justify-center">
+                                                                <i data-lucide="check" class="w-4 h-4 text-blue-600"></i>
+                                                            </div>
+                                                            <span class="ml-3 text-gray-600"><?php echo esc_html($feature); ?></span>
+                                                        </li>
                                                     <?php endforeach; ?>
-                                                </div>
+                                                </ul>
                                             <?php endif; ?>
-                                            <?php if ($meta['price']) : ?>
-                                                <p class="text-xl font-semibold mb-6">Starting at <?php echo esc_html($meta['price']); ?></p>
-                                            <?php endif; ?>
-                                            <a href="<?php the_permalink(); ?>" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2 w-full sm:w-auto">
-                                                Learn More About <?php the_title(); ?>
-                                                <i data-lucide="chevron-right" class="ml-2 h-5 w-5"></i>
-                                            </a>
+                                            <div class="flex items-center gap-4">
+                                                <a href="<?php the_permalink(); ?>" 
+                                                   class="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all duration-300 shadow-lg hover:shadow-blue-500/25">
+                                                    Learn More
+                                                    <i data-lucide="arrow-right" class="w-5 h-5 ml-2"></i>
+                                                </a>
+                                                <a href="/contact?service=<?php echo urlencode(get_the_title()); ?>" 
+                                                   class="inline-flex items-center justify-center px-6 py-3 text-base font-medium bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-300">
+                                                    Schedule Service
+                                                </a>
+                                            </div>
+                                        </div>
+
+                                        <!-- Image -->
+                                        <div class="<?php echo $is_even ? 'md:col-start-1' : ''; ?>">
+                                            <div class="relative aspect-[4/3] overflow-hidden rounded-2xl bg-gray-100 shadow-lg">
+                                                <?php if (has_post_thumbnail()) : ?>
+                                                    <?php the_post_thumbnail('large', array(
+                                                        'class' => 'absolute inset-0 w-full h-full object-cover'
+                                                    )); ?>
+                                                <?php else : ?>
+                                                    <div class="absolute inset-0 flex items-center justify-center bg-blue-50">
+                                                        <i data-lucide="<?php echo esc_attr($icon); ?>" class="w-24 h-24 text-blue-200"></i>
+                                                    </div>
+                                                <?php endif; ?>
+                                                <!-- Overlay gradient -->
+                                                <div class="absolute inset-0 bg-gradient-to-tr from-black/20 to-transparent mix-blend-overlay"></div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="md:w-2/5 relative">
-                                        <?php if (has_post_thumbnail()) : ?>
-                                            <?php the_post_thumbnail('large', array(
-                                                'class' => 'absolute inset-0 object-cover w-full h-full',
-                                                'style' => 'height: 100%',
-                                                'loading' => 'lazy',
-                                                'alt' => get_the_title()
-                                            )); ?>
-                                        <?php endif; ?>
-                                    </div>
-                                    <?php else : ?>
-                                    <div class="md:w-2/5 relative">
-                                        <?php if (has_post_thumbnail()) : ?>
-                                            <?php the_post_thumbnail('large', array(
-                                                'class' => 'absolute inset-0 object-cover w-full h-full',
-                                                'style' => 'height: 100%',
-                                                'loading' => 'lazy',
-                                                'alt' => get_the_title()
-                                            )); ?>
-                                        <?php endif; ?>
-                                    </div>
-                                    <div class="md:w-3/5">
-                                        <div class="flex flex-col space-y-1.5 p-6 bg-muted">
-                                            <h3 class="tracking-tight text-2xl font-bold flex items-center">
-                                                <i data-lucide="<?php echo esc_attr($meta['icon']); ?>" class="w-6 h-6 mr-3"></i>
-                                                <?php the_title(); ?>
-                                            </h3>
-                                            <?php if ($meta['duration'] || $meta['location']) : ?>
-                                                <p class="text-lg text-foreground">
-                                                    <?php 
-                                                    $service_details = array();
-                                                    if ($meta['duration']) $service_details[] = $meta['duration'];
-                                                    if ($meta['location'] === 'mobile') {
-                                                        $service_details[] = 'Mobile Service Available';
-                                                    } elseif ($meta['location'] === 'both') {
-                                                        $service_details[] = 'Shop & Mobile Service';
-                                                    }
-                                                    echo esc_html(implode(' • ', $service_details));
-                                                    ?>
-                                                </p>
-                                            <?php endif; ?>
-                                        </div>
-                                        <div class="p-6">
-                                            <?php if (has_excerpt()) : ?>
-                                                <p class="text-foreground mb-6"><?php echo get_the_excerpt(); ?></p>
-                                            <?php endif; ?>
-                                            <?php if (!empty($meta['features'])) : ?>
-                                                <div class="flex flex-wrap gap-3 mb-6">
-                                                    <?php foreach ($meta['features'] as $feature) : ?>
-                                                        <div class="inline-flex items-center rounded-md border px-2.5 py-0.5 text-sm">
-                                                            <i data-lucide="check" class="w-4 h-4 mr-2"></i>
-                                                            <?php echo esc_html($feature); ?>
-                                                        </div>
-                                                    <?php endforeach; ?>
-                                                </div>
-                                            <?php endif; ?>
-                                            <?php if ($meta['price']) : ?>
-                                                <p class="text-xl font-semibold mb-6">Starting at <?php echo esc_html($meta['price']); ?></p>
-                                            <?php endif; ?>
-                                            <a href="<?php the_permalink(); ?>" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2 w-full sm:w-auto">
-                                                Learn More About <?php the_title(); ?>
-                                                <i data-lucide="chevron-right" class="ml-2 h-5 w-5"></i>
-                                            </a>
-                                        </div>
-                                    </div>
-                                    <?php endif; ?>
                                 </div>
-                            </div>
                         <?php 
                             endwhile;
                             wp_reset_postdata();
-                        endif;
+                        else : 
                         ?>
+                            <div class="text-center py-12">
+                                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4">
+                                    <i data-lucide="tool" class="w-8 h-8 text-blue-600"></i>
+                                </div>
+                                <h3 class="text-xl font-semibold mb-2">No Services Found</h3>
+                                <p class="text-gray-600">Please add some services and mark them to show on the homepage.</p>
+                            </div>
+                        <?php endif; ?>
                     </div>
 
-                    <div class="rounded-xl border shadow bg-primary text-primary-foreground overflow-hidden">
-                        <div class="p-8 md:p-12">
-                            <div class="flex flex-col md:flex-row items-center justify-between gap-8">
-                                <div class="text-center md:text-left md:w-2/3">
-                                    <h3 class="text-3xl md:text-4xl font-bold mb-4">We Don't Just Service Boats - We Live It!</h3>
-                                    <p class="text-xl md:text-2xl">
-                                        Our passion for boating goes beyond service. We're active boaters ourselves, ensuring we provide you with the best care based on real-world experience.
-                                    </p>
-                                </div>
-                                <div class="flex flex-wrap justify-center gap-6 md:w-1/3">
-                                    <div class="flex flex-col items-center">
-                                        <div class="bg-primary-foreground/20 rounded-full p-4 mb-2">
-                                            <i data-lucide="users" class="w-8 h-8"></i>
-                                        </div>
-                                        <span class="text-sm font-medium">Expert Team</span>
-                                    </div>
-                                    <div class="flex flex-col items-center">
-                                        <div class="bg-primary-foreground/20 rounded-full p-4 mb-2">
-                                            <i data-lucide="wrench" class="w-8 h-8"></i>
-                                        </div>
-                                        <span class="text-sm font-medium">Quality Service</span>
-                                    </div>
-                                    <div class="flex flex-col items-center">
-                                        <div class="bg-primary-foreground/20 rounded-full p-4 mb-2">
-                                            <i data-lucide="award" class="w-8 h-8"></i>
-                                        </div>
-                                        <span class="text-sm font-medium">Top Brands</span>
-                                    </div>
-                                </div>
+                    <!-- Service CTA -->
+                    <div class="relative mt-24 rounded-3xl bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-16 text-center">
+                        <div class="absolute inset-x-8 inset-y-0 flex items-center justify-between">
+                            <div class="h-px w-full bg-white/20"></div>
+                            <div class="mx-8 h-12 w-12 rounded-full border border-white/20 flex items-center justify-center">
+                                <i data-lucide="phone" class="w-6 h-6 text-white/70"></i>
                             </div>
+                            <div class="h-px w-full bg-white/20"></div>
+                        </div>
+                        <h3 class="text-2xl font-bold text-white mb-4">Ready to Experience Expert Service?</h3>
+                        <p class="text-lg text-blue-100 mb-8">Our certified technicians are ready to help with all your marine service needs.</p>
+                        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                            <a href="/services" 
+                               class="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-blue-600 bg-white hover:bg-blue-50 rounded-lg transition-all duration-300 shadow-lg">
+                                View All Services
+                                <i data-lucide="arrow-right" class="w-5 h-5 ml-2"></i>
+                            </a>
+                            <a href="tel:+17708817808" 
+                               class="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-white border-2 border-white/20 hover:bg-white/10 rounded-lg transition-all duration-300">
+                                <i data-lucide="phone-call" class="w-5 h-5 mr-2"></i>
+                                (770) 881-7808
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -527,66 +477,59 @@ uasort($sections, function($a, $b) {
 
         <?php elseif ($section_id === 'testimonials') : ?>
             <!-- Testimonials Section -->
-            <section id="testimonials" aria-labelledby="testimonials-heading" class="py-24 overflow-hidden">
-                <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
-                    <h2 id="testimonials-heading" class="text-4xl font-bold text-center mb-16">What Our Customers Say</h2>
-                    
-                    <div class="relative">
-                        <!-- Large Quote Background -->
-                        <div class="absolute inset-0 flex items-center justify-center opacity-5">
-                            <i data-lucide="quote" class="w-96 h-96"></i>
-                        </div>
-
-                        <!-- Testimonials Grid -->
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-12 relative z-10">
-                            <?php
-                            $testimonials = get_post_meta(get_the_ID(), '_testimonials', true) ?: array(
-                                array(
-                                    'content' => 'The team at Impact Marine Group made buying my first yacht a breeze. Their expertise and customer service are unmatched!',
-                                    'author' => 'John D.',
-                                    'rating' => 5
-                                ),
-                                array(
-                                    'content' => 'Outstanding service and attention to detail. They went above and beyond to ensure my boat was in perfect condition.',
-                                    'author' => 'Sarah M.',
-                                    'rating' => 5
-                                ),
-                                array(
-                                    'content' => 'Professional, knowledgeable, and incredibly helpful. The best marine service I\'ve experienced.',
-                                    'author' => 'Mike R.',
-                                    'rating' => 5
-                                )
-                            );
-
-                            foreach ($testimonials as $testimonial) :
-                                $initial = substr($testimonial['author'], 0, 1);
-                            ?>
-                                <div class="flex flex-col items-center">
-                                    <div class="w-24 h-24 bg-primary rounded-full flex items-center justify-center mb-6 shadow-lg">
-                                        <span class="text-3xl font-bold text-primary-foreground"><?php echo esc_html($initial); ?></span>
-                                    </div>
-                                    <div class="text-center">
-                                        <p class="text-lg italic mb-4 relative">
-                                            <span class="absolute -top-4 -left-2 text-4xl text-muted">"</span>
-                                            <?php echo esc_html($testimonial['content']); ?>
-                                            <span class="absolute -bottom-4 -right-2 text-4xl text-muted">"</span>
-                                        </p>
-                                        <p class="font-semibold"><?php echo esc_html($testimonial['author']); ?></p>
-                                        <div class="flex items-center justify-center mt-2">
-                                            <?php for ($i = 0; $i < 5; $i++) : ?>
-                                                <i data-lucide="star" class="w-5 h-5 text-yellow-400 fill-current"></i>
-                                            <?php endfor; ?>
-                                        </div>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
+            <section class="bg-white py-24">
+                <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <!-- Section Header -->
+                    <div class="max-w-3xl mx-auto text-center mb-20">
+                        <h2 class="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
+                            Customer Testimonials
+                        </h2>
+                        <div class="w-24 h-1 bg-blue-600 mx-auto mb-6"></div>
+                        <p class="text-lg text-gray-600">
+                            Hear what our satisfied customers have to say about their experience with Impact Marine.
+                        </p>
                     </div>
 
-                    <div class="mt-16 text-center">
-                        <button class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-10 rounded-md px-8">
-                            Read More Reviews
-                        </button>
+                    <!-- Testimonials Grid -->
+                    <div class="grid md:grid-cols-3 gap-8">
+                        <?php
+                        $testimonials = get_post_meta(get_the_ID(), '_testimonials', true) ?: array(
+                            array(
+                                'content' => 'The team at Impact Marine Group made buying my first yacht a breeze. Their expertise and customer service are unmatched!',
+                                'author' => 'John D.',
+                                'rating' => 5
+                            ),
+                            array(
+                                'content' => 'Outstanding service and attention to detail. They went above and beyond to ensure my boat was in perfect condition.',
+                                'author' => 'Sarah M.',
+                                'rating' => 5
+                            ),
+                            array(
+                                'content' => 'Professional, knowledgeable, and incredibly helpful. The best marine service I\'ve experienced.',
+                                'author' => 'Mike R.',
+                                'rating' => 5
+                            )
+                        );
+
+                        foreach ($testimonials as $testimonial) :
+                        ?>
+                            <div class="bg-gray-50 rounded-lg p-8 relative">
+                                <div class="absolute top-0 right-0 -mt-4 -mr-4 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                                    <i data-lucide="quote" class="w-4 h-4 text-white"></i>
+                                </div>
+                                <div class="flex items-center mb-4">
+                                    <?php for ($i = 0; $i < 5; $i++) : ?>
+                                        <i data-lucide="star" class="w-5 h-5 <?php echo $i < $testimonial['rating'] ? 'text-yellow-400' : 'text-gray-300'; ?> fill-current"></i>
+                                    <?php endfor; ?>
+                                </div>
+                                <blockquote class="text-gray-600 mb-6">
+                                    "<?php echo esc_html($testimonial['content']); ?>"
+                                </blockquote>
+                                <footer class="font-medium">
+                                    <?php echo esc_html($testimonial['author']); ?>
+                                </footer>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
                 </div>
             </section>

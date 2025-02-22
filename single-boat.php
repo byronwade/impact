@@ -10,19 +10,27 @@ get_header(); ?>
 <main role="main" aria-label="Main content" class="flex-grow bg-gray-50">
     <article class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
         <?php while (have_posts()) : the_post(); 
-            $condition = get_post_meta(get_the_ID(), '_boat_condition', true);
-            $price = get_post_meta(get_the_ID(), '_boat_price', true);
-            $status = get_post_meta(get_the_ID(), '_boat_status', true);
-            $year = get_post_meta(get_the_ID(), '_boat_year', true);
-            $type = get_post_meta(get_the_ID(), '_boat_type', true);
-            $manufacturer = get_post_meta(get_the_ID(), '_boat_manufacturer', true);
+            // Get all meta data
+            $stock_number = get_post_meta(get_the_ID(), '_boat_stock_number', true);
+            $model_year = get_post_meta(get_the_ID(), '_boat_model_year', true);
             $model = get_post_meta(get_the_ID(), '_boat_model', true);
-            $length = get_post_meta(get_the_ID(), '_boat_length', true);
-            $engine = get_post_meta(get_the_ID(), '_boat_engine', true);
-            $fuel_type = get_post_meta(get_the_ID(), '_boat_fuel_type', true);
-            $hours = get_post_meta(get_the_ID(), '_boat_hours', true);
-            $features = get_post_meta(get_the_ID(), '_boat_features', true);
-            $gallery = get_post_meta(get_the_ID(), '_boat_gallery', true);
+            $trim = get_post_meta(get_the_ID(), '_boat_trim', true);
+            $retail_price = get_post_meta(get_the_ID(), '_boat_retail_price', true);
+            $sales_price = get_post_meta(get_the_ID(), '_boat_sales_price', true);
+            $web_price = get_post_meta(get_the_ID(), '_boat_web_price', true);
+            $discount = get_post_meta(get_the_ID(), '_boat_discount', true);
+            $floorplan = get_post_meta(get_the_ID(), '_boat_floorplan', true);
+
+            // Get taxonomy terms
+            $location = wp_get_post_terms(get_the_ID(), 'boat_location', array('fields' => 'names'));
+            $condition = wp_get_post_terms(get_the_ID(), 'boat_condition', array('fields' => 'names'));
+            $status = wp_get_post_terms(get_the_ID(), 'boat_status', array('fields' => 'names'));
+            $manufacturer = wp_get_post_terms(get_the_ID(), 'boat_manufacturer', array('fields' => 'names'));
+
+            $location = !empty($location) ? $location[0] : '';
+            $condition = !empty($condition) ? $condition[0] : '';
+            $status = !empty($status) ? $status[0] : '';
+            $manufacturer = !empty($manufacturer) ? $manufacturer[0] : '';
         ?>
 
         <!-- Breadcrumb -->
@@ -47,24 +55,14 @@ get_header(); ?>
                             'alt' => get_the_title()
                         )); ?>
                     <?php endif; ?>
-                    <div class="absolute top-4 right-4">
-                        <span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium <?php echo $condition === 'NEW' ? 'bg-primary text-white' : 'bg-secondary text-secondary-foreground'; ?>">
-                            <?php echo esc_html($condition); ?>
-                        </span>
-                    </div>
+                    <?php if ($condition) : ?>
+                        <div class="absolute top-4 right-4">
+                            <span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium <?php echo $condition === 'NEW' ? 'bg-primary text-white' : 'bg-secondary text-secondary-foreground'; ?>">
+                                <?php echo esc_html($condition); ?>
+                            </span>
+                        </div>
+                    <?php endif; ?>
                 </div>
-
-                <?php if ($gallery) : ?>
-                <div class="grid grid-cols-4 gap-4">
-                    <?php foreach ($gallery as $image_id) : ?>
-                        <button class="relative aspect-w-16 aspect-h-9 rounded-lg overflow-hidden bg-white shadow hover:ring-2 hover:ring-primary transition-all">
-                            <?php echo wp_get_attachment_image($image_id, 'thumbnail', false, array(
-                                'class' => 'object-cover w-full h-full',
-                            )); ?>
-                        </button>
-                    <?php endforeach; ?>
-                </div>
-                <?php endif; ?>
             </div>
 
             <!-- Boat Details -->
@@ -72,24 +70,38 @@ get_header(); ?>
                 <div>
                     <h1 class="text-4xl font-bold mb-2"><?php the_title(); ?></h1>
                     <div class="flex items-center gap-4 text-lg text-muted-foreground">
-                        <span><?php echo esc_html($year); ?></span>
-                        <span>•</span>
-                        <span><?php echo esc_html($type); ?></span>
+                        <?php if ($model_year) : ?>
+                            <span><?php echo esc_html($model_year); ?></span>
+                        <?php endif; ?>
+                        <?php if ($manufacturer) : ?>
+                            <span>•</span>
+                            <span><?php echo esc_html($manufacturer); ?></span>
+                        <?php endif; ?>
                     </div>
                 </div>
 
                 <div class="bg-white rounded-xl shadow-lg p-6">
                     <div class="flex items-center justify-between mb-4">
-                        <span class="text-3xl font-bold">$<?php echo number_format($price); ?></span>
-                        <span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium bg-primary/10 text-primary">
-                            <?php echo esc_html($status); ?>
-                        </span>
+                        <?php if ($sales_price) : ?>
+                            <span class="text-3xl font-bold">$<?php echo number_format($sales_price); ?></span>
+                        <?php endif; ?>
+                        <?php if ($status) : ?>
+                            <span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium bg-primary/10 text-primary">
+                                <?php echo esc_html($status); ?>
+                            </span>
+                        <?php endif; ?>
                     </div>
                     <div class="grid grid-cols-2 gap-6">
-                        <?php if ($manufacturer) : ?>
+                        <?php if ($stock_number) : ?>
                             <div>
-                                <span class="text-sm text-muted-foreground">Manufacturer</span>
-                                <p class="font-medium"><?php echo esc_html($manufacturer); ?></p>
+                                <span class="text-sm text-muted-foreground">Stock Number</span>
+                                <p class="font-medium"><?php echo esc_html($stock_number); ?></p>
+                            </div>
+                        <?php endif; ?>
+                        <?php if ($location) : ?>
+                            <div>
+                                <span class="text-sm text-muted-foreground">Location</span>
+                                <p class="font-medium"><?php echo esc_html($location); ?></p>
                             </div>
                         <?php endif; ?>
                         <?php if ($model) : ?>
@@ -98,51 +110,32 @@ get_header(); ?>
                                 <p class="font-medium"><?php echo esc_html($model); ?></p>
                             </div>
                         <?php endif; ?>
-                        <?php if ($length) : ?>
+                        <?php if ($trim) : ?>
                             <div>
-                                <span class="text-sm text-muted-foreground">Length</span>
-                                <p class="font-medium"><?php echo esc_html($length); ?></p>
+                                <span class="text-sm text-muted-foreground">Trim</span>
+                                <p class="font-medium"><?php echo esc_html($trim); ?></p>
                             </div>
                         <?php endif; ?>
-                        <?php if ($engine) : ?>
+                        <?php if ($retail_price && $retail_price != '0') : ?>
                             <div>
-                                <span class="text-sm text-muted-foreground">Engine</span>
-                                <p class="font-medium"><?php echo esc_html($engine); ?></p>
+                                <span class="text-sm text-muted-foreground">Retail Price</span>
+                                <p class="font-medium">$<?php echo number_format($retail_price); ?></p>
                             </div>
                         <?php endif; ?>
-                        <?php if ($fuel_type) : ?>
+                        <?php if ($web_price && $web_price != '0') : ?>
                             <div>
-                                <span class="text-sm text-muted-foreground">Fuel Type</span>
-                                <p class="font-medium"><?php echo esc_html($fuel_type); ?></p>
-                            </div>
-                        <?php endif; ?>
-                        <?php if ($hours) : ?>
-                            <div>
-                                <span class="text-sm text-muted-foreground">Hours</span>
-                                <p class="font-medium"><?php echo esc_html($hours); ?></p>
+                                <span class="text-sm text-muted-foreground">Web Price</span>
+                                <p class="font-medium">$<?php echo number_format($web_price); ?></p>
                             </div>
                         <?php endif; ?>
                     </div>
                 </div>
 
                 <!-- Description -->
-                <div class="prose max-w-none">
-                    <?php the_content(); ?>
-                </div>
-
-                <!-- Features -->
-                <?php if ($features) : ?>
-                <div>
-                    <h2 class="text-2xl font-semibold mb-4">Features & Equipment</h2>
-                    <div class="grid grid-cols-2 gap-3">
-                        <?php foreach ($features as $feature) : ?>
-                            <div class="flex items-center gap-2">
-                                <i data-lucide="check" class="w-5 h-5 text-primary"></i>
-                                <span><?php echo esc_html($feature); ?></span>
-                            </div>
-                        <?php endforeach; ?>
+                <?php if (get_the_content()) : ?>
+                    <div class="prose max-w-none">
+                        <?php the_content(); ?>
                     </div>
-                </div>
                 <?php endif; ?>
 
                 <!-- Contact Buttons -->
@@ -168,7 +161,7 @@ get_header(); ?>
             'meta_query' => array(
                 array(
                     'key' => '_boat_type',
-                    'value' => $type,
+                    'value' => $model,
                     'compare' => '='
                 )
             )

@@ -106,13 +106,13 @@ function wades_about_content_callback($post) {
                 <p>
                     <label>Hero Background Image:</label><br>
                     <input type="hidden" name="about_image" value="<?php echo esc_attr($meta['about_image']); ?>" class="widefat">
-                    <button type="button" class="button upload-image">Upload Image</button>
-                    <div class="image-preview">
+        <button type="button" class="button upload-image">Upload Image</button>
+        <div class="image-preview">
                         <?php if ($meta['about_image']) : ?>
                             <?php echo wp_get_attachment_image($meta['about_image'], 'thumbnail'); ?>
-                        <?php endif; ?>
-                    </div>
-                </p>
+            <?php endif; ?>
+        </div>
+    </p>
             </div>
         </div>
 
@@ -172,21 +172,21 @@ function wades_about_content_callback($post) {
                                 <button type="button" class="button remove-feature">Remove</button>
                             </div>
                             <div class="card-body">
-                                <p>
-                                    <label>Icon (Lucide icon name):</label><br>
-                                    <input type="text" name="about_features[<?php echo $index; ?>][icon]" value="<?php echo esc_attr($feature['icon']); ?>" class="widefat">
-                                </p>
-                                <p>
-                                    <label>Title:</label><br>
-                                    <input type="text" name="about_features[<?php echo $index; ?>][title]" value="<?php echo esc_attr($feature['title']); ?>" class="widefat">
-                                </p>
-                                <p>
-                                    <label>Description:</label><br>
-                                    <textarea name="about_features[<?php echo $index; ?>][description]" rows="2" class="widefat"><?php echo esc_textarea($feature['description']); ?></textarea>
-                                </p>
-                            </div>
-                        </div>
-                    <?php 
+                <p>
+                    <label>Icon (Lucide icon name):</label><br>
+                    <input type="text" name="about_features[<?php echo $index; ?>][icon]" value="<?php echo esc_attr($feature['icon']); ?>" class="widefat">
+                </p>
+                <p>
+                    <label>Title:</label><br>
+                    <input type="text" name="about_features[<?php echo $index; ?>][title]" value="<?php echo esc_attr($feature['title']); ?>" class="widefat">
+                </p>
+                <p>
+                    <label>Description:</label><br>
+                    <textarea name="about_features[<?php echo $index; ?>][description]" rows="2" class="widefat"><?php echo esc_textarea($feature['description']); ?></textarea>
+                </p>
+            </div>
+    </div>
+    <?php
                         endforeach;
                     endif;
                     ?>
@@ -204,7 +204,7 @@ function wades_about_content_callback($post) {
                         <div class="dynamic-item">
                             <input type="text" name="service_areas[]" value="<?php echo esc_attr($area); ?>" class="widefat">
                             <button type="button" class="button remove-item">Remove</button>
-                        </div>
+                    </div>
                     <?php endforeach; endif; ?>
                 </div>
                 <button type="button" class="button add-area">Add Service Area</button>
@@ -219,10 +219,10 @@ function wades_about_content_callback($post) {
                             <button type="button" class="button remove-item">Remove</button>
                         </div>
                     <?php endforeach; endif; ?>
-                </div>
+    </div>
                 <button type="button" class="button add-shipping">Add Shipping Service</button>
             </div>
-        </div>
+    </div>
 
         <!-- Contact Tab -->
         <div class="tab-content" data-tab="contact">
@@ -243,13 +243,13 @@ function wades_about_content_callback($post) {
                 <div class="hours-list dynamic-list">
                     <?php if (!empty($meta['business_hours'])) : foreach ($meta['business_hours'] as $hours) : ?>
                         <div class="dynamic-item">
-                            <input type="text" name="business_hours[]" value="<?php echo esc_attr($hours); ?>" class="widefat">
+                <input type="text" name="business_hours[]" value="<?php echo esc_attr($hours); ?>" class="widefat">
                             <button type="button" class="button remove-item">Remove</button>
-                        </div>
+    </div>
                     <?php endforeach; endif; ?>
-                </div>
+    </div>
                 <button type="button" class="button add-hours">Add Business Hours</button>
-            </div>
+    </div>
 
             <div class="meta-box-section">
                 <h3>Map Image</h3>
@@ -299,7 +299,7 @@ function wades_about_content_callback($post) {
                         Show Contact Section
                     </label>
                 </p>
-            </div>
+                </div>
 
             <div class="meta-box-section">
                 <h3>Section Order</h3>
@@ -394,11 +394,11 @@ function wades_save_about_meta($post_id) {
         $features = array();
         foreach ($_POST['about_features'] as $feature) {
             if (!empty($feature['title'])) {
-                $features[] = array(
-                    'icon' => sanitize_text_field($feature['icon']),
-                    'title' => sanitize_text_field($feature['title']),
-                    'description' => wp_kses_post($feature['description'])
-                );
+            $features[] = array(
+                'icon' => sanitize_text_field($feature['icon']),
+                'title' => sanitize_text_field($feature['title']),
+                'description' => wp_kses_post($feature['description'])
+            );
             }
         }
         update_post_meta($post_id, '_about_features', $features);
@@ -442,7 +442,7 @@ function wades_about_admin_scripts($hook) {
 
             // Add inline script for tab functionality
             wp_add_inline_script('about-admin', '
-                jQuery(document).ready(function($) {
+        jQuery(document).ready(function($) {
                     // Tab functionality
                     $(".tab-button").on("click", function() {
                         $(".tab-button").removeClass("active");
@@ -465,8 +465,8 @@ function wades_about_admin_scripts($hook) {
 
                     // Image upload functionality
                     $(".upload-image").on("click", function(e) {
-                        e.preventDefault();
-                        var button = $(this);
+                e.preventDefault();
+                var button = $(this);
                         var imagePreview = button.siblings(".image-preview");
                         var imageInput = button.siblings("input[type=\"hidden\"]");
 
@@ -475,7 +475,7 @@ function wades_about_admin_scripts($hook) {
                             button: {
                                 text: "Use this image"
                             },
-                            multiple: false
+                    multiple: false
                         });
 
                         frame.on("select", function() {

@@ -5,15 +5,12 @@
  * @package wades
  */
 
-get_header(); ?>
+get_header();
+get_template_part('template-parts/template-header');
+?>
 
 <main role="main" aria-label="Main content" class="flex-grow">
-    <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
-        <header class="text-center mb-12">
-            <h1 class="text-4xl font-bold mb-4"><?php echo esc_html(get_post_meta(get_the_ID(), '_hero_title', true) ?: 'Financing Options'); ?></h1>
-            <p class="text-xl text-muted-foreground max-w-3xl mx-auto"><?php echo esc_html(get_post_meta(get_the_ID(), '_hero_description', true) ?: 'Flexible financing solutions for your dream boat and expert service work'); ?></p>
-        </header>
-
+    <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24">
         <!-- Financing Options Cards -->
         <div class="grid md:grid-cols-2 gap-6 mb-12">
             <?php

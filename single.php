@@ -23,8 +23,8 @@ get_header(); ?>
                 </nav>
 
                 <!-- Post Header -->
-                <header class="mb-8">
-                    <div class="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                <header class="single-post__header">
+                    <div class="single-post__meta">
                         <time datetime="<?php echo get_the_date('c'); ?>"><?php echo get_the_date(); ?></time>
                         <span>•</span>
                         <?php
@@ -40,9 +40,9 @@ get_header(); ?>
                         <span>•</span>
                         <span><?php echo get_the_author(); ?></span>
                     </div>
-                    <h1 class="text-4xl font-bold mb-6"><?php the_title(); ?></h1>
+                    <h1 class="single-post__title"><?php the_title(); ?></h1>
                     <?php if (has_excerpt()) : ?>
-                        <div class="text-xl text-muted-foreground mb-6">
+                        <div class="single-post__excerpt">
                             <?php the_excerpt(); ?>
                         </div>
                     <?php endif; ?>
@@ -50,16 +50,16 @@ get_header(); ?>
 
                 <!-- Featured Image -->
                 <?php if (has_post_thumbnail()) : ?>
-                    <div class="relative aspect-w-16 aspect-h-9 mb-8 rounded-xl overflow-hidden">
+                    <div class="single-post__featured-image">
                         <?php the_post_thumbnail('large', array(
-                            'class' => 'object-cover w-full h-full',
+                            'class' => 'w-full h-auto',
                             'alt' => get_the_title()
                         )); ?>
                     </div>
                 <?php endif; ?>
 
                 <!-- Post Content -->
-                <div class="prose prose-lg max-w-none prose-headings:font-bold prose-headings:text-gray-900 prose-p:text-gray-600 prose-a:text-primary prose-a:no-underline hover:prose-a:text-primary/80 prose-img:rounded-xl prose-strong:text-gray-900 prose-code:text-primary prose-code:bg-gray-100 prose-code:rounded prose-code:px-1 prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-ol:list-decimal prose-ul:list-disc mb-12">
+                <div class="single-post__content prose">
                     <?php the_content(); ?>
                 </div>
 
@@ -67,7 +67,7 @@ get_header(); ?>
                 <?php
                 $tags = get_the_tags();
                 if ($tags) : ?>
-                    <div class="flex flex-wrap gap-2 mb-8">
+                    <div class="flex flex-wrap gap-2 mt-8">
                         <?php foreach ($tags as $tag) : ?>
                             <a href="<?php echo get_tag_link($tag->term_id); ?>" class="inline-flex items-center rounded-full px-3 py-1 text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors">
                                 #<?php echo $tag->name; ?>
@@ -76,82 +76,61 @@ get_header(); ?>
                     </div>
                 <?php endif; ?>
 
-                <!-- Author Box -->
-                <div class="bg-white rounded-xl shadow-md p-8 mb-12">
-                    <div class="flex items-center gap-6">
-                        <?php echo get_avatar(get_the_author_meta('ID'), 80, '', '', array('class' => 'rounded-full')); ?>
-                        <div>
-                            <h3 class="text-xl font-semibold mb-2">About <?php echo get_the_author(); ?></h3>
-                            <p class="text-muted-foreground mb-4"><?php echo get_the_author_meta('description'); ?></p>
-                            <div class="flex gap-4">
-                                <?php
-                                $author_website = get_the_author_meta('user_url');
-                                if ($author_website) : ?>
-                                    <a href="<?php echo esc_url($author_website); ?>" class="text-sm text-primary hover:text-primary/80" target="_blank" rel="noopener noreferrer">
-                                        <i data-lucide="globe" class="w-5 h-5"></i>
-                                    </a>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Related Posts -->
                 <?php
-                $categories = get_the_category();
-                if ($categories) {
-                    $category_ids = array();
-                    foreach ($categories as $category) {
-                        $category_ids[] = $category->term_id;
-                    }
-                    
-                    $related_args = array(
-                        'category__in' => $category_ids,
-                        'post__not_in' => array(get_the_ID()),
-                        'posts_per_page' => 3,
-                        'orderby' => 'rand'
-                    );
-                    
-                    $related_query = new WP_Query($related_args);
-                    
-                    if ($related_query->have_posts()) : ?>
-                        <div class="border-t border-border pt-12">
-                            <h2 class="text-2xl font-semibold mb-8">Related Posts</h2>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                                <?php while ($related_query->have_posts()) : $related_query->the_post(); ?>
-                                    <article class="bg-white rounded-xl shadow-md overflow-hidden group">
-                                        <div class="relative aspect-w-16 aspect-h-9">
-                                            <?php if (has_post_thumbnail()) : ?>
-                                                <?php the_post_thumbnail('medium', array(
-                                                    'class' => 'object-cover w-full h-full transition-transform duration-300 group-hover:scale-105',
-                                                    'alt' => get_the_title()
-                                                )); ?>
-                                            <?php endif; ?>
-                                        </div>
-                                        <div class="p-6">
-                                            <time datetime="<?php echo get_the_date('c'); ?>" class="text-sm text-muted-foreground">
-                                                <?php echo get_the_date(); ?>
-                                            </time>
-                                            <h3 class="text-lg font-semibold mt-2 group-hover:text-primary transition-colors">
-                                                <a href="<?php the_permalink(); ?>">
-                                                    <?php the_title(); ?>
-                                                </a>
-                                            </h3>
-                                        </div>
-                                    </article>
-                                <?php endwhile; ?>
-                            </div>
-                        </div>
-                    <?php
-                    endif;
-                    wp_reset_postdata();
+                $related_args = array(
+                    'post_type' => 'post',
+                    'posts_per_page' => 3,
+                    'post__not_in' => array(get_the_ID()),
+                    'orderby' => 'rand'
+                );
+
+                // If post has categories, use them to find related posts
+                $cats = wp_get_post_categories(get_the_ID());
+                if ($cats) {
+                    $related_args['category__in'] = $cats;
                 }
+
+                $related_query = new WP_Query($related_args);
+
+                if ($related_query->have_posts()) :
+                ?>
+                    <div class="border-t border-border pt-12 mt-12">
+                        <h2 class="text-2xl font-semibold mb-8">Related Posts</h2>
+                        <div class="blog-grid">
+                            <?php while ($related_query->have_posts()) : $related_query->the_post(); ?>
+                                <article class="blog-card">
+                                    <div class="blog-card__image">
+                                        <?php if (has_post_thumbnail()) : ?>
+                                            <?php the_post_thumbnail('medium_large', array(
+                                                'class' => 'object-cover w-full h-full',
+                                                'alt' => get_the_title()
+                                            )); ?>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="blog-card__content">
+                                        <div class="blog-card__meta">
+                                            <time datetime="<?php echo get_the_date('c'); ?>"><?php echo get_the_date(); ?></time>
+                                        </div>
+                                        <h3 class="blog-card__title">
+                                            <a href="<?php the_permalink(); ?>">
+                                                <?php the_title(); ?>
+                                            </a>
+                                        </h3>
+                                    </div>
+                                </article>
+                            <?php endwhile; ?>
+                        </div>
+                    </div>
+                <?php
+                endif;
+                wp_reset_postdata();
                 ?>
 
                 <!-- Comments -->
                 <?php
                 if (comments_open() || get_comments_number()) :
-                    echo '<div class="border-t border-border pt-12">';
+                    echo '<div class="border-t border-border pt-12 mt-12">';
                     comments_template();
                     echo '</div>';
                 endif;
