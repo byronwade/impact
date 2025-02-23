@@ -5,7 +5,10 @@
  * @package wades
  */
 
-use function Wordpress\unstable_cache;
+// Get spacing and layout settings with defaults
+$spacing_top = get_post_meta(get_the_ID(), '_content_spacing_top', true) ?: '96';
+$spacing_bottom = get_post_meta(get_the_ID(), '_content_spacing_bottom', true) ?: '96';
+$content_width = get_post_meta(get_the_ID(), '_content_max_width', true) ?: '7xl';
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['contact_submit'])) {
@@ -39,13 +42,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['contact_submit'])) {
 }
 
 get_header();
+
+// Get the header template part
 get_template_part('template-parts/template-header');
 ?>
 
 <main class="flex-grow">
     <!-- Main Content -->
-    <div class="relative z-10 px-4 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-7xl">
+    <div class="relative z-10 px-4 sm:px-6 lg:px-8" style="padding-top: <?php echo esc_attr($spacing_top); ?>px; padding-bottom: <?php echo esc_attr($spacing_bottom); ?>px;">
+        <div class="mx-auto max-w-<?php echo esc_attr($content_width); ?>">
             <!-- Contact Cards -->
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-12">
                 <!-- Sales Card -->

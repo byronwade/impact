@@ -12,6 +12,24 @@
  * @package wades
  */
 
+global $post;
+
+// Direct template handling for services page
+if ($post && $post->post_name === 'services') {
+    $services_template = get_template_directory() . '/templates/services.php';
+    if (file_exists($services_template)) {
+        include($services_template);
+        exit;
+    }
+}
+
+// Handle other page templates
+$template = get_page_template_slug();
+if ($template && file_exists(get_template_directory() . '/' . $template)) {
+    include(get_template_directory() . '/' . $template);
+    exit;
+}
+
 get_header();
 get_template_part('template-parts/template-header');
 ?>

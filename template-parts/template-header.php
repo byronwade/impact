@@ -5,14 +5,44 @@
  * @package wades
  */
 
-// Get page-specific content
-$page_title = get_the_title();
-$page_excerpt = has_excerpt() ? get_the_excerpt() : '';
+$post_id = get_queried_object_id();
+$is_blog = is_home() || is_archive();
+
+if ($is_blog) {
+    $post_id = get_option('page_for_posts');
+}
+
+// Get custom header fields
+$custom_title = get_post_meta($post_id, '_custom_header_title', true);
+$custom_subheader = get_post_meta($post_id, '_custom_header_subtext', true);
+
+// Get header settings
+$background_image = get_post_meta($post_id, '_hero_background_image', true);
+$overlay_opacity = get_post_meta($post_id, '_hero_overlay_opacity', true) ?: '40';
+$header_height = get_post_meta($post_id, '_hero_height', true) ?: '70';
+
+// Determine the title to display
+$title = $custom_title ?: get_the_title($post_id);
+
+// Get page excerpt for subheader if no custom subheader is set
+$subheader = $custom_subheader ?: get_the_excerpt($post_id);
 
 // Get customization options from theme mods
-$background_image = get_post_meta(get_the_ID(), '_hero_background_image', true) ?: get_theme_mod('default_hero_background');
-$overlay_opacity = get_theme_mod('hero_overlay_opacity', '40');
-$header_height = get_theme_mod('hero_height', '70');
+$logo_bg_style = get_theme_mod('brand_logos_bg', 'white');
+$logo_classes = 'h-10 object-contain p-2 rounded';
+
+// Add background color class based on setting
+switch ($logo_bg_style) {
+    case 'white':
+        $logo_classes .= ' bg-white';
+        break;
+    case 'dark':
+        $logo_classes .= ' bg-gray-900';
+        break;
+    case 'transparent':
+        // No additional background class
+        break;
+}
 ?>
 
 <header class="relative overflow-hidden" style="height: <?php echo esc_attr($header_height); ?>vh;">
@@ -35,32 +65,16 @@ $header_height = get_theme_mod('hero_height', '70');
         <div class="container mx-auto max-w-7xl">
             <div class="flex flex-col justify-center h-full">
                 <h1 class="text-white text-4xl sm:text-6xl font-bold mb-4 leading-tight max-w-3xl">
-                    <?php echo esc_html($page_title); ?>
+                    <?php echo esc_html($title); ?>
                 </h1>
-                <?php if ($page_excerpt) : ?>
-                    <p class="text-gray-200 text-xl sm:text-2xl mb-8 max-w-2xl mx-auto">
-                        <?php echo esc_html($page_excerpt); ?>
+                <?php if ($subheader) : ?>
+                    <p class="text-gray-200 text-xl sm:text-2xl mb-8 max-w-2xl">
+                        <?php echo wp_kses_post($subheader); ?>
                     </p>
                 <?php endif; ?>
                 
                 <!-- Brand Logos -->
-                <?php if (get_theme_mod('show_brand_logos', true)) : 
-                    $logo_bg_style = get_theme_mod('brand_logos_bg', 'white');
-                    $logo_classes = 'h-10 object-contain p-2 rounded';
-                    
-                    // Add background color class based on setting
-                    switch ($logo_bg_style) {
-                        case 'white':
-                            $logo_classes .= ' bg-white';
-                            break;
-                        case 'dark':
-                            $logo_classes .= ' bg-gray-900';
-                            break;
-                        case 'transparent':
-                            // No additional background class
-                            break;
-                    }
-                ?>
+                <?php if (get_theme_mod('show_brand_logos', true)) : ?>
                     <div class="flex items-center space-x-6 mt-8">
                         <?php
                         // MB Sports Logo

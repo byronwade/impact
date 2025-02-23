@@ -7,6 +7,11 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// Remove any conflicting template registration
+if (function_exists('wades_register_services_template')) {
+    remove_filter('theme_page_templates', 'wades_register_services_template');
+}
+
 /**
  * Add meta boxes for Services template
  */
@@ -19,6 +24,7 @@ function wades_add_services_meta_boxes() {
 
     // Get current template
     $template = get_page_template_slug();
+    wades_debug_log('Services meta box - Current template: ' . $template);
     
     // Only add these meta boxes for the services template
     if ($template !== 'templates/services.php') {
@@ -28,17 +34,17 @@ function wades_add_services_meta_boxes() {
     // Remove the separate page header meta box
     remove_meta_box('wades_page_header', 'page', 'normal');
 
-    // Single meta box with tabs
+    // Add services settings meta box
     add_meta_box(
         'wades_services_settings',
-        'Services Page Settings',
+        __('Services Page Settings', 'wades'),
         'wades_services_settings_callback',
         'page',
         'normal',
         'high'
     );
 }
-add_action('add_meta_boxes', 'wades_add_services_meta_boxes', 1);
+add_action('add_meta_boxes', 'wades_add_services_meta_boxes', 20);
 
 /**
  * Services Settings Meta Box Callback
@@ -585,13 +591,4 @@ function wades_services_admin_scripts($hook) {
         }
     }
 }
-add_action('admin_enqueue_scripts', 'wades_services_admin_scripts');
-
-/**
- * Make sure the services template file is properly registered
- */
-function wades_register_services_template($post_templates) {
-    $post_templates['templates/services.php'] = __('Services Template', 'wades');
-    return $post_templates;
-}
-add_filter('theme_page_templates', 'wades_register_services_template'); 
+add_action('admin_enqueue_scripts', 'wades_services_admin_scripts'); 

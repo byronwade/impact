@@ -19,6 +19,13 @@ get_header();
 
 <main role="main" aria-label="Main content" class="flex-grow bg-gray-50">
     <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24">
+        <!-- Page Title -->
+        <header class="text-center mb-12">
+            <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
+                <?php echo get_the_title(get_option('page_for_posts')); ?>
+            </h1>
+        </header>
+
         <?php if ($show_categories) : ?>
             <!-- Categories Filter -->
             <div class="flex flex-wrap justify-center gap-2 mb-8">

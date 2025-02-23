@@ -124,12 +124,12 @@ $sections = explode(',', $meta['section_order']);
 <main role="main" aria-label="Main content" class="flex-grow">
     <?php
     // Loop through sections in order
-    foreach ($sections as $section) {
-        if (!isset($meta['sections_visibility'][$section]) || $meta['sections_visibility'][$section] !== '1') {
+    foreach ($sections as $section) :
+        if (!isset($meta['sections_visibility'][$section]) || $meta['sections_visibility'][$section] !== '1') :
             continue;
-        }
+        endif;
 
-        switch ($section) {
+        switch ($section) :
             case 'hero':
                 // Hero Section
                 ?>
@@ -255,9 +255,11 @@ $sections = explode(',', $meta['section_order']);
                     </div>
                 </div>
                 <?php
+                endif;
                 break;
 
             case 'inventory':
+                // Inventory content
                 ?>
                 <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
                     <!-- Results Count -->
@@ -447,8 +449,8 @@ $sections = explode(',', $meta['section_order']);
                 <?php
                 endif;
                 break;
-        }
-    }
+        endswitch;
+    endforeach;
     ?>
 </main>
 

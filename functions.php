@@ -239,6 +239,7 @@ require_once get_template_directory() . '/inc/meta-boxes/boat-meta.php';
 require_once get_template_directory() . '/inc/meta-boxes/boats-meta.php';
 require_once get_template_directory() . '/inc/meta-boxes/services-meta.php';
 require_once get_template_directory() . '/inc/meta-boxes/financing-meta.php';
+require_once get_template_directory() . '/inc/meta-boxes/contact-meta.php';
 
 // Load meta boxes
 require_once get_template_directory() . '/inc/meta-boxes.php';
@@ -292,9 +293,9 @@ function wades_debug_log($message) {
     }
 }
 
-// Register page templates with debugging
+// Register page templates
 function wades_add_page_templates($templates) {
-    wades_debug_log('Registering page templates');
+    wades_debug_log('Adding page templates');
     wades_debug_log('Current templates: ' . print_r($templates, true));
     
     $custom_templates = array(
@@ -312,7 +313,10 @@ function wades_add_page_templates($templates) {
     
     return $merged_templates;
 }
-add_filter('theme_page_templates', 'wades_add_page_templates');
+add_filter('theme_page_templates', 'wades_add_page_templates', 20);
+
+// Remove any conflicting template registrations
+remove_all_filters('theme_page_templates', 10);
 
 // Load page templates with debugging
 function wades_load_page_templates($template) {
@@ -329,13 +333,17 @@ function wades_load_page_templates($template) {
     }
     
     $template_slug = get_page_template_slug($post->ID);
+    wades_debug_log('Loading template for page ID: ' . $post->ID);
+    wades_debug_log('Page title: ' . get_the_title($post->ID));
     wades_debug_log('Template slug: ' . $template_slug);
+    wades_debug_log('Current template: ' . $template);
     
     if (empty($template_slug)) {
         wades_debug_log('No template slug found');
         return $template;
     }
     
+    // Check if template exists in theme directory
     $template_path = get_template_directory() . '/' . $template_slug;
     wades_debug_log('Looking for template at: ' . $template_path);
     
@@ -344,13 +352,32 @@ function wades_load_page_templates($template) {
         return $template_path;
     }
     
+    // Additional check for templates in subdirectories
+    $template_parts = explode('/', $template_slug);
+    if (count($template_parts) > 1) {
+        $alt_template_path = get_template_directory() . '/' . end($template_parts);
+        wades_debug_log('Checking alternative template path: ' . $alt_template_path);
+        
+        if (file_exists($alt_template_path)) {
+            wades_debug_log('Alternative template found, loading: ' . $alt_template_path);
+            return $alt_template_path;
+        }
+    }
+    
     wades_debug_log('Template not found, using default: ' . $template);
     return $template;
 }
 add_filter('template_include', 'wades_load_page_templates', 99);
 
-// Remove conflicting filters
-remove_all_filters('template_include', 98);
+// Ensure template loading filter is registered early
+function wades_ensure_template_loading() {
+    remove_all_filters('template_include', 98);
+    if (!has_filter('template_include', 'wades_load_page_templates')) {
+        add_filter('template_include', 'wades_load_page_templates', 99);
+        wades_debug_log('Template loading filter registered');
+    }
+}
+add_action('init', 'wades_ensure_template_loading', 5);
 
 function wades_admin_scripts() {
     if (is_admin()) {
@@ -520,4 +547,274 @@ if (!get_option('wades_services_created')) {
     wades_create_default_services();
     update_option('wades_services_created', true);
 }
+
+/**
+ * Disable Gutenberg for template pages
+ */
+function wades_disable_gutenberg($can_edit, $post_type) {
+    if ($post_type !== 'page') {
+        return $can_edit;
+    }
+
+    $template = get_page_template_slug(get_the_ID());
+    $template_pages = array(
+        'templates/boats.php',
+        'templates/about.php',
+        'templates/blog.php',
+        'templates/contact.php',
+        'templates/financing.php',
+        'templates/home.php',
+        'templates/services.php'
+    );
+
+    if (in_array($template, $template_pages)) {
+        return false;
+    }
+
+    return $can_edit;
+}
+add_filter('use_block_editor_for_post_type', 'wades_disable_gutenberg', 10, 2);
+
+/**
+ * Remove the content editor from template pages
+ */
+function wades_remove_content_editor() {
+    if (isset($_GET['post'])) {
+        $post_id = $_GET['post'];
+    } else if (isset($_POST['post_ID'])) {
+        $post_id = $_POST['post_ID'];
+    } else {
+        return;
+    }
+
+    if (!isset($post_id)) {
+        return;
+    }
+
+    $template = get_page_template_slug($post_id);
+    $template_pages = array(
+        'templates/boats.php',
+        'templates/about.php',
+        'templates/blog.php',
+        'templates/contact.php',
+        'templates/financing.php',
+        'templates/home.php',
+        'templates/services.php'
+    );
+
+    if (in_array($template, $template_pages)) {
+        remove_post_type_support('page', 'editor');
+    }
+}
+add_action('admin_init', 'wades_remove_content_editor');
+
+/**
+ * Add notice to template pages about using meta boxes
+ */
+function wades_template_admin_notice() {
+    $screen = get_current_screen();
+    if ($screen->id !== 'page') {
+        return;
+    }
+
+    if (isset($_GET['post'])) {
+        $post_id = $_GET['post'];
+    } else if (isset($_POST['post_ID'])) {
+        $post_id = $_POST['post_ID'];
+    } else {
+        return;
+    }
+
+    $template = get_page_template_slug($post_id);
+    $template_pages = array(
+        'templates/boats.php',
+        'templates/about.php',
+        'templates/blog.php',
+        'templates/contact.php',
+        'templates/financing.php',
+        'templates/home.php',
+        'templates/services.php'
+    );
+
+    if (in_array($template, $template_pages)) {
+        $template_name = ucfirst(str_replace(array('templates/', '.php'), '', $template));
+        echo '<div class="notice notice-info">
+            <p><strong>' . $template_name . ' Template:</strong> This page uses a custom template. Please use the settings below to customize the content.</p>
+        </div>';
+    }
+}
+add_action('admin_notices', 'wades_template_admin_notice');
+
+// Check and fix template assignments
+function wades_check_template_assignments() {
+    $services_page = get_page_by_path('services');
+    if ($services_page) {
+        $template = get_post_meta($services_page->ID, '_wp_page_template', true);
+        wades_debug_log('Services page template: ' . $template);
+        
+        // If template is not set or incorrect, set it
+        if (empty($template) || $template !== 'templates/services.php') {
+            update_post_meta($services_page->ID, '_wp_page_template', 'templates/services.php');
+            wades_debug_log('Updated services page template');
+        }
+    } else {
+        wades_debug_log('Services page not found');
+    }
+}
+add_action('init', 'wades_check_template_assignments', 1);
+
+// Prevent template conflicts
+function wades_prevent_template_conflicts($template) {
+    global $post;
+    
+    if (!$post) {
+        return $template;
+    }
+    
+    // Check if we're on the services page
+    if ($post->post_name === 'services') {
+        $services_template = get_template_directory() . '/templates/services.php';
+        if (file_exists($services_template)) {
+            wades_debug_log('Forcing services template for services page');
+            return $services_template;
+        }
+    }
+    
+    return $template;
+}
+add_filter('template_include', 'wades_prevent_template_conflicts', 100);
+
+// Remove all previous template handling code
+remove_all_filters('template_include');
+remove_all_filters('page_template');
+remove_all_filters('single_template');
+remove_all_filters('archive_template');
+remove_all_filters('category_template');
+remove_all_filters('home_template');
+remove_all_filters('frontpage_template');
+remove_all_filters('index_template');
+
+// Handle services page directly
+add_action('parse_request', function($wp) {
+    // Check if this is the services page
+    if (isset($wp->request) && $wp->request === 'services') {
+        // Force this to be treated as a page
+        $wp->query_vars['post_type'] = 'page';
+        $wp->query_vars['pagename'] = 'services';
+        
+        // Remove any blog-related query vars
+        unset($wp->query_vars['post_type']);
+        unset($wp->query_vars['name']);
+        unset($wp->query_vars['category_name']);
+        unset($wp->query_vars['feed']);
+        unset($wp->query_vars['author']);
+        unset($wp->query_vars['withcomments']);
+        unset($wp->query_vars['withoutcomments']);
+        unset($wp->query_vars['year']);
+        unset($wp->query_vars['monthnum']);
+        unset($wp->query_vars['day']);
+        unset($wp->query_vars['w']);
+        unset($wp->query_vars['tag']);
+        unset($wp->query_vars['cat']);
+    }
+}, 1);
+
+// Force services template
+add_action('template_redirect', function() {
+    global $wp_query;
+    
+    // Check if this is the services page
+    if (isset($wp_query->query['pagename']) && $wp_query->query['pagename'] === 'services') {
+        // Force this to be a page
+        $wp_query->is_home = false;
+        $wp_query->is_archive = false;
+        $wp_query->is_category = false;
+        $wp_query->is_tag = false;
+        $wp_query->is_tax = false;
+        $wp_query->is_page = true;
+        $wp_query->is_single = false;
+        
+        // Load the services template
+        $template = get_template_directory() . '/templates/services.php';
+        if (file_exists($template)) {
+            include($template);
+            exit;
+        }
+    }
+}, 0);
+
+// Prevent any redirects
+add_filter('redirect_canonical', function($redirect_url, $requested_url) {
+    if (strpos($requested_url, '/services') !== false) {
+        return false;
+    }
+    return $redirect_url;
+}, 10, 2);
+
+// Register services template
+add_filter('theme_page_templates', function($templates) {
+    $templates['templates/services.php'] = 'Services Template';
+    return $templates;
+}, 20);
+
+/**
+ * Custom comment callback
+ */
+function wades_comment_callback($comment, $args, $depth) {
+    $tag = ($args['style'] === 'div') ? 'div' : 'li';
+    ?>
+    <<?php echo $tag; ?> id="comment-<?php comment_ID(); ?>" <?php comment_class(empty($args['has_children']) ? '' : 'parent'); ?>>
+        <article id="div-comment-<?php comment_ID(); ?>" class="comment-body">
+            <footer class="comment-meta">
+                <div class="comment-author vcard">
+                    <?php
+                    if ($args['avatar_size'] != 0) {
+                        echo get_avatar($comment, $args['avatar_size']);
+                    }
+                    printf('<b class="fn">%s</b>', get_comment_author_link());
+                    ?>
+                </div>
+
+                <div class="comment-metadata">
+                    <time datetime="<?php comment_time('c'); ?>">
+                        <?php
+                        printf(
+                            _x('%1$s at %2$s', '1: date, 2: time'),
+                            get_comment_date(),
+                            get_comment_time()
+                        );
+                        ?>
+                    </time>
+                    <?php edit_comment_link(__('Edit'), ' <span class="edit-link">', '</span>'); ?>
+                </div>
+
+                <?php if ($comment->comment_approved == '0') : ?>
+                    <em class="comment-awaiting-moderation"><?php _e('Your comment is awaiting moderation.'); ?></em>
+                <?php endif; ?>
+            </footer>
+
+            <div class="comment-content">
+                <?php comment_text(); ?>
+            </div>
+
+            <div class="reply">
+                <?php
+                comment_reply_link(array_merge($args, array(
+                    'add_below' => 'div-comment',
+                    'depth'     => $depth,
+                    'max_depth' => $args['max_depth']
+                )));
+                ?>
+            </div>
+        </article>
+    <?php
+}
+
+// Add comment styles
+function wades_comment_styles() {
+    if (is_singular() && comments_open() && get_option('thread_comments')) {
+        wp_enqueue_style('wades-comments', get_template_directory_uri() . '/assets/css/comments.css', array(), _S_VERSION);
+    }
+}
+add_action('wp_enqueue_scripts', 'wades_comment_styles');
 

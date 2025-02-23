@@ -1,500 +1,301 @@
 <?php
 /**
- * Meta Boxes for Contact Template
+ * Custom Meta Boxes for Contact Page Template
  */
 
 if (!defined('ABSPATH')) {
-    exit;
+    exit; // Exit if accessed directly
 }
 
 /**
  * Add meta boxes for Contact template
  */
-function wades_contact_meta_boxes() {
-    // Only add meta boxes on page edit screen
-    if (!is_admin()) {
+function wades_add_contact_meta_boxes() {
+    // Get current screen
+    $screen = get_current_screen();
+    if (!$screen || $screen->id !== 'page') {
         return;
     }
 
-    global $post;
-    if (!$post) {
+    // Get current template
+    $template = get_page_template_slug();
+    
+    // Only add these meta boxes for the contact template
+    if ($template !== 'templates/contact.php') {
         return;
     }
 
-    // Check if we're on a page and using the contact template
-    if (get_post_type($post) === 'page') {
-        $template = get_page_template_slug($post->ID);
-        
-        if ($template === 'templates/contact.php' || basename($template) === 'contact.php') {
-            add_meta_box(
-                'contact_content',
-                'Contact Page Content',
-                'wades_contact_content_callback',
-                'page',
-                'normal',
-                'high'
-            );
-        }
-    }
+    add_meta_box(
+        'wades_contact_settings',
+        'Page Settings',
+        'wades_contact_settings_callback',
+        'page',
+        'normal',
+        'high'
+    );
 }
-add_action('add_meta_boxes', 'wades_contact_meta_boxes');
+add_action('add_meta_boxes', 'wades_add_contact_meta_boxes', 1);
 
 /**
  * Contact Content Meta Box Callback
  */
-function wades_contact_content_callback($post) {
+function wades_contact_settings_callback($post) {
     wp_nonce_field('wades_contact_meta', 'wades_contact_meta_nonce');
 
-    $meta = array(
-        // Hero Section
-        'contact_title' => get_post_meta($post->ID, '_contact_title', true) ?: 'Get in Touch',
-        'contact_subtitle' => get_post_meta($post->ID, '_contact_subtitle', true) ?: 'We\'re here to help with all your boating needs',
-        'hero_background' => get_post_meta($post->ID, '_hero_background', true),
-        
-        // Contact Cards
-        'contact_cards' => get_post_meta($post->ID, '_contact_cards', true) ?: array(
-            array(
-                'icon' => 'ship',
-                'title' => 'Sales Department',
-                'description' => 'Find your perfect boat',
-                'contact' => 'sales@impactmarinegroup.com',
-                'type' => 'email'
-            ),
-            array(
-                'icon' => 'wrench',
-                'title' => 'Service Department',
-                'description' => 'Expert boat maintenance & repairs',
-                'contact' => 'service@impactmarinegroup.com',
-                'type' => 'email'
-            ),
-            array(
-                'icon' => 'map-pin',
-                'title' => 'Visit Our Showroom',
-                'description' => '5185 Browns Bridge Rd, Cumming, GA',
-                'link_text' => 'Get Directions',
-                'href' => 'https://maps.google.com/?q=5185+Browns+Bridge+Rd+Cumming+GA',
-                'type' => 'location'
-            ),
-            array(
-                'icon' => 'phone',
-                'title' => 'Call Us Today',
-                'description' => 'Mon-Fri from 8am to 5pm',
-                'contacts' => array(
-                    array('label' => 'Sales', 'number' => '(770) 881-7808'),
-                    array('label' => 'Service', 'number' => '(770) 881-7809')
-                ),
-                'type' => 'phone'
-            )
-        ),
-        
-        // Form Settings
-        'form_settings' => get_post_meta($post->ID, '_form_settings', true) ?: array(
-            'recipient_email' => get_option('admin_email'),
-            'success_message' => 'Thank you for your message. Our team will get back to you within 24 hours.',
-            'error_message' => 'Sorry, there was a problem sending your message. Please try again or contact us directly.',
-            'required_fields' => array('name', 'email', 'phone', 'message')
-        ),
-        
-        // FAQ Section
-        'faqs' => get_post_meta($post->ID, '_faqs', true) ?: array(
-            array(
-                'icon' => 'clock',
-                'question' => 'What are your business hours?',
-                'answer' => 'Our showroom and service department are open Monday through Friday from 8am to 5pm. We\'re closed on major holidays.'
-            ),
-            array(
-                'icon' => 'map',
-                'question' => 'Where are you located?',
-                'answer' => 'We\'re conveniently located at 5185 Browns Bridge Rd in Cumming, GA. Our facility is easily accessible from GA-400.'
-            ),
-            array(
-                'icon' => 'calendar',
-                'question' => 'Do I need an appointment?',
-                'answer' => 'While walk-ins are welcome for our showroom, we recommend scheduling appointments for service work and boat viewings to ensure the best possible experience.'
-            ),
-            array(
-                'icon' => 'truck',
-                'question' => 'Do you offer mobile service?',
-                'answer' => 'Yes, we offer mobile service for many maintenance and repair needs. Contact our service department to discuss your specific requirements.'
-            ),
-            array(
-                'icon' => 'credit-card',
-                'question' => 'What payment methods do you accept?',
-                'answer' => 'We accept all major credit cards, cash, and certified checks. We also offer various financing options through our trusted lending partners.'
-            ),
-            array(
-                'icon' => 'life-buoy',
-                'question' => 'Do you offer emergency service?',
-                'answer' => 'Yes, we provide emergency service assistance during business hours. For after-hours emergencies, please call our service hotline.'
-            )
-        ),
-        
-        // Layout Options
-        'sections_visibility' => get_post_meta($post->ID, '_sections_visibility', true) ?: array(
-            'hero' => '1',
-            'contact_cards' => '1',
-            'form' => '1',
-            'faqs' => '1'
-        ),
-        'section_order' => get_post_meta($post->ID, '_section_order', true) ?: 'hero,contact_cards,form,faqs'
+    // Render the shared header fields
+    wades_render_header_fields($post);
+}
+
+// Add content for the Content tab
+add_action('wades_meta_box_content_tab', 'wades_contact_content_tab');
+function wades_contact_content_tab($post) {
+    // Get contact form settings
+    $form_settings = array(
+        'form_title' => get_post_meta($post->ID, '_contact_form_title', true) ?: 'Get in Touch',
+        'form_description' => get_post_meta($post->ID, '_contact_form_description', true) ?: 'Have a question about our boats or services? We\'re here to help! Fill out the form below and our team will get back to you promptly.',
+        'success_message' => get_post_meta($post->ID, '_contact_success_message', true) ?: 'Thank you for reaching out! Our team will get back to you within 24 hours.',
+        'recipient_email' => get_post_meta($post->ID, '_contact_recipient_email', true) ?: get_option('admin_email')
     );
+
+    // Get location information with defaults
+    $location = array(
+        'address' => get_post_meta($post->ID, '_contact_address', true) ?: "5185 Browns Bridge Rd\nCumming, GA 30041",
+        'phone' => get_post_meta($post->ID, '_contact_phone', true) ?: '(770) 881-7808',
+        'email' => get_post_meta($post->ID, '_contact_email', true) ?: 'info@impactmarinegroup.com',
+        'hours' => get_post_meta($post->ID, '_contact_hours', true) ?: "Monday - Friday: 8:00 AM - 5:00 PM\nSaturday: By Appointment\nSunday: Closed",
+        'map_embed' => get_post_meta($post->ID, '_contact_map_embed', true) ?: '<iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3305.7168559858897!2d-84.09678492432373!3d34.22759127220751!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x88f59fb0c3ff6e7d%3A0x3b1e388da1e435c4!2s5185%20Browns%20Bridge%20Rd%2C%20Cumming%2C%20GA%2030041!5e0!3m2!1sen!2sus!4v1709254559083!5m2!1sen!2sus" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>'
+    );
+
+    // Get social media links with defaults
+    $default_social = array(
+        array(
+            'platform' => 'facebook',
+            'url' => 'https://www.facebook.com/ImpactMarineGroup'
+        ),
+        array(
+            'platform' => 'instagram',
+            'url' => 'https://www.instagram.com/impactmarinegroup'
+        )
+    );
+    $social_media = get_post_meta($post->ID, '_contact_social_media', true) ?: $default_social;
     ?>
-    <div class="contact-meta-box">
-        <div class="meta-box-tabs">
-            <button type="button" class="tab-button active" data-tab="hero">Hero</button>
-            <button type="button" class="tab-button" data-tab="cards">Contact Cards</button>
-            <button type="button" class="tab-button" data-tab="form">Form Settings</button>
-            <button type="button" class="tab-button" data-tab="faqs">FAQs</button>
-            <button type="button" class="tab-button" data-tab="layout">Layout</button>
+    <div class="wades-meta-section">
+        <h3>Contact Form Settings</h3>
+        <div class="wades-meta-field">
+            <label for="contact_form_title">Form Title:</label>
+            <input type="text" id="contact_form_title" name="contact_form_title" 
+                   value="<?php echo esc_attr($form_settings['form_title']); ?>" class="widefat">
         </div>
-
-        <!-- Hero Tab -->
-        <div class="tab-content active" data-tab="hero">
-            <div class="meta-box-section">
-                <h3>Hero Section</h3>
-                <p>
-                    <label for="contact_title">Page Title:</label><br>
-                    <input type="text" id="contact_title" name="contact_title" value="<?php echo esc_attr($meta['contact_title']); ?>" class="widefat">
-                </p>
-                <p>
-                    <label for="contact_subtitle">Subtitle:</label><br>
-                    <input type="text" id="contact_subtitle" name="contact_subtitle" value="<?php echo esc_attr($meta['contact_subtitle']); ?>" class="widefat">
-                </p>
-                <p>
-                    <label>Hero Background Image:</label><br>
-                    <input type="hidden" name="hero_background" value="<?php echo esc_attr($meta['hero_background']); ?>" class="widefat">
-                    <button type="button" class="button upload-image">Upload Image</button>
-                    <div class="image-preview">
-                        <?php if ($meta['hero_background']) : ?>
-                            <?php echo wp_get_attachment_image($meta['hero_background'], 'thumbnail'); ?>
-                        <?php endif; ?>
-                    </div>
-                </p>
-            </div>
+        <div class="wades-meta-field">
+            <label for="contact_form_description">Form Description:</label>
+            <textarea id="contact_form_description" name="contact_form_description" 
+                      rows="3" class="widefat"><?php echo esc_textarea($form_settings['form_description']); ?></textarea>
         </div>
-
-        <!-- Contact Cards Tab -->
-        <div class="tab-content" data-tab="cards">
-            <div class="meta-box-section">
-                <h3>Contact Cards</h3>
-                <div class="contact-cards-list">
-                    <?php foreach ($meta['contact_cards'] as $index => $card) : ?>
-                        <div class="card">
-                            <div class="card-header">
-                                <h4>Contact Card <?php echo $index + 1; ?></h4>
-                                <button type="button" class="button remove-card">Remove</button>
-                            </div>
-                            <div class="card-body">
-                                <p>
-                                    <label>Icon (Lucide icon name):</label><br>
-                                    <input type="text" name="contact_cards[<?php echo $index; ?>][icon]" value="<?php echo esc_attr($card['icon']); ?>" class="widefat">
-                                </p>
-                                <p>
-                                    <label>Title:</label><br>
-                                    <input type="text" name="contact_cards[<?php echo $index; ?>][title]" value="<?php echo esc_attr($card['title']); ?>" class="widefat">
-                                </p>
-                                <p>
-                                    <label>Description:</label><br>
-                                    <input type="text" name="contact_cards[<?php echo $index; ?>][description]" value="<?php echo esc_attr($card['description']); ?>" class="widefat">
-                                </p>
-                                <p>
-                                    <label>Type:</label><br>
-                                    <select name="contact_cards[<?php echo $index; ?>][type]" class="widefat card-type-select">
-                                        <option value="email" <?php selected($card['type'], 'email'); ?>>Email</option>
-                                        <option value="phone" <?php selected($card['type'], 'phone'); ?>>Phone</option>
-                                        <option value="location" <?php selected($card['type'], 'location'); ?>>Location</option>
-                                    </select>
-                                </p>
-                                
-                                <div class="card-type-fields email-fields" <?php echo $card['type'] === 'email' ? '' : 'style="display:none;"'; ?>>
-                                    <p>
-                                        <label>Email Address:</label><br>
-                                        <input type="email" name="contact_cards[<?php echo $index; ?>][contact]" value="<?php echo esc_attr($card['contact'] ?? ''); ?>" class="widefat">
-                                    </p>
-                                </div>
-
-                                <div class="card-type-fields location-fields" <?php echo $card['type'] === 'location' ? '' : 'style="display:none;"'; ?>>
-                                    <p>
-                                        <label>Link Text:</label><br>
-                                        <input type="text" name="contact_cards[<?php echo $index; ?>][link_text]" value="<?php echo esc_attr($card['link_text'] ?? ''); ?>" class="widefat">
-                                    </p>
-                                    <p>
-                                        <label>Map URL:</label><br>
-                                        <input type="url" name="contact_cards[<?php echo $index; ?>][href]" value="<?php echo esc_url($card['href'] ?? ''); ?>" class="widefat">
-                                    </p>
-                                </div>
-
-                                <div class="card-type-fields phone-fields" <?php echo $card['type'] === 'phone' ? '' : 'style="display:none;"'; ?>>
-                                    <div class="phone-numbers">
-                                        <?php if (isset($card['contacts']) && is_array($card['contacts'])) : ?>
-                                            <?php foreach ($card['contacts'] as $phone_index => $phone) : ?>
-                                                <div class="phone-number">
-                                                    <p>
-                                                        <label>Label:</label><br>
-                                                        <input type="text" name="contact_cards[<?php echo $index; ?>][contacts][<?php echo $phone_index; ?>][label]" value="<?php echo esc_attr($phone['label']); ?>" class="widefat">
-                                                    </p>
-                                                    <p>
-                                                        <label>Number:</label><br>
-                                                        <input type="text" name="contact_cards[<?php echo $index; ?>][contacts][<?php echo $phone_index; ?>][number]" value="<?php echo esc_attr($phone['number']); ?>" class="widefat">
-                                                    </p>
-                                                    <button type="button" class="button remove-phone">Remove</button>
-                                                </div>
-                                            <?php endforeach; ?>
-                                        <?php endif; ?>
-                                    </div>
-                                    <button type="button" class="button add-phone">Add Phone Number</button>
-                                </div>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-                <button type="button" class="button add-card">Add Contact Card</button>
-            </div>
+        <div class="wades-meta-field">
+            <label for="contact_success_message">Success Message:</label>
+            <textarea id="contact_success_message" name="contact_success_message" 
+                      rows="2" class="widefat"><?php echo esc_textarea($form_settings['success_message']); ?></textarea>
         </div>
-
-        <!-- Form Settings Tab -->
-        <div class="tab-content" data-tab="form">
-            <div class="meta-box-section">
-                <h3>Form Configuration</h3>
-                <p>
-                    <label for="recipient_email">Recipient Email:</label><br>
-                    <input type="email" id="recipient_email" name="form_settings[recipient_email]" value="<?php echo esc_attr($meta['form_settings']['recipient_email']); ?>" class="widefat">
-                </p>
-                <p>
-                    <label for="success_message">Success Message:</label><br>
-                    <input type="text" id="success_message" name="form_settings[success_message]" value="<?php echo esc_attr($meta['form_settings']['success_message']); ?>" class="widefat">
-                </p>
-                <p>
-                    <label for="error_message">Error Message:</label><br>
-                    <input type="text" id="error_message" name="form_settings[error_message]" value="<?php echo esc_attr($meta['form_settings']['error_message']); ?>" class="widefat">
-                </p>
-            </div>
-
-            <div class="meta-box-section">
-                <h3>Required Fields</h3>
-                <p>
-                    <label>
-                        <input type="checkbox" name="form_settings[required_fields][]" value="name" <?php checked(in_array('name', $meta['form_settings']['required_fields'])); ?>>
-                        Name
-                    </label>
-                </p>
-                <p>
-                    <label>
-                        <input type="checkbox" name="form_settings[required_fields][]" value="email" <?php checked(in_array('email', $meta['form_settings']['required_fields'])); ?>>
-                        Email
-                    </label>
-                </p>
-                <p>
-                    <label>
-                        <input type="checkbox" name="form_settings[required_fields][]" value="phone" <?php checked(in_array('phone', $meta['form_settings']['required_fields'])); ?>>
-                        Phone
-                    </label>
-                </p>
-                <p>
-                    <label>
-                        <input type="checkbox" name="form_settings[required_fields][]" value="message" <?php checked(in_array('message', $meta['form_settings']['required_fields'])); ?>>
-                        Message
-                    </label>
-                </p>
-            </div>
-        </div>
-
-        <!-- FAQs Tab -->
-        <div class="tab-content" data-tab="faqs">
-            <div class="meta-box-section">
-                <h3>Frequently Asked Questions</h3>
-                <div class="faqs-list">
-                    <?php foreach ($meta['faqs'] as $index => $faq) : ?>
-                        <div class="card">
-                            <div class="card-header">
-                                <h4>FAQ <?php echo $index + 1; ?></h4>
-                                <button type="button" class="button remove-faq">Remove</button>
-                            </div>
-                            <div class="card-body">
-                                <p>
-                                    <label>Icon (Lucide icon name):</label><br>
-                                    <input type="text" name="faqs[<?php echo $index; ?>][icon]" value="<?php echo esc_attr($faq['icon']); ?>" class="widefat">
-                                </p>
-                                <p>
-                                    <label>Question:</label><br>
-                                    <input type="text" name="faqs[<?php echo $index; ?>][question]" value="<?php echo esc_attr($faq['question']); ?>" class="widefat">
-                                </p>
-                                <p>
-                                    <label>Answer:</label><br>
-                                    <textarea name="faqs[<?php echo $index; ?>][answer]" rows="3" class="widefat"><?php echo esc_textarea($faq['answer']); ?></textarea>
-                                </p>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-                <button type="button" class="button add-faq">Add FAQ</button>
-            </div>
-        </div>
-
-        <!-- Layout Tab -->
-        <div class="tab-content" data-tab="layout">
-            <div class="meta-box-section">
-                <h3>Section Visibility</h3>
-                <p>
-                    <label>
-                        <input type="checkbox" name="sections_visibility[hero]" value="1" <?php checked($meta['sections_visibility']['hero'], '1'); ?>>
-                        Show Hero Section
-                    </label>
-                </p>
-                <p>
-                    <label>
-                        <input type="checkbox" name="sections_visibility[contact_cards]" value="1" <?php checked($meta['sections_visibility']['contact_cards'], '1'); ?>>
-                        Show Contact Cards
-                    </label>
-                </p>
-                <p>
-                    <label>
-                        <input type="checkbox" name="sections_visibility[form]" value="1" <?php checked($meta['sections_visibility']['form'], '1'); ?>>
-                        Show Contact Form
-                    </label>
-                </p>
-                <p>
-                    <label>
-                        <input type="checkbox" name="sections_visibility[faqs]" value="1" <?php checked($meta['sections_visibility']['faqs'], '1'); ?>>
-                        Show FAQs Section
-                    </label>
-                </p>
-            </div>
-
-            <div class="meta-box-section">
-                <h3>Section Order</h3>
-                <p class="description">Drag and drop sections to reorder them on the page.</p>
-                <ul id="section-order" class="section-order-list">
-                    <?php
-                    $sections = explode(',', $meta['section_order']);
-                    $section_labels = array(
-                        'hero' => 'Hero Section',
-                        'contact_cards' => 'Contact Cards',
-                        'form' => 'Contact Form',
-                        'faqs' => 'FAQs Section'
-                    );
-                    foreach ($sections as $section) :
-                        if (isset($section_labels[$section])) :
-                    ?>
-                        <li data-section="<?php echo esc_attr($section); ?>">
-                            <i class="dashicons dashicons-menu"></i>
-                            <?php echo esc_html($section_labels[$section]); ?>
-                        </li>
-                    <?php
-                        endif;
-                    endforeach;
-                    ?>
-                </ul>
-                <input type="hidden" name="section_order" id="section-order-input" value="<?php echo esc_attr($meta['section_order']); ?>">
-            </div>
+        <div class="wades-meta-field">
+            <label for="contact_recipient_email">Recipient Email:</label>
+            <input type="email" id="contact_recipient_email" name="contact_recipient_email" 
+                   value="<?php echo esc_attr($form_settings['recipient_email']); ?>" class="widefat">
+            <p class="description">Email address where contact form submissions will be sent.</p>
         </div>
     </div>
 
-    <style>
-        <?php include get_template_directory() . '/inc/meta-boxes/meta-box-styles.css'; ?>
-    </style>
+    <div class="wades-meta-section">
+        <h3>Location Information</h3>
+        <div class="wades-meta-field">
+            <label for="contact_address">Address:</label>
+            <textarea id="contact_address" name="contact_address" 
+                      rows="3" class="widefat"><?php echo esc_textarea($location['address']); ?></textarea>
+        </div>
+        <div class="wades-meta-field">
+            <label for="contact_phone">Phone:</label>
+            <input type="text" id="contact_phone" name="contact_phone" 
+                   value="<?php echo esc_attr($location['phone']); ?>" class="widefat">
+        </div>
+        <div class="wades-meta-field">
+            <label for="contact_email">Email:</label>
+            <input type="email" id="contact_email" name="contact_email" 
+                   value="<?php echo esc_attr($location['email']); ?>" class="widefat">
+        </div>
+        <div class="wades-meta-field">
+            <label for="contact_hours">Business Hours:</label>
+            <textarea id="contact_hours" name="contact_hours" 
+                      rows="3" class="widefat"><?php echo esc_textarea($location['hours']); ?></textarea>
+            <p class="description">Enter each line of hours (e.g., "Monday - Friday: 9am - 5pm")</p>
+        </div>
+        <div class="wades-meta-field">
+            <label for="contact_map_embed">Google Maps Embed Code:</label>
+            <textarea id="contact_map_embed" name="contact_map_embed" 
+                      rows="4" class="widefat"><?php echo esc_textarea($location['map_embed']); ?></textarea>
+            <p class="description">Paste the Google Maps embed code here.</p>
+        </div>
+    </div>
+
+    <div class="wades-meta-section">
+        <h3>Social Media Links</h3>
+        <div class="social-media-list">
+            <?php
+            if (empty($social_media)) {
+                $social_media = array(array('platform' => '', 'url' => ''));
+            }
+            foreach ($social_media as $index => $social) :
+            ?>
+                <div class="social-media-item" style="margin-bottom: 10px;">
+                    <div class="wades-meta-field" style="display: flex; gap: 10px;">
+                        <select name="social_media[<?php echo $index; ?>][platform]" style="width: 150px;">
+                            <option value="">Select Platform</option>
+                            <option value="facebook" <?php selected($social['platform'], 'facebook'); ?>>Facebook</option>
+                            <option value="twitter" <?php selected($social['platform'], 'twitter'); ?>>Twitter</option>
+                            <option value="instagram" <?php selected($social['platform'], 'instagram'); ?>>Instagram</option>
+                            <option value="linkedin" <?php selected($social['platform'], 'linkedin'); ?>>LinkedIn</option>
+                            <option value="youtube" <?php selected($social['platform'], 'youtube'); ?>>YouTube</option>
+                        </select>
+                        <input type="url" name="social_media[<?php echo $index; ?>][url]" 
+                               value="<?php echo esc_url($social['url']); ?>" 
+                               placeholder="https://" class="widefat">
+                        <button type="button" class="button remove-social-media">Remove</button>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+        <button type="button" class="button add-social-media">Add Social Media Link</button>
+    </div>
 
     <script>
     jQuery(document).ready(function($) {
-        // Tab functionality
-        $('.tab-button').on('click', function() {
-            $('.tab-button').removeClass('active');
-            $('.tab-content').removeClass('active');
-            $(this).addClass('active');
-            $('.tab-content[data-tab="' + $(this).data('tab') + '"]').addClass('active');
+        // Add social media link
+        $('.add-social-media').on('click', function() {
+            var index = $('.social-media-item').length;
+            var template = `
+                <div class="social-media-item" style="margin-bottom: 10px;">
+                    <div class="wades-meta-field" style="display: flex; gap: 10px;">
+                        <select name="social_media[${index}][platform]" style="width: 150px;">
+                            <option value="">Select Platform</option>
+                            <option value="facebook">Facebook</option>
+                            <option value="twitter">Twitter</option>
+                            <option value="instagram">Instagram</option>
+                            <option value="linkedin">LinkedIn</option>
+                            <option value="youtube">YouTube</option>
+                        </select>
+                        <input type="url" name="social_media[${index}][url]" 
+                               placeholder="https://" class="widefat">
+                        <button type="button" class="button remove-social-media">Remove</button>
+                    </div>
+                </div>
+            `;
+            $('.social-media-list').append(template);
         });
 
-        // Section order sorting
-        $('#section-order').sortable({
-            handle: '.dashicons-menu',
-            update: function() {
-                var order = [];
-                $('#section-order li').each(function() {
-                    order.push($(this).data('section'));
+        // Remove social media link
+        $(document).on('click', '.remove-social-media', function() {
+            $(this).closest('.social-media-item').remove();
+            // Update indices
+            $('.social-media-item').each(function(index) {
+                $(this).find('select, input').each(function() {
+                    var name = $(this).attr('name');
+                    $(this).attr('name', name.replace(/\[\d+\]/, '[' + index + ']'));
                 });
-                $('#section-order-input').val(order.join(','));
-            }
-        });
-
-        // Contact card type toggle
-        $(document).on('change', '.card-type-select', function() {
-            var $card = $(this).closest('.card-body');
-            $card.find('.card-type-fields').hide();
-            $card.find('.' + $(this).val() + '-fields').show();
-        });
-
-        // Add contact card
-        $('.add-card').on('click', function() {
-            var index = $('.contact-cards-list .card').length;
-            var template = `
-                <div class="card">
-                    <div class="card-header">
-                        <h4>Contact Card ${index + 1}</h4>
-                        <button type="button" class="button remove-card">Remove</button>
-                    </div>
-                    <div class="card-body">
-                        <!-- Card fields template -->
-                    </div>
-                </div>
-            `;
-            $('.contact-cards-list').append(template);
-        });
-
-        // Remove contact card
-        $(document).on('click', '.remove-card', function() {
-            $(this).closest('.card').remove();
-        });
-
-        // Add FAQ
-        $('.add-faq').on('click', function() {
-            var index = $('.faqs-list .card').length;
-            var template = `
-                <div class="card">
-                    <div class="card-header">
-                        <h4>FAQ ${index + 1}</h4>
-                        <button type="button" class="button remove-faq">Remove</button>
-                    </div>
-                    <div class="card-body">
-                        <!-- FAQ fields template -->
-                    </div>
-                </div>
-            `;
-            $('.faqs-list').append(template);
-        });
-
-        // Remove FAQ
-        $(document).on('click', '.remove-faq', function() {
-            $(this).closest('.card').remove();
-        });
-
-        // Add phone number
-        $(document).on('click', '.add-phone', function() {
-            var $phoneNumbers = $(this).siblings('.phone-numbers');
-            var cardIndex = $(this).closest('.card').index();
-            var phoneIndex = $phoneNumbers.children().length;
-            
-            var template = `
-                <div class="phone-number">
-                    <p>
-                        <label>Label:</label><br>
-                        <input type="text" name="contact_cards[${cardIndex}][contacts][${phoneIndex}][label]" class="widefat">
-                    </p>
-                    <p>
-                        <label>Number:</label><br>
-                        <input type="text" name="contact_cards[${cardIndex}][contacts][${phoneIndex}][number]" class="widefat">
-                    </p>
-                    <button type="button" class="button remove-phone">Remove</button>
-                </div>
-            `;
-            $phoneNumbers.append(template);
-        });
-
-        // Remove phone number
-        $(document).on('click', '.remove-phone', function() {
-            $(this).closest('.phone-number').remove();
+            });
         });
     });
     </script>
+    <?php
+}
+
+// Add content for the Settings tab
+add_action('wades_meta_box_settings_tab', 'wades_contact_settings_tab');
+function wades_contact_settings_tab($post) {
+    // Get default subject options
+    $default_subjects = "Sales Inquiry\nService Request\nParts Order\nFinancing Question\nGeneral Information";
+    
+    // Get default SEO settings
+    $default_seo_title = "Contact Impact Marine Group | Boat Sales & Service in Cumming, GA";
+    $default_seo_description = "Contact Impact Marine Group for boat sales, service, and parts in Cumming, GA. Visit our showroom or reach out online. Expert assistance for all your boating needs.";
+
+    // Get layout settings with defaults
+    $spacing_top = get_post_meta($post->ID, '_content_spacing_top', true) ?: '96';
+    $spacing_bottom = get_post_meta($post->ID, '_content_spacing_bottom', true) ?: '96';
+    $content_width = get_post_meta($post->ID, '_content_max_width', true) ?: '7xl';
+    ?>
+    <div class="wades-meta-section">
+        <h3>Layout Settings</h3>
+        <div class="wades-meta-field">
+            <label for="content_spacing_top">Space After Header (px):</label>
+            <input type="number" id="content_spacing_top" name="content_spacing_top" 
+                   value="<?php echo esc_attr($spacing_top); ?>" class="small-text"
+                   min="0" max="200" step="8">
+            <p class="description">Amount of space between header and content (default: 96px)</p>
+        </div>
+        <div class="wades-meta-field">
+            <label for="content_spacing_bottom">Space Before Footer (px):</label>
+            <input type="number" id="content_spacing_bottom" name="content_spacing_bottom" 
+                   value="<?php echo esc_attr($spacing_bottom); ?>" class="small-text"
+                   min="0" max="200" step="8">
+            <p class="description">Amount of space between content and footer (default: 96px)</p>
+        </div>
+        <div class="wades-meta-field">
+            <label for="content_max_width">Content Width:</label>
+            <select id="content_max_width" name="content_max_width" class="regular-text">
+                <option value="5xl" <?php selected($content_width, '5xl'); ?>>Narrow (1024px)</option>
+                <option value="6xl" <?php selected($content_width, '6xl'); ?>>Medium (1152px)</option>
+                <option value="7xl" <?php selected($content_width, '7xl'); ?>>Wide (1280px)</option>
+                <option value="8xl" <?php selected($content_width, '8xl'); ?>>Extra Wide (1440px)</option>
+            </select>
+            <p class="description">Maximum width of the content area</p>
+        </div>
+    </div>
+
+    <div class="wades-meta-section">
+        <h3>Form Settings</h3>
+        <div class="wades-meta-field">
+            <label>
+                <input type="checkbox" name="contact_show_phone" 
+                       <?php checked(get_post_meta($post->ID, '_contact_show_phone', true) ?: '1', '1'); ?>>
+                Show phone field in contact form
+            </label>
+        </div>
+        <div class="wades-meta-field">
+            <label>
+                <input type="checkbox" name="contact_phone_required" 
+                       <?php checked(get_post_meta($post->ID, '_contact_phone_required', true) ?: '1', '1'); ?>>
+                Make phone field required
+            </label>
+        </div>
+        <div class="wades-meta-field">
+            <label>
+                <input type="checkbox" name="contact_show_subject" 
+                       <?php checked(get_post_meta($post->ID, '_contact_show_subject', true) ?: '1', '1'); ?>>
+                Show subject field in contact form
+            </label>
+        </div>
+        <div class="wades-meta-field">
+            <label for="contact_subject_options">Subject Options:</label>
+            <textarea id="contact_subject_options" name="contact_subject_options" 
+                      rows="4" class="widefat"><?php echo esc_textarea(get_post_meta($post->ID, '_contact_subject_options', true) ?: $default_subjects); ?></textarea>
+            <p class="description">Enter each subject option on a new line. Leave empty for free-form subject field.</p>
+        </div>
+    </div>
+
+    <div class="wades-meta-section">
+        <h3>SEO Settings</h3>
+        <div class="wades-meta-field">
+            <label for="seo_title">SEO Title:</label>
+            <input type="text" id="seo_title" name="seo_title" 
+                   value="<?php echo esc_attr(get_post_meta($post->ID, '_seo_title', true) ?: $default_seo_title); ?>" 
+                   class="widefat">
+            <p class="description">Custom title for search engines. Leave empty to use the default page title.</p>
+        </div>
+        <div class="wades-meta-field">
+            <label for="seo_description">SEO Description:</label>
+            <textarea id="seo_description" name="seo_description" 
+                      rows="3" class="widefat"><?php echo esc_textarea(get_post_meta($post->ID, '_seo_description', true) ?: $default_seo_description); ?></textarea>
+            <p class="description">Custom description for search engines.</p>
+        </div>
+    </div>
     <?php
 }
 
@@ -502,117 +303,103 @@ function wades_contact_content_callback($post) {
  * Save Contact Meta Box Data
  */
 function wades_save_contact_meta($post_id) {
+    // Check if our nonce is set
     if (!isset($_POST['wades_contact_meta_nonce'])) {
         return;
     }
 
+    // Verify that the nonce is valid
     if (!wp_verify_nonce($_POST['wades_contact_meta_nonce'], 'wades_contact_meta')) {
         return;
     }
 
+    // If this is an autosave, our form has not been submitted, so we don't want to do anything
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
         return;
     }
 
+    // Check the user's permissions
     if (!current_user_can('edit_post', $post_id)) {
         return;
     }
 
-    // Save text fields
-    $text_fields = array(
-        'contact_title',
-        'contact_subtitle'
+    // Save form settings
+    $form_fields = array(
+        'contact_form_title' => 'sanitize_text_field',
+        'contact_form_description' => 'wp_kses_post',
+        'contact_success_message' => 'wp_kses_post',
+        'contact_recipient_email' => 'sanitize_email'
     );
 
-    foreach ($text_fields as $field) {
+    foreach ($form_fields as $field => $sanitize_callback) {
         if (isset($_POST[$field])) {
-            update_post_meta($post_id, '_' . $field, sanitize_text_field($_POST[$field]));
+            update_post_meta($post_id, '_' . $field, $sanitize_callback($_POST[$field]));
         }
     }
 
-    // Save contact cards
-    if (isset($_POST['contact_cards']) && is_array($_POST['contact_cards'])) {
-        $cards = array();
-        foreach ($_POST['contact_cards'] as $card) {
-            if (!empty($card['title'])) {
-                $sanitized_card = array(
-                    'icon' => sanitize_text_field($card['icon']),
-                    'title' => sanitize_text_field($card['title']),
-                    'description' => sanitize_text_field($card['description']),
-                    'type' => sanitize_text_field($card['type'])
+    // Save location information
+    $location_fields = array(
+        'contact_address' => 'wp_kses_post',
+        'contact_phone' => 'sanitize_text_field',
+        'contact_email' => 'sanitize_email',
+        'contact_hours' => 'wp_kses_post',
+        'contact_map_embed' => 'wp_kses_post'
+    );
+
+    foreach ($location_fields as $field => $sanitize_callback) {
+        if (isset($_POST[$field])) {
+            update_post_meta($post_id, '_' . $field, $sanitize_callback($_POST[$field]));
+        }
+    }
+
+    // Save social media links
+    if (isset($_POST['social_media']) && is_array($_POST['social_media'])) {
+        $social_media = array();
+        foreach ($_POST['social_media'] as $social) {
+            if (!empty($social['platform']) && !empty($social['url'])) {
+                $social_media[] = array(
+                    'platform' => sanitize_text_field($social['platform']),
+                    'url' => esc_url_raw($social['url'])
                 );
-
-                // Add type-specific fields
-                switch ($card['type']) {
-                    case 'email':
-                        $sanitized_card['contact'] = sanitize_email($card['contact']);
-                        break;
-                    case 'location':
-                        $sanitized_card['link_text'] = sanitize_text_field($card['link_text']);
-                        $sanitized_card['href'] = esc_url_raw($card['href']);
-                        break;
-                    case 'phone':
-                        if (isset($card['contacts']) && is_array($card['contacts'])) {
-                            $sanitized_card['contacts'] = array();
-                            foreach ($card['contacts'] as $contact) {
-                                $sanitized_card['contacts'][] = array(
-                                    'label' => sanitize_text_field($contact['label']),
-                                    'number' => sanitize_text_field($contact['number'])
-                                );
-                            }
-                        }
-                        break;
-                }
-
-                $cards[] = $sanitized_card;
             }
         }
-        update_post_meta($post_id, '_contact_cards', $cards);
+        update_post_meta($post_id, '_contact_social_media', $social_media);
     }
 
     // Save form settings
-    if (isset($_POST['form_settings'])) {
-        $form_settings = array(
-            'recipient_email' => sanitize_email($_POST['form_settings']['recipient_email']),
-            'success_message' => sanitize_text_field($_POST['form_settings']['success_message']),
-            'error_message' => sanitize_text_field($_POST['form_settings']['error_message']),
-            'required_fields' => isset($_POST['form_settings']['required_fields']) ? array_map('sanitize_text_field', $_POST['form_settings']['required_fields']) : array()
-        );
-        update_post_meta($post_id, '_form_settings', $form_settings);
+    $checkbox_fields = array(
+        'contact_show_phone',
+        'contact_phone_required',
+        'contact_show_subject'
+    );
+
+    foreach ($checkbox_fields as $field) {
+        update_post_meta($post_id, '_' . $field, isset($_POST[$field]) ? '1' : '');
     }
 
-    // Save FAQs
-    if (isset($_POST['faqs']) && is_array($_POST['faqs'])) {
-        $faqs = array();
-        foreach ($_POST['faqs'] as $faq) {
-            if (!empty($faq['question'])) {
-                $faqs[] = array(
-                    'icon' => sanitize_text_field($faq['icon']),
-                    'question' => sanitize_text_field($faq['question']),
-                    'answer' => wp_kses_post($faq['answer'])
-                );
-            }
+    if (isset($_POST['contact_subject_options'])) {
+        update_post_meta($post_id, '_contact_subject_options', sanitize_textarea_field($_POST['contact_subject_options']));
+    }
+
+    // Save SEO settings
+    if (isset($_POST['seo_title'])) {
+        update_post_meta($post_id, '_seo_title', sanitize_text_field($_POST['seo_title']));
+    }
+    if (isset($_POST['seo_description'])) {
+        update_post_meta($post_id, '_seo_description', sanitize_textarea_field($_POST['seo_description']));
+    }
+
+    // Save layout settings
+    $layout_fields = array(
+        'content_spacing_top' => 'absint',
+        'content_spacing_bottom' => 'absint',
+        'content_max_width' => 'sanitize_text_field'
+    );
+
+    foreach ($layout_fields as $field => $sanitize_callback) {
+        if (isset($_POST[$field])) {
+            update_post_meta($post_id, '_' . $field, $sanitize_callback($_POST[$field]));
         }
-        update_post_meta($post_id, '_faqs', $faqs);
-    }
-
-    // Save section visibility
-    if (isset($_POST['sections_visibility']) && is_array($_POST['sections_visibility'])) {
-        $visibility = array();
-        foreach ($_POST['sections_visibility'] as $section => $value) {
-            $visibility[$section] = '1';
-        }
-        update_post_meta($post_id, '_sections_visibility', $visibility);
-    }
-
-    // Save section order
-    if (isset($_POST['section_order'])) {
-        update_post_meta($post_id, '_section_order', sanitize_text_field($_POST['section_order']));
-    }
-
-    // Save hero background
-    if (isset($_POST['hero_background'])) {
-        update_post_meta($post_id, '_hero_background', absint($_POST['hero_background']));
     }
 }
 add_action('save_post', 'wades_save_contact_meta'); 
