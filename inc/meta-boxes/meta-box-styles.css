@@ -1,147 +1,159 @@
 /* Meta Box Container */
-.meta-box-container {
+.wades-meta-box-container {
     margin: -6px -12px -12px -12px;
 }
 
 /* Tab Navigation */
-.meta-box-tabs {
+.wades-meta-box-tabs-nav {
+    background: #f0f0f1;
+    border-bottom: 1px solid #ccc;
+    padding: 0;
     margin: 0;
-        padding: 0 12px;
-        background: #fff;
-        border-bottom: 1px solid #ddd;
-        display: flex;
-        gap: 4px;
+    display: flex;
+    gap: 0;
 }
 
-.tab-button {
-    padding: 12px 16px;
-    border: none;
+.wades-tab-button {
     background: none;
+    border: none;
+    padding: 12px 16px;
+    margin: 0;
     cursor: pointer;
+    border-bottom: 3px solid transparent;
+        color: #646970;
     font-size: 13px;
-        font-weight: 500;
-        color: #50575e;
-        border-bottom: 2px solid transparent;
-        margin-bottom: -1px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+        flex: 0 1 auto;
+        text-align: center;
+        min-width: 100px;
     }
-    
-    .tab-button:hover {
-        color: #2271b1;
+.wades-tab-button:hover {
+    color: #2271b1;
+    background: #f6f7f7;
 }
 
-.tab-button.active {
+.wades-tab-button.active {
     border-bottom-color: #2271b1;
-        color: #2271b1;
+    color: #1d2327;
+        font-weight: 600;
+        background: #fff;
 }
 
 /* Tab Content */
-.tab-content {
+.wades-tab-content {
     display: none;
     padding: 20px;
-        background: #f6f7f7;
+    background: #fff;
 }
 
-.tab-content.active {
+.wades-tab-content.active {
     display: block;
 }
 
 /* Section Styling */
-.meta-box-section {
+.wades-meta-section {
     background: #fff;
-        border: 1px solid #ddd;
+    border: 1px solid #ddd;
     border-radius: 4px;
     padding: 16px;
-        margin-bottom: 20px;
+    margin-bottom: 20px;
     }
-    
-    .meta-box-section:last-child {
-        margin-bottom: 0;
+.wades-meta-section:last-child {
+    margin-bottom: 0;
 }
 
-.meta-box-section h3 {
+.wades-meta-section h3 {
     margin: 0 0 16px 0;
-        padding: 0;
+    padding: 0;
         font-size: 14px;
         font-weight: 600;
-    }
-    
-    /* Form Elements */
-    .meta-box-section label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 500;
-    }
-    
-    .meta-box-section input[type="text"],
-    .meta-box-section input[type="number"],
-    .meta-box-section textarea,
-    .meta-box-section select {
-        width: 100%;
-        max-width: 100%;
-        margin: 0;
-    }
-    
-    .meta-box-section .description {
-        color: #666;
-        font-style: italic;
-        font-size: 12px;
-        margin-top: 4px;
-    }
-    
-    /* Card Layout */
-    .card {
-        background: #fff;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        margin-bottom: 12px;
-    }
-    
-    .card:last-child {
-        margin-bottom: 0;
-    }
-    
-    .card-header {
-        padding: 12px;
-        background: #f8f9fa;
+    color: #1d2327;
+}
+
+/* Form Elements */
+.wades-meta-field {
+    margin-bottom: 16px;
+}
+
+.wades-meta-field:last-child {
+    margin-bottom: 0;
+}
+
+.wades-meta-field label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #1d2327;
+}
+.wades-meta-field input[type="text"],
+.wades-meta-field input[type="number"],
+.wades-meta-field input[type="url"],
+.wades-meta-field input[type="email"],
+.wades-meta-field textarea,
+.wades-meta-field select {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 6px 8px;
+}
+.wades-meta-field .description {
+    color: #646970;
+    font-style: italic;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+/* Card Layout */
+.wades-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 12px;
+}
+.wades-card:last-child {
+    margin-bottom: 0;
+}
+.wades-card-header {
+    padding: 12px;
+    background: #f6f7f7;
         border-bottom: 1px solid #ddd;
         display: flex;
         align-items: center;
         justify-content: space-between;
     }
-    
-    .card-header h4 {
-        margin: 0;
-        font-size: 13px;
-        font-weight: 600;
-    }
-    
-    .card-body {
-        padding: 12px;
-    }
-    
-    /* Dynamic Lists */
-    .dynamic-list {
-        margin-bottom: 12px;
-    }
-    
-    .dynamic-item {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 8px;
-    }
-    
-    .dynamic-item:last-child {
-        margin-bottom: 0;
+.wades-card-header h4 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1d2327;
+}
+.wades-card-body {
+    padding: 12px;
 }
 
-/* Section Order List */
-.section-order-list {
+/* Dynamic Lists */
+.wades-dynamic-list {
+    margin-bottom: 12px;
+}
+.wades-dynamic-item {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: center;
+}
+.wades-dynamic-item:last-child {
+    margin-bottom: 0;
+}
+
+/* Sortable Lists */
+.wades-sortable-list {
     margin: 0;
     padding: 0;
     list-style: none;
 }
 
-.section-order-list li {
+.wades-sortable-item {
     display: flex;
     align-items: center;
     padding: 10px;
@@ -152,85 +164,101 @@
     cursor: move;
 }
 
-.section-order-list li:last-child {
+.wades-sortable-item:last-child {
     margin-bottom: 0;
 }
-.section-order-list .dashicons {
+.wades-sortable-handle {
     margin-right: 8px;
-    color: #666;
+    color: #646970;
+        cursor: move;
 }
 
 /* Image Preview */
-.image-preview {
+.wades-image-preview {
     margin-top: 8px;
+    max-width: 300px;
 }
 
-.image-preview img {
-    max-width: 200px;
+.wades-image-preview img {
+    max-width: 100%;
     height: auto;
     border: 1px solid #ddd;
     border-radius: 4px;
     padding: 2px;
 }
 
-/* Grid Layout */
-.grid-2 {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-}
-
-/* Checkbox Groups */
-.checkbox-group {
-    margin-bottom: 16px;
-}
-
-.checkbox-group label {
-    display: flex;
-    align-items: center;
-    margin-bottom: 8px;
-}
-
-.checkbox-group input[type="checkbox"] {
-    margin-right: 8px;
-}
-
 /* Button Groups */
-.button-group {
+.wades-button-group {
     display: flex;
     gap: 8px;
     margin-top: 12px;
 }
 
+/* Checkbox Groups */
+.wades-checkbox-group {
+    margin-bottom: 16px;
+}
+
+.wades-checkbox-group label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    cursor: pointer;
+}
+
+.wades-checkbox-group input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+/* Grid Layout */
+.wades-grid {
+    display: grid;
+    gap: 16px;
+}
+
+.wades-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+}
+
 /* Responsive Adjustments */
 @media screen and (max-width: 782px) {
-    .grid-2 {
+    .wades-grid-2 {
         grid-template-columns: 1fr;
     }
 
-                .meta-box-tabs {
+                .wades-meta-box-tabs-nav {
                     flex-wrap: wrap;
                 }
 
-                .tab-button {
+                .wades-tab-button {
                     flex: 1 1 auto;
-                    text-align: center;
-                }
+    
 }
 
-/* WordPress Admin Overrides */
-.widefat {
-    margin: 8px 0;
+/* WordPress Admin Theme Compatibility */
+.wp-admin {
+    --wades-primary: #2271b1;
+    --wades-primary-hover: #135e96;
+    --wades-border: #ddd;
+    --wades-text: #1d2327;
+    --wades-text-muted: #646970;
+    --wades-bg-light: #f6f7f7;
 }
 
-.button {
-    margin: 2px;
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .wp-admin {
+        --wades-primary: #3582c4;
+        --wades-primary-hover: #4f94d4;
+        --wades-border: #404c58;
+        --wades-text: #f0f0f1;
+        --wades-text-muted: #a7aaad;
+        --wades-bg-light: #2c3338;
+    }
 }
 
-input[type="checkbox"] {
-    margin: 0 8px 0 0;
-}
-
-textarea {
-    min-height: 60px;
+/* Fix for WordPress Admin */
+#poststuff .wades-meta-box-container h2 {
+    padding: 0;
+    margin: 0 0 16px 0;
 }

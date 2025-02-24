@@ -7,6 +7,9 @@
  * @package wades
  */
 
+// Include helper functions
+require get_template_directory() . '/inc/helpers.php';
+
 if ( ! defined( '_S_VERSION' ) ) {
 	// Replace the version number of the theme on each release.
 	define( '_S_VERSION', '1.0.1' );
@@ -229,9 +232,7 @@ require get_template_directory() . '/inc/class-wade-mobile-nav-walker.php';
  */
 require_once get_template_directory() . '/inc/post-types/service.php';
 
-/**
- * Custom Meta Boxes
- */
+// Include meta boxes
 require_once get_template_directory() . '/inc/meta-boxes/about-meta.php';
 require_once get_template_directory() . '/inc/meta-boxes/home-meta.php';
 require_once get_template_directory() . '/inc/meta-boxes/shared-meta.php';
@@ -240,6 +241,7 @@ require_once get_template_directory() . '/inc/meta-boxes/boats-meta.php';
 require_once get_template_directory() . '/inc/meta-boxes/services-meta.php';
 require_once get_template_directory() . '/inc/meta-boxes/financing-meta.php';
 require_once get_template_directory() . '/inc/meta-boxes/contact-meta.php';
+require_once get_template_directory() . '/inc/meta-boxes/blog-meta.php';
 
 // Load meta boxes
 require_once get_template_directory() . '/inc/meta-boxes.php';
@@ -817,4 +819,35 @@ function wades_comment_styles() {
     }
 }
 add_action('wp_enqueue_scripts', 'wades_comment_styles');
+
+/**
+ * AJAX handler for loading more posts
+ */
+function wades_load_more_posts() {
+    check_ajax_referer('load_more_posts', 'nonce');
+
+    $paged = isset($_POST['paged']) ? absint($_POST['paged']) : 1;
+    $posts_per_page = get_option('posts_per_page');
+
+    $args = array(
+        'post_type' => 'post',
+        'posts_per_page' => $posts_per_page,
+        'paged' => $paged,
+        'post_status' => 'publish'
+    );
+
+    $query = new WP_Query($args);
+
+    if ($query->have_posts()) {
+        while ($query->have_posts()) {
+            $query->the_post();
+            get_template_part('template-parts/content', 'post');
+        }
+    }
+
+    wp_reset_postdata();
+    wp_die();
+}
+add_action('wp_ajax_load_more_posts', 'wades_load_more_posts');
+add_action('wp_ajax_nopriv_load_more_posts', 'wades_load_more_posts');
 

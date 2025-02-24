@@ -18,12 +18,21 @@ if (!defined('WADES_SHARED_META_LOADED')) {
      * Helper function for page header fields
      */
     function wades_render_header_fields($post) {
+        // Add nonce field for header settings
+        wp_nonce_field('wades_header_meta', 'wades_header_meta_nonce');
+
         // Get existing values
         $custom_title = get_post_meta($post->ID, '_custom_header_title', true);
         $custom_subheader = get_post_meta($post->ID, '_custom_header_subtext', true);
         $background_image = get_post_meta($post->ID, '_hero_background_image', true);
         $overlay_opacity = get_post_meta($post->ID, '_hero_overlay_opacity', true) ?: '40';
-        $header_height = get_post_meta($post->ID, '_hero_height', true) ?: '70';
+        $header_height = get_post_meta($post->ID, '_hero_height', true) ?: '40';
+
+        // Get current template
+        $template = get_page_template_slug($post->ID);
+
+        // Set template-specific defaults
+        $defaults = wades_get_template_defaults($template);
         ?>
         <div class="wades-meta-box-container">
             <div class="wades-meta-box-tabs-nav">
@@ -37,18 +46,18 @@ if (!defined('WADES_SHARED_META_LOADED')) {
                 <div class="wades-meta-section">
                     <h3>Page Header Options</h3>
                     <div class="wades-meta-field">
-                        <label for="custom_header_title"><strong>Custom Header Title</strong></label>
+                        <label for="custom_header_title"><strong>Header Title</strong></label>
                         <input type="text" id="custom_header_title" name="custom_header_title" 
                                value="<?php echo esc_attr($custom_title); ?>" class="widefat"
-                               placeholder="Leave empty to use default page title">
+                               placeholder="<?php echo esc_attr($defaults['title']); ?>">
                         <p class="description">Override the default page title in the header section.</p>
                     </div>
 
                     <div class="wades-meta-field">
-                        <label for="custom_header_subtext"><strong>Header Subtext</strong></label>
+                        <label for="custom_header_subtext"><strong>Header Description</strong></label>
                         <textarea id="custom_header_subtext" name="custom_header_subtext" 
                                 class="widefat" rows="3"
-                                placeholder="Add a subtitle or description for this page"><?php echo esc_textarea($custom_subheader); ?></textarea>
+                                placeholder="<?php echo esc_attr($defaults['description']); ?>"><?php echo esc_textarea($custom_subheader); ?></textarea>
                         <p class="description">Add a subtitle or description that appears below the main title.</p>
                     </div>
 
@@ -81,7 +90,7 @@ if (!defined('WADES_SHARED_META_LOADED')) {
                         <input type="number" id="hero_height" name="hero_height" 
                                value="<?php echo esc_attr($header_height); ?>" class="small-text"
                                min="10" max="100" step="5">
-                        <p class="description">Set the height of the header (70 = 70% of viewport height)</p>
+                        <p class="description">Set the height of the header (40 = 40% of viewport height)</p>
                     </div>
                 </div>
             </div>
@@ -201,36 +210,103 @@ if (!defined('WADES_SHARED_META_LOADED')) {
     }
 
     /**
+     * Get template-specific defaults
+     */
+    function wades_get_template_defaults($template) {
+        $defaults = array(
+            'title' => get_the_title(),
+            'description' => '',
+            'background_image' => '',
+            'overlay_opacity' => '40',
+            'height' => '50'
+        );
+
+        switch ($template) {
+            case 'templates/contact.php':
+                $defaults['title'] = 'Contact Us';
+                $defaults['description'] = 'Get in touch with our team. We\'re here to help with all your boating needs.';
+                break;
+            case 'templates/about.php':
+                $defaults['title'] = 'About Us';
+                $defaults['description'] = 'Learn more about Impact Marine Group and our commitment to excellence.';
+                break;
+            case 'templates/services.php':
+                $defaults['title'] = 'Our Services';
+                $defaults['description'] = 'Expert marine services and maintenance for your boat.';
+                $defaults['services_title'] = 'Expert Marine Services';
+                $defaults['services_description'] = 'Comprehensive boat maintenance and repair services by certified technicians.';
+                $defaults['grid_columns'] = 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
+                $defaults['services_per_page'] = '12';
+                $defaults['show_search'] = '1';
+                $defaults['show_filters'] = '1';
+                $defaults['section_order'] = 'services,why_choose_us,winterization,policies';
+                $defaults['sections_visibility'] = array(
+                    'services' => '1',
+                    'why_choose_us' => '1',
+                    'winterization' => '1',
+                    'policies' => '1'
+                );
+                break;
+            case 'templates/boats.php':
+                $defaults['title'] = 'Our Fleet';
+                $defaults['description'] = 'Explore our selection of premium boats and watercraft.';
+                break;
+            case 'templates/financing.php':
+                $defaults['title'] = 'Financing Options';
+                $defaults['description'] = 'Flexible financing solutions to help you get on the water.';
+                break;
+            case 'templates/blog.php':
+                $defaults['title'] = 'Latest News & Updates';
+                $defaults['description'] = 'Stay informed with our latest articles, tips, and industry insights.';
+                break;
+        }
+
+        return $defaults;
+    }
+
+    /**
      * Save header fields
      */
     function wades_save_header_fields($post_id) {
-        // Save custom title
-        if (isset($_POST['custom_header_title'])) {
-            update_post_meta($post_id, '_custom_header_title', sanitize_text_field($_POST['custom_header_title']));
+        // Verify nonce
+        if (!isset($_POST['wades_header_meta_nonce']) || 
+            !wp_verify_nonce($_POST['wades_header_meta_nonce'], 'wades_header_meta')) {
+            return;
         }
 
-        // Save subheader
-        if (isset($_POST['custom_header_subtext'])) {
-            update_post_meta($post_id, '_custom_header_subtext', sanitize_textarea_field($_POST['custom_header_subtext']));
+        // Check autosave
+        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+            return;
         }
 
-        // Save background image
-        if (isset($_POST['hero_background_image'])) {
-            update_post_meta($post_id, '_hero_background_image', absint($_POST['hero_background_image']));
+        // Check permissions
+        if (!current_user_can('edit_post', $post_id)) {
+            return;
         }
 
-        // Save overlay opacity
-        if (isset($_POST['hero_overlay_opacity'])) {
-            $opacity = max(0, min(100, absint($_POST['hero_overlay_opacity'])));
-            update_post_meta($post_id, '_hero_overlay_opacity', $opacity);
-        }
+        // Save fields
+        $fields = array(
+            'custom_header_title' => 'sanitize_text_field',
+            'custom_header_subtext' => 'wp_kses_post',
+            'hero_background_image' => 'absint',
+            'hero_overlay_opacity' => function($value) {
+                return max(0, min(100, absint($value)));
+            },
+            'hero_height' => function($value) {
+                return max(10, min(100, absint($value)));
+            }
+        );
 
-        // Save header height
-        if (isset($_POST['hero_height'])) {
-            $height = max(10, min(100, absint($_POST['hero_height'])));
-            update_post_meta($post_id, '_hero_height', $height);
+        foreach ($fields as $field => $sanitize_callback) {
+            if (isset($_POST[$field])) {
+                $value = is_callable($sanitize_callback) 
+                    ? $sanitize_callback($_POST[$field])
+                    : call_user_func($sanitize_callback, $_POST[$field]);
+                update_post_meta($post_id, '_' . $field, $value);
+            }
         }
     }
+    add_action('save_post', 'wades_save_header_fields');
 
     /**
      * Helper function for page select fields

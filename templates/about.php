@@ -10,7 +10,7 @@ get_template_part('template-parts/template-header');
 ?>
 
 <main role="main" aria-label="Main content" class="flex-grow">
-    <div class="bg-gray-50">
+    <div class="bg-gray-50 pt-24">
         <div class="container mx-auto px-4 relative z-10 space-y-24 max-w-7xl pb-24">
             <!-- Our Story Section -->
             <section class="bg-white rounded-2xl shadow-xl p-8 md:p-12">
@@ -267,14 +267,12 @@ get_template_part('template-parts/template-header');
                                 'alt' => 'Location Map'
                             ));
                         else :
+                            echo wades_get_image_html(0, 'large', array(
+                                'class' => 'w-full h-full object-cover',
+                                'alt' => 'Location Map'
+                            ));
+                        endif;
                         ?>
-                            <div class="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                                <div class="text-center">
-                                    <i data-lucide="map" class="w-24 h-24 text-gray-400 mx-auto mb-4"></i>
-                                    <p class="text-gray-500">Map preview not available</p>
-                                </div>
-                            </div>
-                        <?php endif; ?>
 
                         <!-- Overlay with CTA -->
                         <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-end p-8">

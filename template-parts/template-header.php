@@ -12,27 +12,31 @@ if ($is_blog) {
     $post_id = get_option('page_for_posts');
 }
 
-// Get custom header fields
-$custom_title = get_post_meta($post_id, '_custom_header_title', true);
-$custom_subheader = get_post_meta($post_id, '_custom_header_subtext', true);
+// Get current template
+$template = get_page_template_slug($post_id);
 
-// Get header settings
-$background_image = get_post_meta($post_id, '_hero_background_image', true);
-$overlay_opacity = get_post_meta($post_id, '_hero_overlay_opacity', true) ?: '40';
-$header_height = get_post_meta($post_id, '_hero_height', true) ?: '70';
+// Get template-specific defaults
+$defaults = wades_get_template_defaults($template);
 
-// Determine the title to display
-$title = $custom_title ?: get_the_title($post_id);
+// Get meta values with defaults
+$meta = array(
+    'title' => get_post_meta($post_id, '_custom_header_title', true) ?: $defaults['title'],
+    'description' => get_post_meta($post_id, '_custom_header_subtext', true) ?: $defaults['description'],
+    'background_image' => get_post_meta($post_id, '_hero_background_image', true),
+    'overlay_opacity' => get_post_meta($post_id, '_hero_overlay_opacity', true) ?: '40',
+    'height' => get_post_meta($post_id, '_hero_height', true) ?: '40'
+);
 
-// Get page excerpt for subheader if no custom subheader is set
-$subheader = $custom_subheader ?: get_the_excerpt($post_id);
+// Get brand logo settings for boats template
+$logo_settings = array(
+    'bg_style' => get_theme_mod('brand_logos_bg', 'white'),
+    'mb_sports' => get_theme_mod('mb_sports_logo'),
+    'viaggio' => get_theme_mod('viaggio_logo')
+);
 
-// Get customization options from theme mods
-$logo_bg_style = get_theme_mod('brand_logos_bg', 'white');
+// Build logo classes
 $logo_classes = 'h-10 object-contain p-2 rounded';
-
-// Add background color class based on setting
-switch ($logo_bg_style) {
+switch ($logo_settings['bg_style']) {
     case 'white':
         $logo_classes .= ' bg-white';
         break;
@@ -45,19 +49,21 @@ switch ($logo_bg_style) {
 }
 ?>
 
-<header class="relative overflow-hidden" style="height: <?php echo esc_attr($header_height); ?>vh;">
+<header class="relative overflow-hidden" style="height: <?php echo esc_attr($meta['height']); ?>vh;">
     <!-- Background Image with Overlay -->
     <div class="absolute inset-0">
-        <?php if ($background_image) : ?>
-            <?php echo wp_get_attachment_image($background_image, 'full', false, array(
-                'class' => 'h-full w-full object-cover object-center',
-            )); ?>
+        <?php if ($meta['background_image']) : ?>
+            <div class="absolute inset-0 w-full h-full">
+                <?php echo wades_get_image_html($meta['background_image'], 'full', array(
+                    'class' => 'absolute inset-0 w-full h-full object-cover object-center',
+                    'style' => 'object-position: center center;',
+                    'alt' => esc_attr($meta['title'])
+                )); ?>
+            </div>
         <?php else : ?>
-            <img src="<?php echo get_theme_file_uri('assets/images/default-hero.jpg'); ?>" 
-                 alt="" 
-                 class="h-full w-full object-cover object-center">
+            <div class="absolute inset-0 bg-gradient-to-r from-primary to-primary-dark"></div>
         <?php endif; ?>
-        <div class="absolute inset-0 bg-black" style="opacity: <?php echo esc_attr($overlay_opacity / 100); ?>"></div>
+        <div class="absolute inset-0 bg-black" style="opacity: <?php echo esc_attr($meta['overlay_opacity'] / 100); ?>"></div>
     </div>
 
     <!-- Content -->
@@ -65,39 +71,41 @@ switch ($logo_bg_style) {
         <div class="container mx-auto max-w-7xl">
             <div class="flex flex-col justify-center h-full">
                 <h1 class="text-white text-4xl sm:text-6xl font-bold mb-4 leading-tight max-w-3xl">
-                    <?php echo esc_html($title); ?>
+                    <?php echo esc_html($meta['title']); ?>
                 </h1>
-                <?php if ($subheader) : ?>
+                <?php if ($meta['description']) : ?>
                     <p class="text-gray-200 text-xl sm:text-2xl mb-8 max-w-2xl">
-                        <?php echo wp_kses_post($subheader); ?>
+                        <?php echo wp_kses_post($meta['description']); ?>
                     </p>
                 <?php endif; ?>
                 
                 <!-- Brand Logos -->
-                <?php if (get_theme_mod('show_brand_logos', true)) : ?>
-                    <div class="flex items-center space-x-6 mt-8">
-                        <?php
-                        // MB Sports Logo
-                        $mb_sports_logo = get_theme_mod('mb_sports_logo');
-                        if ($mb_sports_logo) : ?>
-                            <img src="<?php echo esc_url(wp_get_attachment_image_url($mb_sports_logo, 'full')); ?>"
-                                 alt="MB Sports Logo"
-                                 class="<?php echo esc_attr($logo_classes); ?>"
-                                 width="120"
-                                 height="40">
-                        <?php endif; ?>
+                <?php if ($template === 'templates/boats.php') : 
+                    // Get brand logos from theme mods
+                    $mb_sports_logo = get_theme_mod('mb_sports_logo');
+                    $viaggio_logo = get_theme_mod('viaggio_logo');
+                    
+                    if ($mb_sports_logo || $viaggio_logo) : ?>
+                        <div class="flex items-center space-x-6 mt-8">
+                            <?php if ($mb_sports_logo) : ?>
+                                <?php echo wades_get_image_html($mb_sports_logo, 'full', array(
+                                    'class' => $logo_classes,
+                                    'alt' => 'MB Sports Logo',
+                                    'width' => '120',
+                                    'height' => '40'
+                                )); ?>
+                            <?php endif; ?>
 
-                        <?php
-                        // Viaggio Logo
-                        $viaggio_logo = get_theme_mod('viaggio_logo');
-                        if ($viaggio_logo) : ?>
-                            <img src="<?php echo esc_url(wp_get_attachment_image_url($viaggio_logo, 'full')); ?>"
-                                 alt="Viaggio Pontoon Boats Logo"
-                                 class="<?php echo esc_attr($logo_classes); ?>"
-                                 width="120"
-                                 height="40">
-                        <?php endif; ?>
-                    </div>
+                            <?php if ($viaggio_logo) : ?>
+                                <?php echo wades_get_image_html($viaggio_logo, 'full', array(
+                                    'class' => $logo_classes,
+                                    'alt' => 'Viaggio Pontoon Boats Logo',
+                                    'width' => '120',
+                                    'height' => '40'
+                                )); ?>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
                 <?php endif; ?>
             </div>
         </div>

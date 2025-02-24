@@ -10,6 +10,9 @@ $spacing_top = get_post_meta(get_the_ID(), '_content_spacing_top', true) ?: '96'
 $spacing_bottom = get_post_meta(get_the_ID(), '_content_spacing_bottom', true) ?: '96';
 $content_width = get_post_meta(get_the_ID(), '_content_max_width', true) ?: '7xl';
 
+// Get pre-filled subject from URL if available
+$prefilled_subject = isset($_GET['subject']) ? urldecode($_GET['subject']) : '';
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['contact_submit'])) {
     $nonce = $_POST['contact_nonce'];
@@ -162,6 +165,7 @@ get_template_part('template-parts/template-header');
                                     <div>
                                         <label for="subject" class="block text-sm font-medium text-gray-700">Subject</label>
                                         <input type="text" id="subject" name="subject" required
+                                               value="<?php echo esc_attr($prefilled_subject); ?>"
                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                     </div>
                                     <div>

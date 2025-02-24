@@ -14,22 +14,25 @@ $sections = get_post_meta(get_the_ID(), '_home_sections', true);
 $hero_meta = array(
     'backgroundVideo' => array('url' => get_post_meta(get_the_ID(), '_hero_background_video', true)),
     'backgroundImage' => array('url' => get_post_meta(get_the_ID(), '_hero_background_image', true)),
-    'title' => get_post_meta(get_the_ID(), '_hero_title', true) ?: 'Expert Boat Service You Can Trust',
-    'description' => get_post_meta(get_the_ID(), '_hero_description', true) ?: 'Certified Technicians, Fast Turnaround, and Unmatched Care for Your Boat.',
+    'title' => get_post_meta(get_the_ID(), '_hero_title', true) ?: 'Georgia\'s Premier Marine Service Center',
+    'description' => get_post_meta(get_the_ID(), '_hero_description', true) ?: 'Factory-Certified Technicians, Fast Turnaround, and Expert Care for Your Boat.',
     'phoneNumber' => get_post_meta(get_the_ID(), '_hero_phone_number', true) ?: '(770) 881-7808',
     'rating' => array(
-        'text' => get_post_meta(get_the_ID(), '_hero_rating_text', true) ?: '4.9 Star Rated',
-        'value' => get_post_meta(get_the_ID(), '_hero_rating_value', true) ?: 4.9
+        'text' => get_post_meta(get_the_ID(), '_hero_rating_text', true) ?: '5-Star Rated Service',
+        'value' => get_post_meta(get_the_ID(), '_hero_rating_value', true) ?: 5.0,
+        'count' => get_post_meta(get_the_ID(), '_hero_rating_count', true) ?: 150
     ),
     'primaryCta' => array(
-        'label' => get_post_meta(get_the_ID(), '_hero_primary_cta_label', true) ?: 'See our Inventory',
+        'label' => get_post_meta(get_the_ID(), '_hero_primary_cta_label', true) ?: 'View Our Inventory',
         'page_id' => get_post_meta(get_the_ID(), '_hero_primary_cta_page', true) ?: get_page_by_path('boats')->ID,
-        'icon' => get_post_meta(get_the_ID(), '_hero_primary_cta_icon', true) ?: 'anchor'
+        'icon' => get_post_meta(get_the_ID(), '_hero_primary_cta_icon', true) ?: 'boat',
+        'style' => get_post_meta(get_the_ID(), '_hero_primary_cta_style', true) ?: 'primary'
     ),
     'secondaryCta' => array(
-        'label' => get_post_meta(get_the_ID(), '_hero_secondary_cta_label', true) ?: 'View Our Services',
+        'label' => get_post_meta(get_the_ID(), '_hero_secondary_cta_label', true) ?: 'Schedule Service',
         'page_id' => get_post_meta(get_the_ID(), '_hero_secondary_cta_page', true) ?: get_page_by_path('services')->ID,
-        'icon' => get_post_meta(get_the_ID(), '_hero_secondary_cta_icon', true) ?: 'chevron-right'
+        'icon' => get_post_meta(get_the_ID(), '_hero_secondary_cta_icon', true) ?: 'wrench',
+        'style' => get_post_meta(get_the_ID(), '_hero_secondary_cta_style', true) ?: 'secondary'
     )
 );
 
@@ -45,57 +48,97 @@ if (!is_array($sections)) {
         'hero' => array(
             'enabled' => true,
             'order' => 10,
-            'title' => 'Hero Section'
+            'title' => 'Hero Section',
+            'background_style' => 'video', // video, image, or gradient
+            'overlay_opacity' => 50
         ),
         'featured_brands' => array(
             'enabled' => true,
             'order' => 20,
-            'title' => 'Featured Brands'
+            'title' => 'Featured Brands',
+            'style' => 'logo-grid', // logo-grid or carousel
+            'background' => 'white'
         ),
         'fleet' => array(
             'enabled' => true,
             'order' => 30,
-            'title' => 'Fleet Section'
+            'title' => 'Featured Inventory',
+            'subtitle' => 'Discover Our Premium Selection',
+            'description' => 'Browse our handpicked selection of premium boats.',
+            'display_count' => 5,
+            'layout' => 'featured', // featured, grid, or carousel
+            'background' => 'light'
         ),
         'services' => array(
             'enabled' => true,
             'order' => 40,
-            'title' => 'Services Section'
+            'title' => 'Expert Marine Services',
+            'subtitle' => 'Professional Marine Services',
+            'description' => 'Factory-certified expertise for all your boating needs.',
+            'layout' => 'alternating', // alternating, grid, or carousel
+            'show_cta' => true,
+            'background' => 'pattern'
         ),
         'stats' => array(
             'enabled' => true,
             'order' => 45,
-            'title' => 'Statistics'
+            'title' => 'By the Numbers',
+            'items' => array(
+                array('value' => '5000+', 'label' => 'Boats Serviced'),
+                array('value' => '98%', 'label' => 'Customer Satisfaction'),
+                array('value' => '25+', 'label' => 'Years Experience'),
+                array('value' => '24/7', 'label' => 'Support Available')
+            ),
+            'background' => 'gradient'
         ),
         'testimonials' => array(
             'enabled' => true,
             'order' => 50,
-            'title' => 'Testimonials'
+            'title' => 'Customer Testimonials',
+            'subtitle' => 'What Our Clients Say',
+            'description' => 'Read what our satisfied customers have to say.',
+            'layout' => 'grid', // grid or carousel
+            'display_count' => 3,
+            'background' => 'white'
         ),
         'certification' => array(
             'enabled' => true,
             'order' => 55,
-            'title' => 'Certifications'
+            'title' => 'Factory-Certified Excellence',
+            'subtitle' => 'Certified Excellence',
+            'description' => 'Our team consists of factory-trained experts.',
+            'layout' => 'split', // split or full-width
+            'background' => 'white'
         ),
         'featured_articles' => array(
             'enabled' => true,
             'order' => 60,
-            'title' => 'Featured Articles'
+            'title' => 'Latest News & Tips',
+            'subtitle' => 'Stay Informed',
+            'description' => 'Expert advice and industry updates.',
+            'post_count' => 3,
+            'categories' => array(), // empty for all categories
+            'background' => 'white'
         ),
         'faq' => array(
             'enabled' => true,
             'order' => 65,
-            'title' => 'FAQ'
+            'title' => 'Common Questions',
+            'subtitle' => 'Frequently Asked Questions',
+            'description' => 'Find answers to common questions.',
+            'layout' => 'two-column', // two-column or accordion
+            'background' => 'light'
         ),
         'social' => array(
             'enabled' => true,
             'order' => 70,
-            'title' => 'Social Feed'
-        ),
-        'cta' => array(
-            'enabled' => true,
-            'order' => 80,
-            'title' => 'Call to Action'
+            'title' => 'Social Updates',
+            'subtitle' => 'Follow Our Journey',
+            'description' => 'Stay connected with us on social media.',
+            'feed_type' => 'instagram',
+            'post_count' => 6,
+            'layout' => 'grid', // grid or carousel
+            'background' => 'muted'
         )
     );
 }
@@ -128,6 +171,11 @@ uasort($sections, function($a, $b) {
                         </video>
                     <?php elseif ($hero_meta['backgroundImage']['url']) : ?>
                         <img src="<?php echo esc_url($hero_meta['backgroundImage']['url']); ?>" alt="Hero background" class="absolute inset-0 w-full h-full object-cover">
+                    <?php else : ?>
+                        <?php echo wades_get_image_html(0, 'full', array(
+                            'class' => 'absolute inset-0 w-full h-full object-cover',
+                            'alt' => 'Hero background'
+                        )); ?>
                     <?php endif; ?>
                 </div>
 
@@ -469,27 +517,101 @@ uasort($sections, function($a, $b) {
                     </div>
 
                     <!-- Service CTA -->
-                    <div class="relative mt-24 rounded-3xl bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-16 text-center">
-                        <div class="absolute inset-x-8 inset-y-0 flex items-center justify-between">
-                            <div class="h-px w-full bg-white/20"></div>
-                            <div class="mx-8 h-12 w-12 rounded-full border border-white/20 flex items-center justify-center">
-                                <i data-lucide="phone" class="w-6 h-6 text-white/70"></i>
+                    <div class="relative mt-24 mx-4">
+                        <!-- Main Container with gradient background -->
+                        <div class="relative max-w-7xl mx-auto">
+                            <!-- Background with complex gradient and texture -->
+                            <div class="absolute inset-0 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 rounded-3xl overflow-hidden">
+                                <!-- Decorative gradient circles -->
+                                <div class="absolute inset-0">
+                                    <div class="absolute left-1/4 top-0 w-64 h-64 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+                                    <div class="absolute right-1/4 bottom-0 w-64 h-64 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+                                    <div class="absolute left-1/3 bottom-1/3 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+                                </div>
+
+                                <!-- Mesh gradient overlay -->
+                                <div class="absolute inset-0 bg-gradient-to-t from-blue-900/50 to-transparent"></div>
+                                
+                                <!-- Grid pattern overlay -->
+                                <div class="absolute inset-0 opacity-10" style="background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(to right, #fff 1px, transparent 1px); background-size: 32px 32px;"></div>
                             </div>
-                            <div class="h-px w-full bg-white/20"></div>
-                        </div>
-                        <h3 class="text-2xl font-bold text-white mb-4">Ready to Experience Expert Service?</h3>
-                        <p class="text-lg text-blue-100 mb-8">Our certified technicians are ready to help with all your marine service needs.</p>
-                        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                            <a href="<?php echo esc_url(get_permalink(get_page_by_path('services')->ID)); ?>" 
-                               class="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all duration-300 shadow-lg">
-                                View All Services
-                                <i data-lucide="arrow-right" class="w-5 h-5 ml-2"></i>
-                            </a>
-                            <a href="tel:+17708817808" 
-                               class="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-white border-2 border-white/20 hover:bg-white/10 rounded-lg transition-all duration-300">
-                                <i data-lucide="phone-call" class="w-5 h-5 mr-2"></i>
-                                (770) 881-7808
-                            </a>
+
+                            <!-- Content Container -->
+                            <div class="relative px-6 py-20 sm:px-12 sm:py-24">
+                                <!-- Top accent line -->
+                                <div class="absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent via-blue-200 to-transparent"></div>
+
+                                <!-- Content Grid -->
+                                <div class="grid lg:grid-cols-2 gap-12 items-center">
+                                    <!-- Left Column - Text Content -->
+                                    <div class="text-center lg:text-left space-y-6">
+                                        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight">
+                                            Ready for Professional Marine Service?
+                                        </h2>
+                                        <p class="text-lg sm:text-xl text-blue-100 max-w-2xl mx-auto lg:mx-0">
+                                            Our certified technicians provide expert care for your boat, ensuring peak performance and reliability.
+                                        </p>
+                                        <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                                            <a href="/services" class="inline-flex items-center justify-center px-8 py-4 rounded-xl bg-white text-blue-900 font-semibold hover:bg-blue-50 transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 group">
+                                                View All Services
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                                </svg>
+                                            </a>
+                                            <a href="tel:+17708817808" class="inline-flex items-center justify-center px-8 py-4 rounded-xl bg-blue-700/30 text-white font-semibold hover:bg-blue-700/40 border border-blue-400/20 backdrop-blur-sm transition-all duration-200 group">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2 transform group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                                </svg>
+                                                (770) 881-7808
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    <!-- Right Column - Feature List -->
+                                    <div class="hidden lg:block">
+                                        <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
+                                            <div class="space-y-6">
+                                                <div class="flex items-start gap-4">
+                                                    <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                                        </svg>
+                                                    </div>
+                                                    <div>
+                                                        <h3 class="text-xl font-semibold text-white mb-2">Factory Certified</h3>
+                                                        <p class="text-blue-100">Our technicians are factory-trained and certified for expert service.</p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-start gap-4">
+                                                    <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                    </div>
+                                                    <div>
+                                                        <h3 class="text-xl font-semibold text-white mb-2">Quick Turnaround</h3>
+                                                        <p class="text-blue-100">Fast, efficient service to get you back on the water.</p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-start gap-4">
+                                                    <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                                                        </svg>
+                                                    </div>
+                                                    <div>
+                                                        <h3 class="text-xl font-semibold text-white mb-2">Satisfaction Guaranteed</h3>
+                                                        <p class="text-blue-100">We stand behind our work with a 100% satisfaction guarantee.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Bottom accent line -->
+                                <div class="absolute inset-x-12 bottom-0 h-px bg-gradient-to-r from-transparent via-blue-200 to-transparent"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -628,55 +750,6 @@ uasort($sections, function($a, $b) {
                             <i data-lucide="instagram" class="w-5 h-5 mr-2"></i>
                             Follow Our Nautical Journey
                         </a>
-                    </div>
-                </div>
-            </section>
-
-        <?php elseif ($section_id === 'cta') : ?>
-            <!-- CTA Section -->
-            <section class="cta-section py-24 bg-blue-900 text-white">
-                <div class="container mx-auto px-4">
-                    <div class="cta-content max-w-4xl mx-auto text-center">
-                        <?php if ($cta_title) : ?>
-                            <h2 class="text-3xl md:text-4xl font-bold mb-6"><?php echo esc_html($cta_title); ?></h2>
-                        <?php endif; ?>
-
-                        <?php if ($cta_description) : ?>
-                            <p class="text-xl text-blue-100 mb-8"><?php echo wp_kses_post($cta_description); ?></p>
-                        <?php endif; ?>
-
-                        <?php if ($cta_button_text && $cta_button_page_id) : ?>
-                            <a href="<?php echo esc_url(get_permalink($cta_button_page_id)); ?>" 
-                               class="button inline-flex items-center bg-white hover:bg-blue-50 text-blue-900 px-8 py-4 rounded-lg font-medium transition-colors">
-                                <?php echo esc_html($cta_button_text); ?>
-                                <i data-lucide="arrow-right" class="w-5 h-5 ml-2"></i>
-                            </a>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </section>
-
-        <?php elseif ($section_id === 'stats') : ?>
-            <!-- Stats Section -->
-            <section class="py-24 bg-gradient-to-b from-gray-50 to-white">
-                <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
-                        <div class="text-center">
-                            <div class="text-4xl font-bold text-blue-600 mb-2">5000+</div>
-                            <div class="text-gray-600">Boats Serviced</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-4xl font-bold text-blue-600 mb-2">98%</div>
-                            <div class="text-gray-600">Customer Satisfaction</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-4xl font-bold text-blue-600 mb-2">25+</div>
-                            <div class="text-gray-600">Years Experience</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-4xl font-bold text-blue-600 mb-2">24/7</div>
-                            <div class="text-gray-600">Support Available</div>
-                        </div>
                     </div>
                 </div>
             </section>

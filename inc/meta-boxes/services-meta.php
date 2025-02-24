@@ -31,8 +31,10 @@ function wades_add_services_meta_boxes() {
         return;
     }
 
-    // Remove the separate page header meta box
+    // Remove any existing meta boxes to prevent duplicates
     remove_meta_box('wades_page_header', 'page', 'normal');
+    remove_meta_box('wades_services_settings', 'page', 'normal');
+    remove_meta_box('wades_header_settings', 'page', 'normal');
 
     // Add services settings meta box
     add_meta_box(
@@ -44,12 +46,15 @@ function wades_add_services_meta_boxes() {
         'high'
     );
 }
-add_action('add_meta_boxes', 'wades_add_services_meta_boxes', 20);
+// Change priority to run after other meta box registrations
+remove_action('add_meta_boxes', 'wades_add_services_meta_boxes', 20);
+add_action('add_meta_boxes', 'wades_add_services_meta_boxes', 100);
 
 /**
  * Services Settings Meta Box Callback
  */
 function wades_services_settings_callback($post) {
+    // Ensure we only output one nonce field
     wp_nonce_field('wades_services_meta', 'wades_services_meta_nonce');
 
     // Get all meta data
@@ -72,10 +77,14 @@ function wades_services_settings_callback($post) {
             'winterization' => '1',
             'policies' => '1'
         ),
-        'hero_background_image' => get_post_meta($post->ID, '_hero_background_image', true),
+        'hero_background_image' => get_post_meta($post->ID, '_hero_background_image', true) ?: '',
         'hero_overlay_opacity' => get_post_meta($post->ID, '_hero_overlay_opacity', true) ?: '40',
-        'hero_height' => get_post_meta($post->ID, '_hero_height', true) ?: '70'
+        'hero_height' => get_post_meta($post->ID, '_hero_height', true) ?: '50',
+        'custom_header_title' => get_post_meta($post->ID, '_custom_header_title', true),
+        'custom_header_subtext' => get_post_meta($post->ID, '_custom_header_subtext', true)
     );
+
+    // Start meta box container
     ?>
     <div class="meta-box-container">
         <!-- Tab Navigation -->
@@ -182,51 +191,55 @@ function wades_services_settings_callback($post) {
         <!-- Header Tab -->
         <div class="tab-content" data-tab="header">
             <div class="meta-box-section">
-                <h3>Page Header Settings</h3>
-                <!-- Background Image -->
-                <div class="mb-6">
-                    <label class="block mb-2 font-medium">Background Image</label>
-                    <div class="flex items-start gap-4">
-                        <div>
-                            <input type="hidden" name="hero_background_image" id="hero_background_image" 
-                                   value="<?php echo esc_attr($meta['hero_background_image']); ?>">
-                            <div class="button-group">
-                                <button type="button" class="button upload-image" id="upload_hero_image">Select Image</button>
-                                <button type="button" class="button remove-image">Remove Image</button>
-                            </div>
-                        </div>
-                        <div id="hero_image_preview" class="max-w-xs">
-                            <?php 
-                            $bg_image = $meta['hero_background_image'];
-                            if ($bg_image) {
-                                echo wp_get_attachment_image($bg_image, 'thumbnail');
-                            }
-                            ?>
-                        </div>
-                    </div>
-                    <p class="description mt-2">Recommended size: 1920x1080px or larger</p>
+                <h3>Page Header Options</h3>
+                <div class="wades-meta-field">
+                    <label for="custom_header_title"><strong>Header Title</strong></label>
+                    <input type="text" id="custom_header_title" name="custom_header_title" 
+                           value="<?php echo esc_attr($meta['custom_header_title']); ?>" 
+                           class="widefat" placeholder="Our Services">
+                    <p class="description">Override the default page title in the header section.</p>
                 </div>
 
-                <!-- Overlay Opacity -->
-                <div class="mb-6">
-                    <label for="hero_overlay_opacity" class="block mb-2 font-medium">
-                        Overlay Opacity (%)
-                    </label>
+                <div class="wades-meta-field">
+                    <label for="custom_header_subtext"><strong>Header Description</strong></label>
+                    <textarea id="custom_header_subtext" name="custom_header_subtext" 
+                            class="widefat" rows="3" 
+                            placeholder="Expert marine services and maintenance for your boat."><?php echo esc_textarea($meta['custom_header_subtext']); ?></textarea>
+                    <p class="description">Add a subtitle or description that appears below the main title.</p>
+                </div>
+
+                <div class="wades-meta-field">
+                    <label><strong>Background Image</strong></label>
+                    <input type="hidden" name="hero_background_image" id="hero_background_image" 
+                           value="<?php echo esc_attr($meta['hero_background_image']); ?>">
+                    <div class="button-group">
+                        <button type="button" class="button upload-image" id="upload_hero_image">Select Image</button>
+                        <button type="button" class="button remove-image" <?php echo empty($meta['hero_background_image']) ? 'style="display:none;"' : ''; ?>>Remove Image</button>
+                    </div>
+                    <div id="hero_image_preview" class="image-preview">
+                        <?php 
+                        if (!empty($meta['hero_background_image'])) {
+                            echo wp_get_attachment_image($meta['hero_background_image'], 'medium');
+                        }
+                        ?>
+                    </div>
+                    <p class="description">Recommended size: 1920x1080px or larger</p>
+                </div>
+
+                <div class="wades-meta-field">
+                    <label for="hero_overlay_opacity"><strong>Overlay Opacity (%)</strong></label>
                     <input type="number" id="hero_overlay_opacity" name="hero_overlay_opacity" 
                            value="<?php echo esc_attr($meta['hero_overlay_opacity']); ?>"
-                           class="regular-text" min="0" max="100" step="5">
-                    <p class="description mt-2">Adjust the darkness of the overlay on the background image</p>
+                           class="small-text" min="0" max="100" step="5">
+                    <p class="description">Adjust the darkness of the overlay on the background image</p>
                 </div>
 
-                <!-- Header Height -->
-                <div class="mb-6">
-                    <label for="hero_height" class="block mb-2 font-medium">
-                        Header Height (vh)
-                    </label>
+                <div class="wades-meta-field">
+                    <label for="hero_height"><strong>Header Height (vh)</strong></label>
                     <input type="number" id="hero_height" name="hero_height" 
                            value="<?php echo esc_attr($meta['hero_height']); ?>"
-                           class="regular-text" min="30" max="100" step="5">
-                    <p class="description mt-2">Set the height of the header (70 = 70% of viewport height)</p>
+                           class="small-text" min="30" max="100" step="5">
+                    <p class="description">Set the height of the header (70 = 70% of viewport height)</p>
                 </div>
             </div>
         </div>
@@ -426,85 +439,53 @@ function wades_services_settings_callback($post) {
  * Save Services Meta Box Data
  */
 function wades_save_services_meta($post_id) {
-    if (!isset($_POST['wades_services_meta_nonce'])) {
+    // Verify nonce
+    if (!isset($_POST['wades_services_meta_nonce']) || !wp_verify_nonce($_POST['wades_services_meta_nonce'], 'wades_services_meta')) {
         return;
     }
 
-    if (!wp_verify_nonce($_POST['wades_services_meta_nonce'], 'wades_services_meta')) {
-        return;
-    }
-
+    // Check autosave
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
         return;
     }
 
+    // Check permissions
     if (!current_user_can('edit_post', $post_id)) {
         return;
     }
 
-    // Save basic content fields
-    $text_fields = array(
+    // Save meta fields
+    $fields = array(
         'services_title',
         'services_description',
+        'services_grid',
+        'why_choose_us',
+        'service_image',
+        'winterization_packages',
+        'service_policies',
         'grid_columns',
         'services_per_page',
+        'show_search',
+        'show_filters',
         'section_order',
+        'sections_visibility',
         'hero_background_image',
         'hero_overlay_opacity',
-        'hero_height'
+        'hero_height',
+        'custom_header_title',
+        'custom_header_subtext'
     );
 
-    foreach ($text_fields as $field) {
-        if (isset($_POST[$field])) {
-            update_post_meta($post_id, '_' . $field, sanitize_text_field($_POST[$field]));
+    foreach ($fields as $field) {
+        $value = isset($_POST[$field]) ? $_POST[$field] : '';
+        
+        // Handle array values
+        if (is_array($value)) {
+            update_post_meta($post_id, '_' . $field, $value);
+        } else {
+            // Sanitize and save string values
+            update_post_meta($post_id, '_' . $field, sanitize_text_field($value));
         }
-    }
-
-    // Save checkboxes
-    $checkboxes = array('show_search', 'show_filters');
-    foreach ($checkboxes as $checkbox) {
-        update_post_meta($post_id, '_' . $checkbox, isset($_POST[$checkbox]) ? '1' : '');
-    }
-
-    // Save section visibility
-    if (isset($_POST['sections_visibility']) && is_array($_POST['sections_visibility'])) {
-        $visibility = array();
-        foreach ($_POST['sections_visibility'] as $section => $value) {
-            $visibility[$section] = '1';
-        }
-        update_post_meta($post_id, '_sections_visibility', $visibility);
-    }
-
-    // Save why choose us
-    if (isset($_POST['why_choose_us'])) {
-        $reasons = array_map('sanitize_text_field', array_filter($_POST['why_choose_us']));
-        update_post_meta($post_id, '_why_choose_us', $reasons);
-    }
-
-    // Save service image
-    if (isset($_POST['service_image'])) {
-        update_post_meta($post_id, '_service_image', absint($_POST['service_image']));
-    }
-
-    // Save winterization packages
-    if (isset($_POST['winterization_packages'])) {
-        $packages = array();
-        foreach ($_POST['winterization_packages'] as $package) {
-            if (!empty($package['title'])) {
-                $packages[] = array(
-                    'title' => sanitize_text_field($package['title']),
-                    'description' => wp_kses_post($package['description']),
-                    'services' => isset($package['services']) ? array_map('sanitize_text_field', array_filter($package['services'])) : array()
-                );
-            }
-        }
-        update_post_meta($post_id, '_winterization_packages', $packages);
-    }
-
-    // Save service policies
-    if (isset($_POST['service_policies'])) {
-        $policies = array_map('sanitize_text_field', array_filter($_POST['service_policies']));
-        update_post_meta($post_id, '_service_policies', $policies);
     }
 }
 add_action('save_post', 'wades_save_services_meta');
@@ -523,7 +504,11 @@ function wades_services_admin_scripts($hook) {
     // Only load for pages using the services template
     if (get_post_type($post) === 'page') {
         $template = get_page_template_slug($post->ID);
-        if ($template === 'templates/services.php' || basename($template) === 'services.php') {
+        if ($template === 'templates/services.php') {
+            // Remove any conflicting scripts
+            wp_dequeue_script('services-admin');
+            wp_dequeue_script('wades-meta-boxes');
+            
             // Enqueue WordPress media scripts
             wp_enqueue_media();
             
@@ -569,26 +554,198 @@ function wades_services_admin_scripts($hook) {
                     background: #f8f9fa;
                     border-radius: 4px;
                 }
-                .section-order-list {
-                    margin: 0;
-                    padding: 0;
-                    list-style: none;
-                }
-                .section-order-list li {
-                    display: flex;
-                    align-items: center;
-                    padding: 10px;
-                    margin-bottom: 5px;
-                    background: #fff;
-                    border: 1px solid #ddd;
-                    cursor: move;
-                }
-                .section-order-list .dashicons {
-                    margin-right: 10px;
-                    color: #666;
-                }
             ');
         }
     }
 }
-add_action('admin_enqueue_scripts', 'wades_services_admin_scripts'); 
+add_action('admin_enqueue_scripts', 'wades_services_admin_scripts', 100);
+
+function wades_render_services_meta_box($post) {
+    // Get the current template
+    $template = get_post_meta($post->ID, '_wp_page_template', true);
+    
+    // Get template defaults from shared function
+    $defaults = wades_get_template_defaults($template);
+    
+    // Get existing values
+    $meta = array(
+        'services_title' => get_post_meta($post->ID, 'services_title', true),
+        'services_description' => get_post_meta($post->ID, 'services_description', true),
+        'grid_columns' => get_post_meta($post->ID, 'grid_columns', true),
+        'services_per_page' => get_post_meta($post->ID, 'services_per_page', true),
+        'show_search' => get_post_meta($post->ID, 'show_search', true),
+        'show_filters' => get_post_meta($post->ID, 'show_filters', true),
+        'section_order' => get_post_meta($post->ID, 'section_order', true),
+        'sections_visibility' => get_post_meta($post->ID, 'sections_visibility', true)
+    );
+
+    // Set defaults if values are empty
+    foreach ($meta as $key => $value) {
+        if (empty($value) && isset($defaults[$key])) {
+            $meta[$key] = $defaults[$key];
+            update_post_meta($post->ID, $key, $defaults[$key]);
+        }
+    }
+
+    // Render the meta box fields
+    ?>
+    <div class="wades-meta-box">
+        <!-- Services Settings -->
+        <div class="meta-box-section">
+            <h3>Services Page Settings</h3>
+            
+            <div class="field-group">
+                <label for="services_title">Services Section Title</label>
+                <input type="text" id="services_title" name="services_title" value="<?php echo esc_attr($meta['services_title']); ?>" />
+            </div>
+            
+            <div class="field-group">
+                <label for="services_description">Services Section Description</label>
+                <textarea id="services_description" name="services_description"><?php echo esc_textarea($meta['services_description']); ?></textarea>
+            </div>
+            
+            <div class="field-group">
+                <label for="grid_columns">Grid Layout</label>
+                <select id="grid_columns" name="grid_columns">
+                    <option value="grid-cols-1 md:grid-cols-2 lg:grid-cols-3" <?php selected($meta['grid_columns'], 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'); ?>>3 Columns</option>
+                    <option value="grid-cols-1 md:grid-cols-2 lg:grid-cols-4" <?php selected($meta['grid_columns'], 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'); ?>>4 Columns</option>
+                </select>
+            </div>
+            
+            <div class="field-group">
+                <label for="services_per_page">Services Per Page</label>
+                <input type="number" id="services_per_page" name="services_per_page" value="<?php echo esc_attr($meta['services_per_page']); ?>" />
+            </div>
+            
+            <div class="field-group">
+                <label><input type="checkbox" name="show_search" value="1" <?php checked($meta['show_search'], '1'); ?>> Show Search Bar</label>
+            </div>
+            
+            <div class="field-group">
+                <label><input type="checkbox" name="show_filters" value="1" <?php checked($meta['show_filters'], '1'); ?>> Show Filters</label>
+            </div>
+        </div>
+
+        <!-- Section Visibility -->
+        <div class="meta-box-section">
+            <h3>Section Visibility</h3>
+            <?php
+            $sections = array(
+                'services' => 'Services Grid',
+                'why_choose_us' => 'Why Choose Us',
+                'winterization' => 'Winterization',
+                'policies' => 'Policies'
+            );
+            
+            foreach ($sections as $section_key => $section_label) {
+                $visibility = isset($meta['sections_visibility'][$section_key]) ? $meta['sections_visibility'][$section_key] : '1';
+                ?>
+                <div class="field-group">
+                    <label>
+                        <input type="checkbox" 
+                               name="sections_visibility[<?php echo esc_attr($section_key); ?>]" 
+                               value="1" 
+                               <?php checked($visibility, '1'); ?>>
+                        <?php echo esc_html($section_label); ?>
+                    </label>
+                </div>
+                <?php
+            }
+            ?>
+        </div>
+
+        <!-- Section Order -->
+        <div class="meta-box-section">
+            <h3>Section Order</h3>
+            <div class="field-group">
+                <input type="hidden" name="section_order" id="section_order" value="<?php echo esc_attr($meta['section_order']); ?>">
+                <div id="sortable-sections" class="sortable-list">
+                    <?php
+                    $order = !empty($meta['section_order']) ? explode(',', $meta['section_order']) : array_keys($sections);
+                    foreach ($order as $section_key) {
+                        if (isset($sections[$section_key])) {
+                            echo '<div class="sortable-item" data-section="' . esc_attr($section_key) . '">';
+                            echo '<span class="dashicons dashicons-menu"></span> ';
+                            echo esc_html($sections[$section_key]);
+                            echo '</div>';
+                        }
+                    }
+                    ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .wades-meta-box {
+            padding: 12px;
+        }
+        .meta-box-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border: 1px solid #e5e5e5;
+            border-radius: 4px;
+        }
+        .meta-box-section h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+        .field-group {
+            margin-bottom: 15px;
+        }
+        .field-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        .field-group input[type="text"],
+        .field-group input[type="number"],
+        .field-group select,
+        .field-group textarea {
+            width: 100%;
+            max-width: 400px;
+        }
+        .field-group textarea {
+            height: 100px;
+        }
+        .sortable-list {
+            border: 1px solid #ddd;
+            background: #fff;
+            padding: 10px;
+            max-width: 400px;
+        }
+        .sortable-item {
+            padding: 10px;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            margin-bottom: 5px;
+            cursor: move;
+        }
+        .sortable-item:last-child {
+            margin-bottom: 0;
+        }
+        .dashicons-menu {
+            color: #666;
+            margin-right: 5px;
+        }
+    </style>
+
+    <script>
+    jQuery(document).ready(function($) {
+        $("#sortable-sections").sortable({
+            handle: ".dashicons-menu",
+            update: function(event, ui) {
+                var order = [];
+                $(".sortable-item").each(function() {
+                    order.push($(this).data("section"));
+                });
+                $("#section_order").val(order.join(","));
+            }
+        });
+    });
+    </script>
+    <?php
+} 

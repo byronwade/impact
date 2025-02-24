@@ -106,6 +106,9 @@ function wades_about_content_tab($post) {
                            name="about_sections[<?php echo esc_attr($section_id); ?>][order]" 
                            value="<?php echo esc_attr($section['order']); ?>"
                            class="section-order">
+                    <input type="hidden" 
+                           name="about_sections[<?php echo esc_attr($section_id); ?>][title]" 
+                           value="<?php echo esc_attr($section['title']); ?>">
                     <label style="display: flex; align-items: center; gap: 10px;">
                         <span class="dashicons dashicons-menu" style="cursor: move;"></span>
                         <input type="checkbox" 
@@ -465,7 +468,7 @@ function wades_save_about_meta($post_id) {
             $sections[$section_id] = array(
                 'enabled' => isset($section_data['enabled']),
                 'order' => absint($section_data['order']),
-                'title' => sanitize_text_field($section_data['title'])
+                'title' => isset($section_data['title']) ? sanitize_text_field($section_data['title']) : ucfirst($section_id)
             );
         }
         update_post_meta($post_id, '_about_sections', $sections);

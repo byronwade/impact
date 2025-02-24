@@ -164,94 +164,48 @@ $sections = explode(',', $meta['section_order']);
             case 'filters':
                 if ($meta['show_search'] || $meta['show_filters']) :
                 ?>
-                <div class="bg-gray-50 py-8">
-                    <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                        <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
-                            <?php if ($meta['show_search']) : ?>
-                                <div class="relative w-full sm:w-96">
-                                    <input type="text" id="boat-search" placeholder="Search boats..." 
-                                           class="pl-10 w-full rounded-lg border border-input bg-background px-3 py-2">
-                                    <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground"></i>
-                                </div>
-                            <?php endif; ?>
+                <div class="sticky top-0 z-10 bg-white border-b border-gray-200">
+                    <div class="container mx-auto px-4 py-4">
+                        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                            <div class="flex flex-col sm:flex-row gap-4 flex-grow lg:flex-grow-0">
+                                <?php if ($meta['show_search']) : ?>
+                                    <div class="relative flex-grow lg:w-64">
+                                        <input type="text" 
+                                               id="boat-search" 
+                                               placeholder="Search boats..." 
+                                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                                    </div>
+                                <?php endif; ?>
 
-                            <?php if ($meta['show_filters']) : ?>
-                                <div class="flex flex-wrap gap-4 w-full sm:w-auto">
-                                    <?php if ($meta['manufacturer_filter']) : ?>
-                                        <select id="manufacturer-filter" class="w-full sm:w-[200px] rounded-lg border border-input bg-background px-3 py-2">
-                                            <option value="">All Manufacturers</option>
-                                            <?php
-                                            $manufacturers = get_terms(array(
-                                                'taxonomy' => 'boat_manufacturer',
-                                                'hide_empty' => true
-                                            ));
-                                            
-                                            if (!empty($manufacturers) && !is_wp_error($manufacturers)) {
-                                                foreach ($manufacturers as $manufacturer) {
-                                                    echo '<option value="' . esc_attr($manufacturer->slug) . '">' . esc_html($manufacturer->name) . '</option>';
-                                                }
-                                            }
-                                            ?>
+                                <?php if ($meta['show_filters']) : ?>
+                                    <div class="flex flex-wrap gap-2 sm:flex-nowrap">
+                                        <select id="type-filter" class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                                            <option value="">All Types</option>
+                                            <option value="pontoon">Pontoon</option>
+                                            <option value="ski">Ski & Wake</option>
+                                            <option value="fishing">Fishing</option>
                                         </select>
-                                    <?php endif; ?>
-
-                                    <?php if ($meta['condition_filter']) : ?>
-                                        <select id="condition-filter" class="w-full sm:w-[200px] rounded-lg border border-input bg-background px-3 py-2">
+                                        <select id="condition-filter" class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
                                             <option value="">All Conditions</option>
                                             <option value="NEW">New</option>
                                             <option value="USED">Used</option>
                                         </select>
-                                    <?php endif; ?>
-
-                                    <?php if ($meta['price_filter']) : ?>
-                                        <select id="price-filter" class="w-full sm:w-[200px] rounded-lg border border-input bg-background px-3 py-2">
-                                            <option value="">Price Range</option>
-                                            <option value="0-25000">Under $25,000</option>
-                                            <option value="25000-50000">$25,000 - $50,000</option>
-                                            <option value="50000-100000">$50,000 - $100,000</option>
-                                            <option value="100000+">$100,000+</option>
-                                        </select>
-                                    <?php endif; ?>
-
-                                    <?php if ($meta['year_filter']) : ?>
-                                        <select id="year-filter" class="w-full sm:w-[200px] rounded-lg border border-input bg-background px-3 py-2">
-                                            <option value="">All Years</option>
-                                            <?php
-                                            $current_year = date('Y');
-                                            for ($year = $current_year; $year >= $current_year - 10; $year--) {
-                                                echo '<option value="' . $year . '">' . $year . '</option>';
-                                            }
-                                            ?>
-                                        </select>
-                                    <?php endif; ?>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-
-                        <?php if (!empty($meta['sort_options'])) : ?>
-                            <div class="mt-4 flex justify-end">
-                                <select id="sort-options" class="w-[200px] rounded-lg border border-input bg-background px-3 py-2">
-                                    <?php if ($meta['sort_options']['newest']) : ?>
-                                        <option value="newest">Newest First</option>
-                                    <?php endif; ?>
-                                    <?php if ($meta['sort_options']['price_low']) : ?>
-                                        <option value="price_low">Price (Low to High)</option>
-                                    <?php endif; ?>
-                                    <?php if ($meta['sort_options']['price_high']) : ?>
-                                        <option value="price_high">Price (High to Low)</option>
-                                    <?php endif; ?>
-                                    <?php if ($meta['sort_options']['name']) : ?>
-                                        <option value="name">Name (A-Z)</option>
-                                    <?php endif; ?>
-                                    <?php if ($meta['sort_options']['length']) : ?>
-                                        <option value="length">Length</option>
-                                    <?php endif; ?>
-                                    <?php if ($meta['sort_options']['year']) : ?>
-                                        <option value="year">Year</option>
-                                    <?php endif; ?>
-                                </select>
+                                    </div>
+                                <?php endif; ?>
                             </div>
-                        <?php endif; ?>
+
+                            <div class="flex flex-col sm:flex-row gap-4 sm:items-center">
+                                <div class="flex items-center gap-2">
+                                    <label class="text-sm font-medium text-gray-700">Sort by:</label>
+                                    <select id="sort-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                                        <option value="newest">Newest</option>
+                                        <option value="price-asc">Price: Low to High</option>
+                                        <option value="price-desc">Price: High to Low</option>
+                                        <option value="length">Length</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <?php
@@ -261,7 +215,7 @@ $sections = explode(',', $meta['section_order']);
             case 'inventory':
                 // Inventory content
                 ?>
-                <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+                <div class="container mx-auto px-4 py-12">
                     <!-- Results Count -->
                     <p id="results-count" class="text-sm text-muted-foreground mb-4"></p>
 
@@ -276,7 +230,8 @@ $sections = explode(',', $meta['section_order']);
                             'posts_per_page' => $posts_per_page,
                             'paged' => $paged,
                             'orderby' => 'date',
-                            'order' => 'DESC'
+                            'order' => 'DESC',
+                            'post_status' => 'publish'
                         );
 
                         $boats_query = new WP_Query($args);
@@ -294,6 +249,9 @@ $sections = explode(',', $meta['section_order']);
                                 $sales_price = get_post_meta(get_the_ID(), '_boat_sales_price', true);
                                 $web_price = get_post_meta(get_the_ID(), '_boat_web_price', true);
                                 $status = get_post_meta(get_the_ID(), '_boat_status', true);
+
+                                // Get the proper permalink
+                                $boat_url = get_permalink();
                         ?>
                         <div class="boat-card rounded-xl overflow-hidden bg-white shadow-md <?php echo esc_attr($meta['card_style']); ?> hover:<?php echo esc_attr($meta['hover_effect']); ?>" 
                              data-manufacturer="<?php echo esc_attr($manufacturer_slug); ?>"
@@ -301,13 +259,18 @@ $sections = explode(',', $meta['section_order']);
                              data-name="<?php echo esc_attr(get_the_title()); ?>"
                              data-year="<?php echo esc_attr($year); ?>"
                              data-model="<?php echo esc_attr($model); ?>">
-                            <a href="<?php the_permalink(); ?>" class="block">
-                                <div class="relative aspect-w-16 aspect-h-9">
+                            <a href="<?php echo esc_url($boat_url); ?>" class="block">
+                                <div class="relative aspect-w-16 aspect-h-9 min-h-[400px]">
                                     <?php if (has_post_thumbnail()) : ?>
                                         <?php the_post_thumbnail('large', array(
                                             'class' => 'transition-transform duration-300 group-hover:scale-105 object-cover w-full h-full',
                                             'alt' => get_the_title()
                                         )); ?>
+                                    <?php else : ?>
+                                        <div class="w-full h-full min-h-[400px] bg-gray-100 flex flex-col items-center justify-center">
+                                            <i data-lucide="image-off" class="w-12 h-12 text-gray-400 mb-2"></i>
+                                            <span class="text-sm text-gray-500 font-medium">No Image Available</span>
+                                        </div>
                                     <?php endif; ?>
                                     <?php if ($condition) : ?>
                                         <div class="absolute top-4 right-4">
@@ -321,8 +284,8 @@ $sections = explode(',', $meta['section_order']);
 
                             <div class="p-6">
                                 <h2 class="text-xl font-semibold mb-2">
-                                    <a href="<?php the_permalink(); ?>" class="hover:text-primary transition-colors">
-                                        <?php the_title(); ?>
+                                    <a href="<?php echo esc_url($boat_url); ?>" class="hover:text-primary transition-colors">
+                                        <?php echo wades_get_boat_title(); ?>
                                     </a>
                                 </h2>
                                 
@@ -345,20 +308,21 @@ $sections = explode(',', $meta['section_order']);
                                 } elseif (!empty($web_price) && is_numeric($web_price) && $web_price > 0) {
                                     $display_price = $web_price;
                                 }
+
+                                // Get boat SKU or model number for inquiry
+                                $boat_sku = get_post_meta(get_the_ID(), '_boat_sku', true);
+                                $inquiry_subject = urlencode("I'm interested in your: " . ($boat_sku ?: ($year . ' ' . $model)));
+                                $contact_url = home_url('/contact') . '?subject=' . $inquiry_subject;
                                 ?>
                                 
                                 <div class="mt-4 space-y-4">
-                                    <?php if ($display_price > 0) : ?>
-                                        <p class="text-2xl font-bold text-primary">$<?php echo number_format($display_price); ?></p>
-                                    <?php else : ?>
-                                        <p class="text-2xl font-bold text-primary">Call for Price</p>
-                                    <?php endif; ?>
+                                    <p class="text-2xl font-bold text-primary"><?php echo wades_format_price($display_price); ?></p>
 
                                     <div class="flex items-center justify-between">
-                                        <a href="#inquiry" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
+                                        <a href="<?php echo esc_url($contact_url); ?>" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
                                             Request Info
                                         </a>
-                                        <a href="<?php the_permalink(); ?>" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2">
+                                        <a href="<?php echo esc_url($boat_url); ?>" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2">
                                             View Details
                                             <i data-lucide="chevron-right" class="ml-2 h-4 w-4"></i>
                                         </a>
@@ -457,41 +421,36 @@ $sections = explode(',', $meta['section_order']);
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const boatSearch = document.getElementById('boat-search');
-    const manufacturerFilter = document.getElementById('manufacturer-filter');
+    const typeFilter = document.getElementById('type-filter');
     const conditionFilter = document.getElementById('condition-filter');
-    const priceFilter = document.getElementById('price-filter');
-    const yearFilter = document.getElementById('year-filter');
-    const sortOptions = document.getElementById('sort-options');
+    const sortFilter = document.getElementById('sort-filter');
     const boatCards = document.querySelectorAll('.boat-card');
     const resultsCount = document.getElementById('results-count');
 
     function filterBoats() {
         const searchTerm = boatSearch ? boatSearch.value.toLowerCase() : '';
-        const manufacturer = manufacturerFilter ? manufacturerFilter.value.toLowerCase() : '';
+        const type = typeFilter ? typeFilter.value.toLowerCase() : '';
         const condition = conditionFilter ? conditionFilter.value : '';
-        const priceRange = priceFilter ? priceFilter.value : '';
-        const year = yearFilter ? yearFilter.value : '';
         let visibleCount = 0;
 
         boatCards.forEach(card => {
             const cardData = {
-                manufacturer: card.dataset.manufacturer.toLowerCase(),
-                condition: card.dataset.condition,
                 name: card.dataset.name.toLowerCase(),
+                model: card.dataset.model.toLowerCase(),
                 year: card.dataset.year,
-                model: card.dataset.model.toLowerCase()
+                condition: card.dataset.condition,
+                manufacturer: card.dataset.manufacturer.toLowerCase()
             };
 
-            const matchesSearch = searchTerm === '' || 
+            const matchesSearch = !searchTerm || 
                                 cardData.name.includes(searchTerm) || 
                                 cardData.model.includes(searchTerm) ||
                                 cardData.year.includes(searchTerm);
             
-            const matchesManufacturer = manufacturer === '' || cardData.manufacturer === manufacturer;
-            const matchesCondition = condition === '' || cardData.condition === condition;
-            const matchesYear = year === '' || cardData.year === year;
+            const matchesType = !type || cardData.manufacturer.includes(type);
+            const matchesCondition = !condition || cardData.condition === condition;
 
-            if (matchesSearch && matchesManufacturer && matchesCondition && matchesYear) {
+            if (matchesSearch && matchesType && matchesCondition) {
                 card.style.display = '';
                 visibleCount++;
             } else {
@@ -500,21 +459,66 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         resultsCount.textContent = `Showing ${visibleCount} boat${visibleCount !== 1 ? 's' : ''}`;
+
+        // Handle sorting
+        if (sortFilter) {
+            const sortValue = sortFilter.value;
+            const sortedCards = Array.from(boatCards);
+            const boatsGrid = document.getElementById('boats-grid');
+
+            sortedCards.sort((a, b) => {
+                switch (sortValue) {
+                    case 'newest':
+                        // Assuming data-year is available
+                        return b.dataset.year - a.dataset.year;
+                    case 'price-asc':
+                        return getPriceValue(a) - getPriceValue(b);
+                    case 'price-desc':
+                        return getPriceValue(b) - getPriceValue(a);
+                    default:
+                        return 0;
+                }
+            });
+
+            // Reorder the cards in the DOM
+            sortedCards.forEach(card => {
+                boatsGrid.appendChild(card);
+            });
+        }
+    }
+
+    // Helper function to get price value from card
+    function getPriceValue(card) {
+        const priceText = card.querySelector('.text-primary').textContent;
+        // Remove '$' and ',' and convert to number
+        return Number(priceText.replace(/[$,]/g, '')) || 0;
     }
 
     // Add event listeners
     if (boatSearch) boatSearch.addEventListener('input', filterBoats);
-    if (manufacturerFilter) manufacturerFilter.addEventListener('change', filterBoats);
+    if (typeFilter) typeFilter.addEventListener('change', filterBoats);
     if (conditionFilter) conditionFilter.addEventListener('change', filterBoats);
-    if (priceFilter) priceFilter.addEventListener('change', filterBoats);
-    if (yearFilter) yearFilter.addEventListener('change', filterBoats);
-    if (sortOptions) sortOptions.addEventListener('change', filterBoats);
+    if (sortFilter) sortFilter.addEventListener('change', filterBoats);
 
     // Initialize Lucide icons
     lucide.createIcons();
 
-    // Initial count
+    // Initial filter
     filterBoats();
+
+    // Initialize sticky toolbar behavior
+    const toolbar = document.querySelector('.sticky');
+    const toolbarOffset = toolbar.offsetTop;
+
+    function updateToolbarSticky() {
+        if (window.pageYOffset > toolbarOffset) {
+            toolbar.classList.add('shadow-md');
+        } else {
+            toolbar.classList.remove('shadow-md');
+        }
+    }
+
+    window.addEventListener('scroll', updateToolbarSticky);
 });
 </script>
 

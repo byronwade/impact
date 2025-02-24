@@ -12,7 +12,7 @@ get_template_part('template-parts/template-header');
 <main role="main" aria-label="Main content" class="flex-grow">
     <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24">
         <!-- Financing Options Cards -->
-        <div class="grid md:grid-cols-2 gap-6 mb-12">
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-12">
             <?php
             $financing_options = get_post_meta(get_the_ID(), '_financing_options', true) ?: array(
                 array(
@@ -59,6 +59,61 @@ get_template_part('template-parts/template-header');
                 </div>
             <?php endforeach; ?>
         </div>
+
+        <!-- Financing Partners -->
+        <?php
+        $financing_partners = get_post_meta(get_the_ID(), '_financing_partners', true);
+        if (!empty($financing_partners)) : ?>
+            <div class="mb-12">
+                <h2 class="text-2xl font-semibold mb-6">Our Financing Partners</h2>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <?php foreach ($financing_partners as $partner) : ?>
+                        <div class="rounded-xl border bg-card text-card-foreground shadow-sm p-6 flex flex-col items-center text-center">
+                            <?php if (!empty($partner['logo'])) : ?>
+                                <div class="mb-4 h-20 flex items-center justify-center">
+                                    <?php 
+                                    $logo_url = wp_get_attachment_image_url($partner['logo'], 'medium');
+                                    if ($logo_url) :
+                                        if (!empty($partner['link'])) : ?>
+                                            <a href="<?php echo esc_url($partner['link']); ?>" target="_blank" rel="noopener noreferrer">
+                                        <?php endif; ?>
+                                        
+                                        <?php echo wades_get_image_html($partner['logo'], 'medium', array(
+                                            'class' => 'h-full w-auto object-contain',
+                                            'alt' => esc_attr($partner['name']) . ' logo'
+                                        )); ?>
+                                             
+                                        <?php if (!empty($partner['link'])) : ?>
+                                            </a>
+                                        <?php endif;
+                                    else :
+                                        echo wades_get_image_html(0, 'medium', array(
+                                            'class' => 'h-full w-auto object-contain',
+                                            'alt' => 'Partner logo placeholder'
+                                        ));
+                                    endif; ?>
+                                </div>
+                            <?php endif; ?>
+                            
+                            <h3 class="text-lg font-semibold mb-2"><?php echo esc_html($partner['name']); ?></h3>
+                            <?php if (!empty($partner['description'])) : ?>
+                                <p class="text-muted-foreground text-sm mb-4"><?php echo esc_html($partner['description']); ?></p>
+                            <?php endif; ?>
+                            
+                            <?php if (!empty($partner['link'])) : ?>
+                                <a href="<?php echo esc_url($partner['link']); ?>" 
+                                   target="_blank" 
+                                   rel="noopener noreferrer"
+                                   class="inline-flex items-center text-sm text-primary hover:text-primary/80">
+                                    Visit Website
+                                    <i data-lucide="external-link" class="ml-1 h-4 w-4"></i>
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        <?php endif; ?>
 
         <!-- Loan Calculator -->
         <div class="mb-12">
@@ -150,45 +205,60 @@ get_template_part('template-parts/template-header');
 </main>
 
 <script>
-function calculateMonthlyPayment() {
-    const loanAmount = parseFloat(document.getElementById('loanAmount').value);
-    const interestRate = parseFloat(document.getElementById('interestRate').value) / 100 / 12;
-    const loanTerm = parseInt(document.getElementById('loanTerm').value);
-    
-    const monthlyPayment = (loanAmount * interestRate * Math.pow(1 + interestRate, loanTerm)) / (Math.pow(1 + interestRate, loanTerm) - 1);
-    document.getElementById('monthlyPayment').textContent = '$' + monthlyPayment.toFixed(2);
-}
-
-function toggleFAQ(index) {
-    const button = document.querySelector(`button[onclick="toggleFAQ(${index})"]`);
-    const icon = button.querySelector('[data-lucide="chevron-down"]');
-    const answer = document.getElementById(`faq-${index}`);
-    const allAnswers = document.querySelectorAll('[id^="faq-"]');
-    const allIcons = document.querySelectorAll('[data-lucide="chevron-down"]');
-    
-    allAnswers.forEach(el => {
-        if (el.id !== `faq-${index}`) {
-            el.classList.add('hidden');
+document.addEventListener('DOMContentLoaded', function() {
+    function calculateMonthlyPayment() {
+        const loanAmount = parseFloat(document.getElementById('loanAmount').value) || 0;
+        const interestRate = (parseFloat(document.getElementById('interestRate').value) || 0) / 100 / 12;
+        const loanTerm = parseInt(document.getElementById('loanTerm').value) || 0;
+        
+        let monthlyPayment = 0;
+        if (loanAmount > 0 && interestRate > 0 && loanTerm > 0) {
+            monthlyPayment = (loanAmount * interestRate * Math.pow(1 + interestRate, loanTerm)) / (Math.pow(1 + interestRate, loanTerm) - 1);
         }
-    });
-    
-    allIcons.forEach(icon => {
-        icon.style.transform = 'rotate(0deg)';
-    });
-
-    answer.classList.toggle('hidden');
-    if (!answer.classList.contains('hidden')) {
-        icon.style.transform = 'rotate(180deg)';
+        
+        document.getElementById('monthlyPayment').textContent = '$' + monthlyPayment.toFixed(2);
     }
-}
 
-// Add event listeners for calculator inputs
-document.getElementById('loanAmount').addEventListener('input', calculateMonthlyPayment);
-document.getElementById('interestRate').addEventListener('input', calculateMonthlyPayment);
-document.getElementById('loanTerm').addEventListener('input', calculateMonthlyPayment);
+    function toggleFAQ(index) {
+        const button = document.querySelector(`button[onclick="toggleFAQ(${index})"]`);
+        const icon = button.querySelector('[data-lucide="chevron-down"]');
+        const answer = document.getElementById(`faq-${index}`);
+        const allAnswers = document.querySelectorAll('[id^="faq-"]');
+        const allIcons = document.querySelectorAll('[data-lucide="chevron-down"]');
+        
+        allAnswers.forEach(el => {
+            if (el.id !== `faq-${index}`) {
+                el.classList.add('hidden');
+            }
+        });
+        
+        allIcons.forEach(icon => {
+            icon.style.transform = 'rotate(0deg)';
+        });
 
-// Initialize calculator
-calculateMonthlyPayment();
+        answer.classList.toggle('hidden');
+        if (!answer.classList.contains('hidden')) {
+            icon.style.transform = 'rotate(180deg)';
+        }
+    }
+
+    // Add event listeners for calculator inputs
+    const loanAmount = document.getElementById('loanAmount');
+    const interestRate = document.getElementById('interestRate');
+    const loanTerm = document.getElementById('loanTerm');
+
+    if (loanAmount && interestRate && loanTerm) {
+        loanAmount.addEventListener('input', calculateMonthlyPayment);
+        interestRate.addEventListener('input', calculateMonthlyPayment);
+        loanTerm.addEventListener('input', calculateMonthlyPayment);
+
+        // Initialize calculator with default values
+        calculateMonthlyPayment();
+    }
+
+    // Make toggleFAQ available globally
+    window.toggleFAQ = toggleFAQ;
+});
 </script>
 
 <?php get_footer(); ?> 

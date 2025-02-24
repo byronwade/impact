@@ -44,6 +44,41 @@ function wades_register_post_types() {
         'capability_type'       => 'post',
         'map_meta_cap'         => true,
     ));
+
+    // Register Boat Post Type
+    register_post_type('boat', array(
+        'labels' => array(
+            'name'               => 'Boats',
+            'singular_name'      => 'Boat',
+            'menu_name'          => 'Boats',
+            'add_new'           => 'Add New Boat',
+            'add_new_item'      => 'Add New Boat',
+            'edit_item'         => 'Edit Boat',
+            'new_item'          => 'New Boat',
+            'view_item'         => 'View Boat',
+            'search_items'      => 'Search Boats',
+            'not_found'         => 'No boats found',
+            'not_found_in_trash'=> 'No boats found in Trash',
+        ),
+        'public'              => true,
+        'has_archive'         => true,
+        'publicly_queryable'  => true,
+        'show_ui'            => true,
+        'show_in_menu'       => true,
+        'query_var'          => true,
+        'rewrite'            => array(
+            'slug' => 'boats',
+            'with_front' => false,
+            'pages' => true,
+            'feeds' => true,
+        ),
+        'capability_type'    => 'post',
+        'menu_icon'          => 'dashicons-store',
+        'supports'           => array('title', 'editor', 'thumbnail', 'excerpt', 'custom-fields'),
+        'show_in_rest'       => true,
+        'hierarchical'       => false,
+        'menu_position'      => 5,
+    ));
 }
 add_action('init', 'wades_register_post_types');
 
@@ -76,18 +111,57 @@ function wades_register_taxonomies() {
         ),
         'show_in_rest'      => true,
     ));
+
+    // Boat Taxonomies
+    $boat_taxonomies = array(
+        'boat_manufacturer' => array(
+            'label' => 'Manufacturers',
+            'slug' => 'manufacturer',
+            'hierarchical' => true
+        ),
+        'boat_location' => array(
+            'label' => 'Locations',
+            'slug' => 'location',
+            'hierarchical' => true
+        ),
+        'boat_condition' => array(
+            'label' => 'Conditions',
+            'slug' => 'condition',
+            'hierarchical' => true
+        ),
+        'boat_status' => array(
+            'label' => 'Status',
+            'slug' => 'status',
+            'hierarchical' => true
+        )
+    );
+
+    foreach ($boat_taxonomies as $tax_name => $tax_args) {
+        register_taxonomy($tax_name, 'boat', array(
+            'hierarchical'      => $tax_args['hierarchical'],
+            'labels'            => array(
+                'name'              => $tax_args['label'],
+                'singular_name'     => rtrim($tax_args['label'], 's'),
+                'search_items'      => 'Search ' . $tax_args['label'],
+                'all_items'         => 'All ' . $tax_args['label'],
+                'edit_item'         => 'Edit ' . rtrim($tax_args['label'], 's'),
+                'update_item'       => 'Update ' . rtrim($tax_args['label'], 's'),
+                'add_new_item'      => 'Add New ' . rtrim($tax_args['label'], 's'),
+                'new_item_name'     => 'New ' . rtrim($tax_args['label'], 's') . ' Name',
+                'menu_name'         => $tax_args['label'],
+            ),
+            'show_ui'           => true,
+            'show_admin_column' => true,
+            'query_var'         => true,
+            'rewrite'           => array(
+                'slug' => $tax_args['slug'],
+                'with_front' => false
+            ),
+            'show_in_rest'      => true,
+        ));
+    }
 }
 add_action('init', 'wades_register_taxonomies');
-
-/**
- * Flush rewrite rules on theme activation
- */
-function wades_rewrite_flush() {
-    wades_register_post_types();
-    wades_register_taxonomies();
-    flush_rewrite_rules();
-}
-add_action('after_switch_theme', 'wades_rewrite_flush');
 
 /**
  * Redirect service archive and taxonomy pages to services page
@@ -103,119 +177,36 @@ function wades_redirect_service_pages() {
 }
 add_action('template_redirect', 'wades_redirect_service_pages');
 
-// Register Boat Post Type
-function wades_register_boat_post_type() {
-    $labels = array(
-        'name'               => 'Boats',
-        'singular_name'      => 'Boat',
-        'menu_name'          => 'Boats',
-        'add_new'           => 'Add New Boat',
-        'add_new_item'      => 'Add New Boat',
-        'edit_item'         => 'Edit Boat',
-        'new_item'          => 'New Boat',
-        'view_item'         => 'View Boat',
-        'search_items'      => 'Search Boats',
-        'not_found'         => 'No boats found',
-        'not_found_in_trash'=> 'No boats found in Trash',
-    );
-
-    $args = array(
-        'labels'              => $labels,
-        'public'              => true,
-        'has_archive'         => false,
-        'publicly_queryable'  => true,
-        'show_ui'            => true,
-        'show_in_menu'       => true,
-        'query_var'          => true,
-        'rewrite'            => array(
-            'slug' => 'boat',
-            'with_front' => false
-        ),
-        'capability_type'    => 'post',
-        'menu_icon'          => 'dashicons-store',
-        'supports'           => array('title', 'editor', 'thumbnail', 'excerpt'),
-        'show_in_rest'       => true,
-    );
-
-    register_post_type('boat', $args);
-
-    // Add redirect for boat archive to boats page
-    add_action('template_redirect', function() {
-        if (is_post_type_archive('boat')) {
-            $boats_page = get_page_by_path('boats');
-            if ($boats_page) {
-                wp_redirect(get_permalink($boats_page->ID), 301);
-                exit;
-            }
-        }
-    });
-
-    // Flush rewrite rules when saving a boat post
-    add_action('save_post_boat', function() {
-        flush_rewrite_rules();
-    });
-
-    // Register additional taxonomies
-    $taxonomies = array(
-        'boat_manufacturer' => array(
-            'label' => 'Manufacturers',
-            'slug' => 'manufacturer'
-        ),
-        'boat_location' => array(
-            'label' => 'Locations',
-            'slug' => 'location'
-        ),
-        'boat_condition' => array(
-            'label' => 'Conditions',
-            'slug' => 'condition'
-        ),
-        'boat_status' => array(
-            'label' => 'Status',
-            'slug' => 'status'
-        )
-    );
-
-    foreach ($taxonomies as $tax_name => $tax_args) {
-        register_taxonomy($tax_name, 'boat', array(
-            'hierarchical'      => true,
-            'labels'            => array(
-                'name'              => $tax_args['label'],
-                'singular_name'     => rtrim($tax_args['label'], 's'),
-                'search_items'      => 'Search ' . $tax_args['label'],
-                'all_items'         => 'All ' . $tax_args['label'],
-                'edit_item'         => 'Edit ' . rtrim($tax_args['label'], 's'),
-                'update_item'       => 'Update ' . rtrim($tax_args['label'], 's'),
-                'add_new_item'      => 'Add New ' . rtrim($tax_args['label'], 's'),
-                'new_item_name'     => 'New ' . rtrim($tax_args['label'], 's') . ' Name',
-                'menu_name'         => $tax_args['label'],
-            ),
-            'show_ui'           => true,
-            'show_admin_column' => true,
-            'query_var'         => true,
-            'rewrite'           => array('slug' => $tax_args['slug']),
-            'show_in_rest'      => true,
-        ));
+/**
+ * Fix boat permalinks
+ */
+function wades_boat_post_link($post_link, $post) {
+    if ($post->post_type === 'boat') {
+        return home_url('boats/' . $post->post_name . '/');
     }
+    return $post_link;
+}
+add_filter('post_type_link', 'wades_boat_post_link', 10, 2);
 
-    // Register meta fields
-    $meta_fields = array(
-        '_boat_stock_number' => 'string',
-        '_boat_model_year' => 'string',
-        '_boat_model' => 'string',
-        '_boat_trim' => 'string',
-        '_boat_retail_price' => 'number',
-        '_boat_sales_price' => 'number',
-        '_boat_web_price' => 'number',
-        '_boat_discount' => 'number',
-        '_boat_floorplan' => 'string'
-    );
+/**
+ * Flush rewrite rules when needed
+ */
+function wades_flush_rewrite_rules() {
+    // Register post types and taxonomies first
+    wades_register_post_types();
+    wades_register_taxonomies();
+    
+    // Then flush rewrite rules
+    flush_rewrite_rules();
+}
 
-    foreach ($meta_fields as $meta_key => $meta_type) {
-        register_post_meta('boat', $meta_key, array(
-            'type' => $meta_type,
-            'single' => true,
-            'show_in_rest' => true,
-        ));
+// Flush rules on theme activation
+add_action('after_switch_theme', 'wades_flush_rewrite_rules');
+
+// Flush rules when saving permalinks
+function wades_flush_rules_on_save() {
+    if (isset($_POST['permalink_structure']) || isset($_POST['category_base'])) {
+        wades_flush_rewrite_rules();
     }
 }
-add_action('init', 'wades_register_boat_post_type'); 
+add_action('admin_init', 'wades_flush_rules_on_save'); 

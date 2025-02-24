@@ -986,6 +986,10 @@ body {
   height: 1px;
 }
 
+.h-20 {
+  height: 5rem;
+}
+
 .max-h-24 {
   max-height: 6rem;
 }
@@ -1044,10 +1048,6 @@ body {
 
 .w-9 {
   width: 2.25rem;
-}
-
-.w-\[200px\] {
-  width: 200px;
 }
 
 .w-auto {
@@ -1160,10 +1160,6 @@ body {
   align-items: center;
 }
 
-.justify-end {
-  justify-content: flex-end;
-}
-
 .justify-center {
   justify-content: center;
 }
@@ -1268,10 +1264,6 @@ body {
   white-space: nowrap;
 }
 
-.whitespace-pre-line {
-  white-space: pre-line;
-}
-
 .rounded {
   border-radius: 0.25rem;
 }
@@ -1364,6 +1356,10 @@ body {
 
 .border-white\/20 {
   border-color: rgb(255 255 255 / 0.2);
+}
+
+.border-transparent {
+  border-color: transparent;
 }
 
 .bg-background {
@@ -1589,6 +1585,12 @@ body {
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
 
+.from-primary {
+  --tw-gradient-from: hsl(var(--primary)) var(--tw-gradient-from-position);
+  --tw-gradient-to: hsl(var(--primary) / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
 .from-30\% {
   --tw-gradient-from-position: 30%;
 }
@@ -1639,6 +1641,10 @@ body {
 
 .to-white {
   --tw-gradient-to: #fff var(--tw-gradient-to-position);
+}
+
+.to-black\/25 {
+  --tw-gradient-to: rgb(0 0 0 / 0.25) var(--tw-gradient-to-position);
 }
 
 .to-100\% {
@@ -1773,11 +1779,6 @@ body {
   padding-bottom: 1.5rem;
 }
 
-.py-8 {
-  padding-top: 2rem;
-  padding-bottom: 2rem;
-}
-
 .pb-12 {
   padding-bottom: 3rem;
 }
@@ -1804,6 +1805,10 @@ body {
 
 .pt-8 {
   padding-top: 2rem;
+}
+
+.pt-24 {
+  padding-top: 6rem;
 }
 
 .text-left {
@@ -1877,10 +1882,6 @@ body {
 
 .lowercase {
   text-transform: lowercase;
-}
-
-.not-italic {
-  font-style: normal;
 }
 
 .leading-relaxed {
@@ -2047,11 +2048,6 @@ body {
 .text-yellow-400 {
   --tw-text-opacity: 1;
   color: rgb(250 204 21 / var(--tw-text-opacity, 1));
-}
-
-.text-green-700 {
-  --tw-text-opacity: 1;
-  color: rgb(21 128 61 / var(--tw-text-opacity, 1));
 }
 
 .opacity-0 {
@@ -2526,6 +2522,14 @@ body {
     flex-direction: row;
   }
 
+  .sm\:flex-nowrap {
+    flex-wrap: nowrap;
+  }
+
+  .sm\:items-center {
+    align-items: center;
+  }
+
   .sm\:gap-16 {
     gap: 4rem;
   }
@@ -2543,6 +2547,10 @@ body {
   .sm\:py-24 {
     padding-top: 6rem;
     padding-bottom: 6rem;
+  }
+
+  .sm\:pt-24 {
+    padding-top: 6rem;
   }
 
   .sm\:text-2xl {
@@ -2658,6 +2666,14 @@ body {
     width: 60%;
   }
 
+  .lg\:w-64 {
+    width: 16rem;
+  }
+
+  .lg\:flex-grow-0 {
+    flex-grow: 0;
+  }
+
   .lg\:grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2674,8 +2690,16 @@ body {
     flex-direction: row;
   }
 
+  .lg\:items-center {
+    align-items: center;
+  }
+
   .lg\:justify-start {
     justify-content: flex-start;
+  }
+
+  .lg\:justify-between {
+    justify-content: space-between;
   }
 
   .lg\:p-12 {

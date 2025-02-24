@@ -5,7 +5,41 @@
  * @package wades
  */
 
-get_header(); 
+get_header();
+
+// Get header meta values
+$meta = array(
+    'custom_header_title' => get_post_meta(get_the_ID(), '_custom_header_title', true),
+    'custom_header_subtext' => get_post_meta(get_the_ID(), '_custom_header_subtext', true),
+    'hero_background_image' => get_post_meta(get_the_ID(), '_hero_background_image', true),
+    'hero_overlay_opacity' => get_post_meta(get_the_ID(), '_hero_overlay_opacity', true) ?: '40',
+    'hero_height' => get_post_meta(get_the_ID(), '_hero_height', true) ?: '50'
+);
+
+// Get template defaults
+$defaults = wades_get_template_defaults('templates/services.php');
+
+// Set header values
+$header_title = !empty($meta['custom_header_title']) ? $meta['custom_header_title'] : $defaults['title'];
+$header_description = !empty($meta['custom_header_subtext']) ? $meta['custom_header_subtext'] : $defaults['description'];
+
+// Update post meta with defaults if empty
+if (empty($meta['custom_header_title'])) {
+    update_post_meta(get_the_ID(), '_custom_header_title', $header_title);
+}
+if (empty($meta['custom_header_subtext'])) {
+    update_post_meta(get_the_ID(), '_custom_header_subtext', $header_description);
+}
+
+// Pass header data to template part
+set_query_var('header_data', array(
+    'title' => $header_title,
+    'description' => $header_description,
+    'background_image' => $meta['hero_background_image'],
+    'overlay_opacity' => $meta['hero_overlay_opacity'],
+    'height' => $meta['hero_height']
+));
+
 get_template_part('template-parts/template-header');
 ?>
 
@@ -263,15 +297,17 @@ get_template_part('template-parts/template-header');
                                 </div>
                             </div>
                             <div>
-                                <?php
-                                $service_image = get_post_meta(get_the_ID(), '_service_image', true);
-                                if ($service_image) :
-                                    echo wp_get_attachment_image($service_image, 'large', false, array(
-                                        'class' => 'w-full h-full object-cover',
-                                        'alt' => 'Our Service Department'
-                                    ));
-                                endif;
-                                ?>
+                                <?php if (has_post_thumbnail()) : ?>
+                                    <?php the_post_thumbnail('large', array(
+                                        'class' => 'absolute inset-0 w-full h-full object-cover',
+                                        'alt' => get_the_title()
+                                    )); ?>
+                                <?php else : ?>
+                                    <?php echo wades_get_image_html(0, 'large', array(
+                                        'class' => 'absolute inset-0 w-full h-full object-cover',
+                                        'alt' => get_the_title()
+                                    )); ?>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </section>

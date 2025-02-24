@@ -5,6 +5,170 @@
  * @package wades
  */
 
+// Register blog settings
+function wades_register_blog_settings() {
+    // Register settings group
+    register_setting('wades_blog_settings_group', 'wades_blog_settings', array(
+        'type' => 'array',
+        'default' => array(
+            'show_featured' => true,
+            'show_categories' => true,
+            'posts_per_page' => 9,
+            'show_sidebar' => true
+        ),
+        'sanitize_callback' => 'wades_sanitize_blog_settings'
+    ));
+
+    // Initialize settings if they don't exist
+    if (false === get_option('wades_blog_settings')) {
+        add_option('wades_blog_settings', array(
+            'show_featured' => true,
+            'show_categories' => true,
+            'posts_per_page' => 9,
+            'show_sidebar' => true
+        ));
+    }
+}
+add_action('admin_init', 'wades_register_blog_settings');
+
+// Sanitize blog settings
+function wades_sanitize_blog_settings($input) {
+    $defaults = array(
+        'show_featured' => true,
+        'show_categories' => true,
+        'posts_per_page' => 9,
+        'show_sidebar' => true
+    );
+
+    $output = wp_parse_args($input, $defaults);
+
+    $output['show_featured'] = (bool) $output['show_featured'];
+    $output['show_categories'] = (bool) $output['show_categories'];
+    $output['posts_per_page'] = absint($output['posts_per_page']);
+    $output['show_sidebar'] = (bool) $output['show_sidebar'];
+
+    return $output;
+}
+
+// Helper function to get blog setting
+function wades_get_blog_setting($key, $default = '') {
+    $settings = get_option('wades_blog_settings', array());
+    return isset($settings[$key]) ? $settings[$key] : $default;
+}
+
+// Get all blog settings
+function wades_get_blog_settings() {
+    $defaults = array(
+        'show_featured' => true,
+        'show_categories' => true,
+        'posts_per_page' => 9,
+        'show_sidebar' => true
+    );
+
+    $settings = get_option('wades_blog_settings', array());
+    return wp_parse_args($settings, $defaults);
+}
+
+// Blog Settings Page Callback
+function wades_blog_settings_page() {
+    if (!current_user_can('manage_options')) {
+        return;
+    }
+
+    // Get current settings with defaults
+    $settings = wades_get_blog_settings();
+
+    // Save settings if form is submitted
+    if (isset($_POST['wades_blog_settings_nonce']) && wp_verify_nonce($_POST['wades_blog_settings_nonce'], 'wades_blog_settings')) {
+        // Update settings array
+        $new_settings = array(
+            'show_featured' => isset($_POST['show_featured']),
+            'show_categories' => isset($_POST['show_categories']),
+            'posts_per_page' => isset($_POST['posts_per_page']) ? absint($_POST['posts_per_page']) : $settings['posts_per_page'],
+            'show_sidebar' => isset($_POST['show_sidebar'])
+        );
+
+        // Save all settings at once
+        update_option('wades_blog_settings', $new_settings);
+        $settings = $new_settings;
+        
+        add_settings_error('wades_blog_messages', 'wades_blog_message', 'Settings Saved', 'updated');
+    }
+
+    settings_errors('wades_blog_messages');
+    ?>
+    <div class="wrap">
+        <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+
+        <form method="post" action="">
+            <?php wp_nonce_field('wades_blog_settings', 'wades_blog_settings_nonce'); ?>
+
+            <div class="card" style="max-width: 800px; margin-top: 20px; padding: 20px;">
+                <h2>Layout Settings</h2>
+                
+                <table class="form-table" role="presentation">
+                    <tr>
+                        <th scope="row">Show Featured Post</th>
+                        <td>
+                            <label>
+                                <input type="checkbox" 
+                                       name="show_featured" 
+                                       value="1" 
+                                       <?php checked($settings['show_featured']); ?>>
+                                Display featured post at the top of the blog
+                            </label>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row">Show Categories</th>
+                        <td>
+                            <label>
+                                <input type="checkbox" 
+                                       name="show_categories" 
+                                       value="1" 
+                                       <?php checked($settings['show_categories']); ?>>
+                                Display category filter buttons
+                            </label>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row">Show Sidebar</th>
+                        <td>
+                            <label>
+                                <input type="checkbox" 
+                                       name="show_sidebar" 
+                                       value="1" 
+                                       <?php checked($settings['show_sidebar']); ?>>
+                                Display sidebar on blog pages
+                            </label>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row">
+                            <label for="posts_per_page">Posts Per Page</label>
+                        </th>
+                        <td>
+                            <input type="number" 
+                                   id="posts_per_page" 
+                                   name="posts_per_page" 
+                                   value="<?php echo esc_attr($settings['posts_per_page']); ?>" 
+                                   min="1" 
+                                   max="100" 
+                                   class="small-text">
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <?php submit_button('Save Settings'); ?>
+        </form>
+    </div>
+    <?php
+}
+
 // Add the theme settings page to the admin menu
 function wades_add_theme_settings_page() {
     // Add top level menu
@@ -66,6 +230,16 @@ function wades_add_theme_settings_page() {
         'manage_options',
         'wades-boats-import-export',
         'wades_boats_import_export_page'
+    );
+
+    // Add Blog Settings submenu
+    add_submenu_page(
+        'wades-dashboard',
+        'Blog Settings',
+        'Blog Settings',
+        'manage_options',
+        'wades-blog-settings',
+        'wades_blog_settings_page'
     );
 }
 add_action('admin_menu', 'wades_add_theme_settings_page');
@@ -1318,4 +1492,219 @@ function wades_admin_boat_icon() {
     </style>
     <?php
 }
-add_action('admin_head', 'wades_admin_boat_icon'); 
+add_action('admin_head', 'wades_admin_boat_icon');
+
+// Add Blog Settings section to the theme settings
+add_action('admin_init', 'wades_blog_settings_init');
+
+function wades_blog_settings_init() {
+    // Add new section
+    add_settings_section(
+        'wades_blog_settings_section',
+        'Blog Page Settings',
+        'wades_blog_settings_section_callback',
+        'wades_theme_settings'
+    );
+
+    // Register Blog Hero Title setting
+    register_setting('wades_theme_settings', 'wades_blog_hero_title');
+    add_settings_field(
+        'wades_blog_hero_title',
+        'Blog Hero Title',
+        'wades_text_field_callback',
+        'wades_theme_settings',
+        'wades_blog_settings_section',
+        array(
+            'label_for' => 'wades_blog_hero_title',
+            'default' => 'Latest News & Updates'
+        )
+    );
+
+    // Register Blog Hero Description setting
+    register_setting('wades_theme_settings', 'wades_blog_hero_description');
+    add_settings_field(
+        'wades_blog_hero_description',
+        'Blog Hero Description',
+        'wades_textarea_field_callback',
+        'wades_theme_settings',
+        'wades_blog_settings_section',
+        array(
+            'label_for' => 'wades_blog_hero_description',
+            'default' => 'Stay informed with our latest articles, tips, and industry insights.'
+        )
+    );
+
+    // Register Blog Hero Background Image setting
+    register_setting('wades_theme_settings', 'wades_blog_hero_image');
+    add_settings_field(
+        'wades_blog_hero_image',
+        'Blog Hero Background Image',
+        'wades_image_field_callback',
+        'wades_theme_settings',
+        'wades_blog_settings_section',
+        array(
+            'label_for' => 'wades_blog_hero_image',
+            'description' => 'Select a background image for the blog hero section.'
+        )
+    );
+
+    // Register Blog Hero Overlay Opacity setting
+    register_setting('wades_theme_settings', 'wades_blog_hero_opacity');
+    add_settings_field(
+        'wades_blog_hero_opacity',
+        'Blog Hero Overlay Opacity',
+        'wades_number_field_callback',
+        'wades_theme_settings',
+        'wades_blog_settings_section',
+        array(
+            'label_for' => 'wades_blog_hero_opacity',
+            'default' => '50',
+            'min' => '0',
+            'max' => '100',
+            'step' => '5',
+            'description' => 'Adjust the darkness of the hero image overlay (0-100)'
+        )
+    );
+}
+
+function wades_blog_settings_section_callback() {
+    echo '<p>Configure the appearance and content of your blog page.</p>';
+}
+
+// Add image upload field callback if not already defined
+if (!function_exists('wades_image_field_callback')) {
+    function wades_image_field_callback($args) {
+        $option_name = $args['label_for'];
+        $value = get_option($option_name);
+        $image_url = $value ? wp_get_attachment_image_url($value, 'medium') : '';
+        ?>
+        <div class="wades-image-field">
+            <input type="hidden" id="<?php echo esc_attr($option_name); ?>" 
+                   name="<?php echo esc_attr($option_name); ?>" 
+                   value="<?php echo esc_attr($value); ?>">
+            
+            <div class="image-preview" style="margin-bottom: 10px;">
+                <?php if ($image_url) : ?>
+                    <img src="<?php echo esc_url($image_url); ?>" style="max-width: 300px; height: auto;">
+                <?php endif; ?>
+            </div>
+
+            <button type="button" 
+                    class="button wades-upload-image" 
+                    data-target="<?php echo esc_attr($option_name); ?>">
+                <?php echo $image_url ? 'Change Image' : 'Choose Image'; ?>
+            </button>
+
+            <?php if ($image_url) : ?>
+                <button type="button" 
+                        class="button wades-remove-image" 
+                        data-target="<?php echo esc_attr($option_name); ?>">
+                    Remove Image
+                </button>
+            <?php endif; ?>
+        </div>
+        <?php
+    }
+}
+
+// Add script for image upload if not already added
+add_action('admin_footer', 'wades_image_upload_script');
+function wades_image_upload_script() {
+    ?>
+    <script>
+    jQuery(document).ready(function($) {
+        // Handle image upload
+        $('.wades-upload-image').click(function(e) {
+            e.preventDefault();
+            
+            var button = $(this);
+            var targetId = button.data('target');
+            var previewContainer = button.closest('.wades-image-field').find('.image-preview');
+            
+            var frame = wp.media({
+                title: 'Select Image',
+                multiple: false,
+                library: {
+                    type: 'image'
+                }
+            });
+
+            frame.on('select', function() {
+                var attachment = frame.state().get('selection').first().toJSON();
+                $('#' + targetId).val(attachment.id);
+                
+                var preview = $('<img>')
+                    .attr('src', attachment.sizes.medium.url)
+                    .css({
+                        'max-width': '300px',
+                        'height': 'auto'
+                    });
+                
+                previewContainer.html(preview);
+                
+                button.text('Change Image');
+                
+                if (!button.siblings('.wades-remove-image').length) {
+                    $('<button>')
+                        .attr('type', 'button')
+                        .addClass('button wades-remove-image')
+                        .data('target', targetId)
+                        .text('Remove Image')
+                        .insertAfter(button);
+                }
+            });
+
+            frame.open();
+        });
+
+        // Handle image removal
+        $(document).on('click', '.wades-remove-image', function(e) {
+            e.preventDefault();
+            var targetId = $(this).data('target');
+            var container = $(this).closest('.wades-image-field');
+            
+            $('#' + targetId).val('');
+            container.find('.image-preview').empty();
+            container.find('.wades-upload-image').text('Choose Image');
+            $(this).remove();
+        });
+    });
+    </script>
+    <?php
+}
+
+// Add number field callback if not already defined
+if (!function_exists('wades_number_field_callback')) {
+    function wades_number_field_callback($args) {
+        $option_name = $args['label_for'];
+        $value = get_option($option_name, $args['default']);
+        ?>
+        <input type="number" 
+               id="<?php echo esc_attr($option_name); ?>" 
+               name="<?php echo esc_attr($option_name); ?>"
+               value="<?php echo esc_attr($value); ?>"
+               min="<?php echo esc_attr($args['min']); ?>"
+               max="<?php echo esc_attr($args['max']); ?>"
+               step="<?php echo esc_attr($args['step']); ?>"
+               class="regular-text">
+        <?php if (isset($args['description'])) : ?>
+            <p class="description"><?php echo esc_html($args['description']); ?></p>
+        <?php endif;
+    }
+}
+
+// Add textarea field callback if not already defined
+if (!function_exists('wades_textarea_field_callback')) {
+    function wades_textarea_field_callback($args) {
+        $option_name = $args['label_for'];
+        $value = get_option($option_name, $args['default']);
+        ?>
+        <textarea id="<?php echo esc_attr($option_name); ?>" 
+                  name="<?php echo esc_attr($option_name); ?>"
+                  class="large-text" 
+                  rows="3"><?php echo esc_textarea($value); ?></textarea>
+        <?php if (isset($args['description'])) : ?>
+            <p class="description"><?php echo esc_html($args['description']); ?></p>
+        <?php endif;
+    }
+} 
